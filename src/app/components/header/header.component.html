@@ -1,0 +1,8 @@
+<div class="card">
+  <p-menubar [model]="items">
+    <div>
+      <p-avatar icon="pi pi-user" style="background-color: #dee9fc; color: #1a2551; cursor: pointer;" shape="circle" (click)="menu.toggle($event)"/>
+      <p-menu #menu [model]="profileItems" [popup]="true"></p-menu>
+    </div>
+  </p-menubar>
+</div>

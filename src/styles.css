@@ -1,0 +1,8 @@
+@import "../node_modules/primeicons/primeicons.css";
+/* You can add global styles to this file, and also import other style files */
+html {
+  font-family: 'Roboto, Arial, sans-serif';
+  font-size: '1rem';
+  line-height: '1.5';
+}
+

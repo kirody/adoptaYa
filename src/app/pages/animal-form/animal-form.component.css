@@ -1,0 +1,126 @@
+body {
+  background-color: #f4f7f6; /* Un gris claro para el fondo del cuerpo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.animal-form-container {
+  max-width: 600px;
+  width: 90%; /* Ajuste para mejor responsividad */
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 12px; /* Bordes más redondeados */
+  background-color: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Sombra más pronunciada pero suave */
+  border: 1px solid #e0e0e0; /* Borde sutil */
+}
+
+.p-card-title {
+  font-size: 2rem; /* Tamaño de título un poco más grande */
+  font-weight: 700;
+  color: #2c3e50; /* Un gris oscuro más elegante */
+  text-align: center;
+  margin-bottom: 30px; /* Más espacio debajo del título */
+  letter-spacing: 0.5px;
+}
+
+.form-field {
+  margin-bottom: 25px;
+  padding: 0 15px; /* Añadir padding para espaciar los campos en md */
+}
+
+/* Ajustes para los campos de PrimeNG */
+.p-float-label {
+  display: block;
+  width: 100%;
+}
+
+.p-float-label input,
+.p-float-label .p-inputnumber {
+  width: 100%;
+  padding: 14px 12px; /* Más padding para una apariencia más alta */
+  border-radius: 8px;
+  border: 1px solid #dcdcdc; /* Borde más claro */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  font-size: 1rem;
+  color: #333;
+}
+
+.p-float-label label {
+  color: #7f8c8d; /* Un gris más suave para las etiquetas */
+  font-size: 1rem;
+  top: 14px; /* Alinea la etiqueta con el input */
+  transition: all 0.3s ease;
+}
+
+.p-float-label input:focus,
+.p-float-label .p-inputnumber:focus-within {
+  border-color: #3498db; /* Azul más profesional al enfocar */
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25); /* Sombra de enfoque */
+}
+
+/* Estilo para los mensajes de error de PrimeNG */
+p-message {
+  display: block;
+  margin-top: 8px; /* Más espacio sobre el mensaje de error */
+  font-size: 0.875rem;
+  color: #e74c3c; /* Rojo de error */
+}
+
+/* Botones */
+.form-buttons {
+  text-align: center;
+  margin-top: 40px; /* Más espacio sobre el botón */
+}
+
+.p-button {
+  padding: 14px 30px; /* Más padding para un botón más grande */
+  font-size: 1.1rem;
+  border-radius: 30px; /* Bordes más redondeados */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: linear-gradient(to right, #3498db, #2980b9); /* Degradado azul */
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Sombra para el botón */
+}
+
+.p-button:hover {
+  background: linear-gradient(to right, #2980b9, #3498db); /* Invierte el degradado al pasar el ratón */
+  transform: translateY(-2px); /* Efecto de elevación */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.p-button:disabled {
+  background: #cccccc;
+  border-color: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .animal-form-container {
+    padding: 25px;
+    margin: 20px auto;
+  }
+
+  .form-field {
+    padding: 0 10px;
+  }
+
+  .p-card-title {
+    font-size: 1.7rem;
+    margin-bottom: 20px;
+  }
+
+  .p-button {
+    width: 100%; /* Botón de ancho completo en móviles */
+    padding: 12px 20px;
+  }
+}
