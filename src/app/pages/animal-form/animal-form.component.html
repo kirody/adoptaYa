@@ -1,99 +1,82 @@
-<p-card>
-  <ng-template pTemplate="title">
-    <h2 class="h3">Añadir Nuevo Animal 🦁</h2>
-  </ng-template>
-  <ng-template pTemplate="content">
-    <form [formGroup]="animalForm" (ngSubmit)="addAnimal()">
+<div class="animal-form-container">
+  <form [formGroup]="animalForm" (ngSubmit)="addAnimal()">
+    <p-card styleClass="formal-card">
+      <ng-template pTemplate="title">
+        Registro de Nuevo Animal
+      </ng-template>
 
-      <p-fieldset legend="Datos del Animal" [toggleable]="true">
-        <div class="row gx-4">
-
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="animalName" class="form-label">Nombre del Animal</label>
-              <input id="animalName" type="text" pInputText formControlName="name" class="w-100" />
-              <p-message severity="error" text="El nombre es requerido."
-                *ngIf="animalForm.get('name')?.touched && animalForm.get('name')?.errors?.['required']"></p-message>
+      <ng-template pTemplate="content">
+        <p-fieldset legend="Información del Animal" [toggleable]="true">
+          <div class="row gx-4">
+            <div class="col-md-6">
+              <div class="mb-4">
+                <label for="animalName" class="form-label">Nombre</label>
+                <input id="animalName" type="text" pInputText formControlName="name" class="w-100" />
+                <p-message severity="error" text="El nombre es requerido."
+                  *ngIf="animalForm.get('name')?.touched && animalForm.get('name')?.errors?.['required']"></p-message>
+              </div>
+              <div class="mb-4">
+                <label for="animalAge" class="form-label">Edad</label>
+                <p-inputNumber id="animalAge" formControlName="age" mode="decimal" [showButtons]="true" [min]="0"
+                  [max]="150" inputStyleClass="w-100"></p-inputNumber>
+                <p-message severity="error" text="La edad es requerida."
+                  *ngIf="animalForm.get('age')?.touched && animalForm.get('age')?.errors?.['required']"></p-message>
+              </div>
+              <div class="mb-4">
+                <label for="animalProvince" class="form-label">Provincia</label>
+                <input id="animalProvince" type="text" pInputText formControlName="province" class="w-100" />
+                <p-message severity="error" text="La provincia es requerida."
+                  *ngIf="animalForm.get('province')?.touched && animalForm.get('province')?.errors?.['required']"></p-message>
+              </div>
             </div>
 
-            <div class="mb-3">
-              <label for="animalAge" class="form-label">Edad</label>
-              <p-inputNumber id="animalAge" formControlName="age" mode="decimal" [showButtons]="true" [min]="0"
-                [max]="150" inputStyleClass="w-100"></p-inputNumber>
-              <p-message severity="error" text="La edad es requerida."
-                *ngIf="animalForm.get('age')?.touched && animalForm.get('age')?.errors?.['required']"></p-message>
-            </div>
-
-            <div class="mb-3">
-              <label for="animalProvince" class="form-label">Provincia</label>
-              <input id="animalProvince" type="text" pInputText formControlName="province" class="w-100" />
-              <p-message severity="error" text="La provincia es requerida."
-                *ngIf="animalForm.get('province')?.touched && animalForm.get('province')?.errors?.['required']"></p-message>
-            </div>
-
-            <div class="mb-3">
-              <label for="animalState" class="form-label">Estado</label>
-              <input id="animalState" type="text" pInputText formControlName="state" class="w-100" />
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label for="animalSpecies" class="form-label">Especie</label>
-              <input id="animalSpecies" type="text" pInputText formControlName="specie" class="w-100" />
-              <p-message severity="error" text="La especie es requerida."
-                *ngIf="animalForm.get('specie')?.touched && animalForm.get('specie')?.errors?.['required']"></p-message>
-            </div>
-
-            <div class="mb-3">
-              <label for="animalRace" class="form-label">Raza</label>
-              <input id="animalRace" type="text" pInputText formControlName="race" class="w-100" />
-              <p-message severity="error" text="La raza es requerida."
-                *ngIf="animalForm.get('race')?.touched && animalForm.get('race')?.errors?.['required']"></p-message>
-            </div>
-
-            <div class="mb-3">
-              <label for="animalUrlImage" class="form-label">URL de la Imagen</label>
-              <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-100" />
-              <p-message severity="error" text="La URL de la imagen es requerida."
-                *ngIf="animalForm.get('urlImage')?.touched && animalForm.get('urlImage')?.errors?.['required']"></p-message>
-            </div>
-
-            <div class="mb-3">
-              <label for="animalPublished" class="form-label">Publicado</label>
-              <input id="animalPublished" type="text" pInputText formControlName="published" class="w-100" />
-              <p-message severity="error" text="El estado de publicación es requerido."
-                *ngIf="animalForm.get('published')?.touched && animalForm.get('published')?.errors?.['required']"></p-message>
+            <div class="col-md-6">
+              <div class="mb-4">
+                <label for="animalSpecies" class="form-label">Especie</label>
+                <input id="animalSpecies" type="text" pInputText formControlName="specie" class="w-100" />
+                <p-message severity="error" text="La especie es requerida."
+                  *ngIf="animalForm.get('specie')?.touched && animalForm.get('specie')?.errors?.['required']"></p-message>
+              </div>
+              <div class="mb-4">
+                <label for="animalRace" class="form-label">Raza</label>
+                <input id="animalRace" type="text" pInputText formControlName="race" class="w-100" />
+                <p-message severity="error" text="La raza es requerida."
+                  *ngIf="animalForm.get('race')?.touched && animalForm.get('race')?.errors?.['required']"></p-message>
+              </div>
+              <div class="mb-4">
+                <label for="animalUrlImage" class="form-label">URL de la Imagen</label>
+                <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-100" />
+                <p-message severity="error" text="La URL de la imagen es requerida."
+                  *ngIf="animalForm.get('urlImage')?.touched && animalForm.get('urlImage')?.errors?.['required']"></p-message>
+              </div>
             </div>
           </div>
+        </p-fieldset>
 
+        <p-fieldset legend="Datos de Contacto" [toggleable]="true" styleClass="mt-4">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="protectressName" class="form-label">Nombre de la Protectora</label>
+              <input id="protectressName" type="text" pInputText formControlName="protectressName" class="w-100" />
+            </div>
+            <div class="col-md-4">
+              <label for="protectressPhone" class="form-label">Teléfono</label>
+              <input id="protectressPhone" type="text" pInputText formControlName="protectressPhone" class="w-100" />
+            </div>
+            <div class="col-md-4">
+              <label for="protectressEmail" class="form-label">Email</label>
+              <input id="protectressEmail" type="email" pInputText formControlName="protectressEmail" class="w-100" />
+            </div>
+          </div>
+        </p-fieldset>
+
+        <div class="mt-4 d-flex justify-content-end">
+          <button type="submit" class="btn btn-success" [disabled]="!animalForm.valid">
+            <i class="pi pi-check me-2"></i>
+            Registrar Animal
+          </button>
         </div>
-      </p-fieldset>
-
-      <p-fieldset legend="Información de la Protectora" [toggleable]="true" styleClass="mt-4">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label for="protectressName" class="form-label">Nombre de la Protectora</label>
-            <input id="protectressName" type="text" pInputText formControlName="protectressName" class="w-100"/>
-          </div>
-          <div class="col-md-4">
-            <label for="protectressPhone" class="form-label">Teléfono</label>
-            <input id="protectressPhone" type="text" pInputText formControlName="protectressPhone" class="w-100"/>
-          </div>
-          <div class="col-md-4">
-            <label for="protectressEmail" class="form-label">Email</label>
-            <input id="protectressEmail" type="email" pInputText formControlName="protectressEmail" class="w-100"/>
-          </div>
-        </div>
-      </p-fieldset>
-
-      <div class="mt-4 d-flex justify-content-end">
-        <button type="submit" class="btn btn-primary rounded-pill" [disabled]="!animalForm.valid">
-          <i class="pi pi-plus me-2"></i>
-          Añadir Animal
-        </button>
-      </div>
-
-    </form>
-  </ng-template>
-</p-card>
+      </ng-template>
+    </p-card>
+  </form>
+</div>
