@@ -1,1 +1,44 @@
-<p>register works!</p>
+<div class="auth-container">
+  <p-card styleClass="auth-card">
+    <ng-template pTemplate="title">
+      <div class="auth-title">
+        <i class="pi pi-user-plus mr-2"></i>
+        Crear una Cuenta
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <form> <div class="field">
+          <label for="username" class="form-label">Nombre de Usuario</label>
+          <input id="username" type="text" pInputText class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="email" class="form-label">Correo Electrónico</label>
+          <input id="email" type="email" pInputText class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="password" class="form-label">Contraseña</label>
+          <p-password inputId="password" [feedback]="true" styleClass="w-full" inputStyleClass="w-full" [toggleMask]="true"></p-password>
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+          <p-password inputId="confirmPassword" [feedback]="false" styleClass="w-full" inputStyleClass="w-full" [toggleMask]="true"></p-password>
+        </div>
+
+        <div class="mt-4">
+          <p-button label="Registrarse" styleClass="w-full" type="submit"></p-button>
+        </div>
+      </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="auth-footer">
+        <span>¿Ya tienes una cuenta?</span>
+        <a routerLink="/login" class="font-semibold ml-2">Inicia sesión</a>
+      </div>
+    </ng-template>
+  </p-card>
+</div>

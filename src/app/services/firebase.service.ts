@@ -54,30 +54,6 @@ export class FirebaseService {
     await updateDoc(animalDoc, data);
   }
 
-  async getCatRaces() {
-    const q = collection(db, 'catRaces');
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data());
-  }
-
-  async getDogRaces() {
-    const q = collection(db, 'dogRaces');
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data());
-  }
-
-  async getProvinces() {
-    const q = collection(db, 'provinces');
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data());
-  }
-
-  async getStates() {
-    const q = collection(db, 'status');
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => doc.data());
-  }
-
   //USUARIOS
   async getUsers() {
     const q = collection(db, 'users');

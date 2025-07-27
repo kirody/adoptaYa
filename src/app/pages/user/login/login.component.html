@@ -1,1 +1,34 @@
-<p>login works!</p>
+<div class="auth-container">
+  <p-card styleClass="auth-card">
+    <ng-template pTemplate="title">
+      <div class="auth-title">
+        <i class="pi pi-user mr-2"></i>
+        Iniciar Sesión
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <form> <div class="field">
+          <label for="email" class="form-label">Correo Electrónico</label>
+          <input id="email" type="email" pInputText class="w-full" placeholder="tu@email.com" />
+        </div>
+
+        <div class="field">
+          <label for="password" class="form-label">Contraseña</label>
+          <p-password inputId="password" [feedback]="false" styleClass="w-full" inputStyleClass="w-full" [toggleMask]="true"></p-password>
+        </div>
+
+        <div class="mt-4">
+          <p-button label="Acceder" styleClass="w-full" type="submit"></p-button>
+        </div>
+      </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="auth-footer">
+        <span>¿No tienes una cuenta?</span>
+        <a routerLink="/register" class="font-semibold ml-2">Regístrate aquí</a>
+      </div>
+    </ng-template>
+  </p-card>
+</div>

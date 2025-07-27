@@ -7,13 +7,23 @@ import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
 import { RouterModule } from '@angular/router';
 import { MenuModule } from 'primeng/menu';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, MenubarModule, BadgeModule, AvatarModule, InputTextModule, RouterModule, MenuModule],
+  imports: [
+    CommonModule,
+    MenubarModule,
+    BadgeModule,
+    AvatarModule,
+    InputTextModule,
+    RouterModule,
+    MenuModule,
+    ButtonModule,
+  ],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  styleUrl: './header.component.css',
 })
 export class HeaderComponent {
   items: MenuItem[] | undefined;
@@ -24,40 +34,40 @@ export class HeaderComponent {
       {
         label: 'Home',
         icon: 'pi pi-home',
-        routerLink: '/'
+        routerLink: '/',
       },
       {
         label: 'Animales',
         icon: 'fas fa-paw',
-        routerLink: '/animales'
+        routerLink: '/animales',
       },
       {
         label: 'Protectoras',
         icon: 'pi pi-shield',
-        routerLink: '/protectoras'
+        routerLink: '/protectoras',
       },
       {
         label: 'Sobre Nosotros',
         icon: 'pi pi-info-circle',
-        routerLink: '/sobre-nosotros'
+        routerLink: '/sobre-nosotros',
       },
       {
         label: 'Contacto',
         icon: 'pi pi-envelope',
-        routerLink: '/contacto'
-      }
+        routerLink: '/contacto',
+      },
     ];
 
     this.profileItems = [
       {
         label: 'Mi perfil',
         icon: 'pi pi-user',
-        routerLink: '/mi-perfil'
+        routerLink: '/mi-perfil',
       },
       {
         label: 'Añadir animal',
         icon: 'pi pi-plus',
-        routerLink: '/add-animal'
+        routerLink: '/add-animal',
       },
       {
         label: 'Cerrar sesión',
@@ -65,8 +75,8 @@ export class HeaderComponent {
         command: () => {
           // Lógica para cerrar sesión
           console.log('Cerrar sesión');
-        }
-      }
+        },
+      },
     ];
   }
 }

@@ -1,8 +1,13 @@
-@import "../node_modules/primeicons/primeicons.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 /* You can add global styles to this file, and also import other style files */
 html {
-  font-family: 'Roboto, Arial, sans-serif';
-  font-size: '1rem';
-  line-height: '1.5';
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 1rem;
+  line-height: 1.5;
+  background-color: #e7f7e7;
+  padding-top: 6rem;
+  padding-left: 10rem;
+  padding-right: 10rem;
 }
-

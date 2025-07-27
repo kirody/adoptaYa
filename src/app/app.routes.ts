@@ -6,6 +6,8 @@ import { AboutUsComponent } from './pages/about-us/about-us.component';
 import { ContactComponent } from './pages/contact/contact.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { AnimalFormComponent } from './pages/animal-form/animal-form.component';
+import { LoginComponent } from './pages/user/login/login.component';
+import { RegisterComponent } from './pages/user/register/register.component';
 
 export const routes: Routes = [
   {
@@ -35,5 +37,21 @@ export const routes: Routes = [
   {
     path: 'add-animal',
     component: AnimalFormComponent
+  },
+  {
+    path: 'edit-animal/:id',
+    component: AnimalFormComponent
+  },
+  {
+    path: 'login',
+    component: LoginComponent
+  },
+  {
+    path: 'register',
+    component: RegisterComponent
+  },
+  {
+    path: '**',
+    redirectTo: ''
   }
 ];

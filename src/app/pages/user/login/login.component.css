@@ -1,0 +1,8 @@
+/* Contenedor principal para centrar el formulario en la página */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  background-color: #f4f7f6; /* Un fondo muy sutil */
+}

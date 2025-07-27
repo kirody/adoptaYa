@@ -1,6 +1,7 @@
-<div class="card">
+<div class="container-header">
   <p-menubar [model]="items">
     <div>
+      <p-button label="Iniciar sesión" class="mr-3" [routerLink]="['/login']" icon="pi pi-sign-in"/>
       <p-avatar icon="pi pi-user" style="background-color: #dee9fc; color: #1a2551; cursor: pointer;" shape="circle" (click)="menu.toggle($event)"/>
       <p-menu #menu [model]="profileItems" [popup]="true"></p-menu>
     </div>

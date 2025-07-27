@@ -1,49 +1,56 @@
 /* Estilo general del contenedor del formulario */
 .animal-form-container {
-  max-width: 800px;
-  margin: 40px auto;
-}
-
-/* Aplicamos estilos a la p-card usando una clase para evitar ::ng-deep */
-:host ::ng-deep .formal-card {
+  margin: 0 auto;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 1rem;
 }
-
-/* Título de la tarjeta de PrimeNG */
-:host ::ng-deep .formal-card .p-card-title {
-  font-size: 1.8rem;
+/* Título del formulario */
+.title {
+  font-size: 1.6rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: #ffffff;
+  background: #88b78a; /* Color de fondo verde */
+  padding: 1.25rem;
   text-align: center;
-  margin-bottom: 25px;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 15px;
+  /* Se ajusta al padding del p-panel para ocupar todo el ancho y pegarse arriba */
+  margin: -1.25rem -1.25rem 2rem -1.25rem;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  letter-spacing: 0.5px;
 }
 
-/* Etiqueta del formulario de Bootstrap */
+/* Etiqueta del formulario */
 .form-label {
-  font-weight: 500;
+  display: block;
+  font-size: 0.9rem;
   color: #34495e;
+  font-weight: 600;
+  margin-bottom: 8px; /* Espacio entre la etiqueta y el input */
 }
 
-/* Estilo para los inputs de PrimeNG para que encajen con Bootstrap */
-:host ::ng-deep .p-inputtext:focus {
-  border-color: #198754; /* Verde de Bootstrap .btn-success */
-  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+/* Espaciado de los campos de PrimeFlex */
+.field {
+  margin-bottom: 1.25rem;
 }
 
-/* Ajustes para la leyenda de los fieldsets */
-:host ::ng-deep .p-fieldset .p-fieldset-legend {
+/* Estilo de los inputs */
+:host ::ng-deep .p-inputtext:focus,
+:host ::ng-deep .p-inputnumber-input:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+/* Contenedor para los botones */
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+/* Leyenda de los fieldsets */
+:host ::ng-deep .p-fieldset-legend {
   font-size: 1.1rem;
   font-weight: 500;
   color: #34495e;
-}
-
-/* Mensajes de error de PrimeNG */
-:host ::ng-deep p-message {
-  margin-top: 6px;
-  font-size: 0.875em; /* Tamaño estándar de Bootstrap */
 }
