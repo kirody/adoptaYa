@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
-import GreenPreset from './green-preset';
+import { GreenPreset } from './green-preset';
 import { MessageService } from 'primeng/api';
 
 export const appConfig: ApplicationConfig = {

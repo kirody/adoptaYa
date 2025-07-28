@@ -1,5 +1,5 @@
 import { MessageModule } from 'primeng/message';
-import { FirebaseService } from './../../services/firebase.service';
+import { FirebaseService } from './../../../services/firebase.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, Validators, ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -17,10 +17,10 @@ import { PanelModule } from 'primeng/panel';
 import { TextareaModule } from 'primeng/textarea';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { PROVINCES_SPAIN, RACES_BY_SPECIES, SPECIES } from '../../constants/form-data.constants';
+import { PROVINCES_SPAIN, RACES_BY_SPECIES, SPECIES } from '../../../constants/form-data.constants';
 import { Subscription } from 'rxjs';
-import { GeminiService } from '../../services/gemini.service';
-import { HeaderPageComponent } from '../../components/header-page/header-page.component';
+import { GeminiService } from '../../../services/gemini.service';
+import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
 
 @Component({
   selector: 'app-animal-form',

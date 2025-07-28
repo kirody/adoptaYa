@@ -32,8 +32,8 @@ export class HeaderComponent {
   ngOnInit(): void {
     this.items = [
       {
-        label: 'Home',
-        icon: 'pi pi-home',
+        label: 'AdoptaYa',
+        icon: '',
         routerLink: '/',
       },
       {
@@ -43,17 +43,17 @@ export class HeaderComponent {
       },
       {
         label: 'Protectoras',
-        icon: 'pi pi-shield',
+        icon: 'fas fa-building-shield',
         routerLink: '/protectoras',
       },
       {
         label: 'Sobre Nosotros',
-        icon: 'pi pi-info-circle',
+        icon: 'fas fa-circle-info',
         routerLink: '/sobre-nosotros',
       },
       {
         label: 'Contacto',
-        icon: 'pi pi-envelope',
+        icon: 'fas fa-address-book',
         routerLink: '/contacto',
       },
     ];
@@ -61,17 +61,17 @@ export class HeaderComponent {
     this.profileItems = [
       {
         label: 'Mi perfil',
-        icon: 'pi pi-user',
+        icon: 'fas fa-user',
         routerLink: '/mi-perfil',
       },
       {
         label: 'Añadir animal',
-        icon: 'pi pi-plus',
+        icon: 'fas fa-plus',
         routerLink: '/add-animal',
       },
       {
         label: 'Cerrar sesión',
-        icon: 'pi pi-sign-out',
+        icon: 'fas fa-sign-out-alt',
         command: () => {
           // Lógica para cerrar sesión
           console.log('Cerrar sesión');

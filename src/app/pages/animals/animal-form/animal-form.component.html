@@ -1,16 +1,15 @@
 <p-toast></p-toast>
 <div class="animal-form-container">
-  <app-header-page [title]="'Añadir Animal'"></app-header-page>
+  <app-header-page [title]="'Añadir Animal'" [icon]="'fas fa-plus'"></app-header-page>
   <p-blockui [target]="pnl" [blocked]="blockedPanel" showHeader />
   <p-panel #pnl showHeader="false">
     <form [formGroup]="animalForm" (ngSubmit)="addAnimal()">
-      <div class="flex justify-content-end mb-4">
-        <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" [loading]="blockedPanel"
-          severity="warn">
+      <div class="flex justify-content-end mt-3">
+        <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" [loading]="blockedPanel" severity="secondary" [raised]="true" [rounded]="true">
         </p-button>
       </div>
       <div>
-        <p-fieldset legend="Información del Animal" [toggleable]="true" [style]="{'border-color': 'blue'}">
+        <p-fieldset legend="Información del Animal" [toggleable]="true" [style]="{'border-color': 'lightgrey'}">
           <div class="card grid grid-cols-1 md:grid-cols-2">
             <div class="col">
               <div class="field">
@@ -82,8 +81,8 @@
         </p-fieldset>
 
         <div class="form-buttons">
-          <p-button label="Añadir animal" icon="pi pi-check" type="submit" [loading]="blockedPanel"
-            [disabled]="!animalForm.valid || blockedPanel"></p-button>
+          <p-button label="Guardar cambios" icon="pi pi-save" type="submit" [loading]="blockedPanel"
+            [disabled]="!animalForm.valid || blockedPanel" [raised]="true" [rounded]="true"></p-button>
         </div>
       </div>
     </form>
