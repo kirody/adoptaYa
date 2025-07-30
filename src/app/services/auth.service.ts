@@ -1,21 +1,59 @@
-import { Injectable } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, authState, createUserWithEmailAndPassword, sendEmailVerification, User, signOut } from '@angular/fire/auth';
-import { from, Observable, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import {
+  Auth,
+  signInWithEmailAndPassword,
+  authState,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  User,
+  signOut,
+  UserCredential,
+} from '@angular/fire/auth';
+import { from, Observable, of, BehaviorSubject } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
+import { FirebaseService } from './firebase.service';
+import { Router } from '@angular/router';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
+  private afAuth: Auth = inject(Auth);
+  private firebaseService: FirebaseService = inject(FirebaseService);
+  private router: Router = inject(Router);
 
-  constructor(private afAuth: Auth) { }
+  private _currentUser = new BehaviorSubject<User | null>(null);
+  public currentUser$: Observable<User | null> =
+    this._currentUser.asObservable();
+  constructor() {
+    this.initAuthStateListener();
+  }
 
-  login(email: string, password: string): Observable<any> {
+  private initAuthStateListener() {
+    authState(this.afAuth).subscribe((firebaseUser) => {
+      if (firebaseUser && firebaseUser?.uid) {
+        this.firebaseService
+          .getUserById(firebaseUser?.uid)
+          .then((user: any) => {
+            if (user) {
+              this._currentUser.next(user);
+            }
+          });
+      }
+    });
+  }
+
+  login(email: string, password: string): Observable<UserCredential> {
     return from(signInWithEmailAndPassword(this.afAuth, email, password));
   }
 
   logout(): Observable<void> {
-    return from(signOut(this.afAuth));
+    return from(signOut(this.afAuth)).pipe(
+      tap(() => {
+        this._currentUser.next(null);
+        this.router.navigate(['/']);
+      }) // Redirige al home después de cerrar sesión
+    );
   }
 
   /**
@@ -27,7 +65,14 @@ export class AuthService {
   }
 
   register(email: string, password: string): Observable<any> {
-    return from(createUserWithEmailAndPassword(this.afAuth, email, password));
+    return from(
+      createUserWithEmailAndPassword(this.afAuth, email, password).then(
+        (userCredential) => {
+          /* return sendEmailVerification(userCredential.user); */
+          return userCredential;
+        }
+      )
+    );
   }
 
   /**
@@ -35,7 +80,7 @@ export class AuthService {
    */
   sendVerificationEmail(): Observable<void | null> {
     return this.getAuthState().pipe(
-      switchMap(user => user ? from(sendEmailVerification(user)) : of(null))
+      switchMap((user) => (user ? from(sendEmailVerification(user)) : of(null)))
     );
   }
 }

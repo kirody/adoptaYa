@@ -8,14 +8,16 @@
     </ng-template>
 
     <ng-template pTemplate="content">
-      <form> <div class="field">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="field">
           <label for="email" class="form-label">Correo Electrónico</label>
-          <input id="email" type="email" pInputText class="w-full" placeholder="tu@email.com" />
+          <input id="email" type="email" pInputText formControlName="email" class="w-full" placeholder="tu@email.com" />
         </div>
 
         <div class="field">
           <label for="password" class="form-label">Contraseña</label>
-          <p-password inputId="password" [feedback]="false" styleClass="w-full" inputStyleClass="w-full" [toggleMask]="true"></p-password>
+          <p-password inputId="password" [feedback]="false" formControlName="password" styleClass="w-full"
+            inputStyleClass="w-full" [toggleMask]="true"></p-password>
         </div>
 
         <div class="mt-4">

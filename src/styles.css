@@ -8,6 +8,10 @@ html {
   line-height: 1.5;
   background-color: #e7f7e7;
   padding-top: 6rem;
-  padding-left: 10rem;
-  padding-right: 10rem;
+  padding-left: 6rem;
+  padding-right: 6rem;
+}
+
+.p-progressspinner-circle {
+  stroke: #88b78a !important; /* ¡Usa el color que prefieras! */
 }

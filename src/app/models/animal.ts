@@ -7,6 +7,8 @@ export interface Animal {
   province: string;
   description: string;
   urlImage: string;
+  size: string;
+  gender: string;
   state?: string;
   published?: boolean;
   protectressName: string;

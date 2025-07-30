@@ -29,11 +29,11 @@ const GreenPreset = definePreset(Aura, {
           activeColor: '{primary.700}',
         },
         highlight: {
-          background: '{zinc.950}',
-          focusBackground: '{zinc.700}',
+          background: '{primary.500}',
+          focusBackground: '{primary.700}',
           color: '#ffffff',
           focusColor: '#ffffff',
-        },
+        }
       },
     },
   },

@@ -11,6 +11,8 @@ import { TagModule } from 'primeng/tag';
 import { Skeleton } from 'primeng/skeleton';
 import { FormsModule } from '@angular/forms';
 import { HeaderPageComponent } from '../../components/header-page/header-page.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CardNodataComponent } from "../../components/card-nodata/card-nodata.component";
 
 @Component({
   selector: 'app-animals',
@@ -25,8 +27,9 @@ import { HeaderPageComponent } from '../../components/header-page/header-page.co
     TagModule,
     FormsModule,
     Skeleton,
-    HeaderPageComponent
-  ],
+    HeaderPageComponent,
+    CardNodataComponent
+],
   templateUrl: './animals.component.html',
   styleUrl: './animals.component.css',
 })
@@ -36,7 +39,10 @@ export class AnimalsComponent implements OnInit {
   options = ['list', 'grid'];
   isLoading = true;
 
-  constructor(private firebaseService: FirebaseService) {}
+  constructor(
+    private firebaseService: FirebaseService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadAnimals();
@@ -80,5 +86,9 @@ export class AnimalsComponent implements OnInit {
       default:
         return '';
     }
+  }
+
+  showAnimal(id: any) {
+    this.router.navigate(['/detail-animal', id]);
   }
 }

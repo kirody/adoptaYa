@@ -5,3 +5,10 @@
   align-items: center;
   min-height: 80vh;
 }
+
+/* Usamos :host para asegurar que los estilos se apliquen al componente */
+:host {
+  display: block;
+  height: 80vh; /* Ocupa toda la altura de la pantalla */
+}
+

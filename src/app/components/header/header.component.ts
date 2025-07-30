@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { UserData } from './../../models/user-data';
+import { Component, HostListener, inject, ViewChild } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { BadgeModule } from 'primeng/badge';
 import { AvatarModule } from 'primeng/avatar';
@@ -8,6 +9,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { RouterModule } from '@angular/router';
 import { MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
+import { AuthService } from '../../services/auth.service';
+import { Observable } from 'rxjs';
+import { TagModule } from 'primeng/tag';
+import { Menu } from 'primeng/menu';
 
 @Component({
   selector: 'app-header',
@@ -15,21 +20,43 @@ import { ButtonModule } from 'primeng/button';
   imports: [
     CommonModule,
     MenubarModule,
-    BadgeModule,
     AvatarModule,
     InputTextModule,
     RouterModule,
     MenuModule,
     ButtonModule,
+    TagModule,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
 export class HeaderComponent {
+  private authService = inject(AuthService);
+  currentUser$: Observable<any | null>;
   items: MenuItem[] | undefined;
   profileItems: MenuItem[] | undefined;
+  user: UserData | undefined;
+  @ViewChild('menu') menu: Menu | undefined;
 
-  ngOnInit(): void {
+  // Detector de eventos de scroll en la ventana
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll(event: Event) {
+    // Si el menú está visible, lo ocultamos
+    this.menu?.hide();
+  }
+
+  constructor() {
+    this.currentUser$ = this.authService.currentUser$;
+    this.currentUser$.subscribe((user: UserData | undefined) => {
+      this.user = user;
+      console.log(user);
+      this.loadMenu();
+    });
+  }
+
+  ngOnInit(): void {}
+
+  loadMenu(): void {
     this.items = [
       {
         label: 'AdoptaYa',
@@ -64,17 +91,27 @@ export class HeaderComponent {
         icon: 'fas fa-user',
         routerLink: '/mi-perfil',
       },
-      {
-        label: 'Añadir animal',
-        icon: 'fas fa-plus',
-        routerLink: '/add-animal',
-      },
+      ...(this.user && this.user.role === 'ROLE_ADMIN'
+        ? [
+            {
+              label: 'Panel de gestión',
+              icon: 'fas fa-cog',
+              routerLink: '/panel-gestion',
+            },
+            {
+              label: 'Añadir animal',
+              icon: 'fas fa-plus',
+              routerLink: '/form-animal',
+            },
+          ]
+        : []),
       {
         label: 'Cerrar sesión',
         icon: 'fas fa-sign-out-alt',
+        routerLink: '/',
         command: () => {
-          // Lógica para cerrar sesión
-          console.log('Cerrar sesión');
+          console.log('Sesión cerrada');
+          this.authService.logout().subscribe();
         },
       },
     ];

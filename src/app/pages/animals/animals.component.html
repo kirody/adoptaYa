@@ -1,7 +1,7 @@
 <div class="animals-container">
   <app-header-page [title]="'Animales en Adopción'" [icon]="'fas fa-paw'"></app-header-page>
   <div class="card flex justify-center" *ngIf="isLoading">
-    <p-progress-spinner ariaLabel="loading" />
+    <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s" [style]="{ width: '50px', height: '50px' }" />
   </div>
   <div class="grid animals-grid">
     <p-dataview #dv [value]="animals()" [rows]="8" [paginator]="true" [layout]="layout"
@@ -92,7 +92,7 @@
                 <div class="flex flex-col gap-6 mt-6">
                   <!-- <span class="text-2xl font-semibold">{{ animal.price | currency: 'USD' }}</span> -->
                   <div class="flex gap-2">
-                    <button pButton icon="pi pi-eye" label="Ver más" class="flex-auto whitespace-nowrap"></button>
+                    <button pButton icon="pi pi-eye" label="Ver más" class="flex-auto whitespace-nowrap" (click)="showAnimal(animal.id)"></button>
                     <button pButton icon="pi pi-heart" outlined></button>
                   </div>
                 </div>
@@ -102,7 +102,7 @@
         </div>
       </ng-template>
     </p-dataview>
-    <div class="no-data" *ngIf="!isLoading && animals().length === 0">
-      <p class="text-center text-gray-500">No hay animales disponibles</p>
+    <div *ngIf="!isLoading && animals().length === 0">
+      <app-card-nodata message="No hay animales disponibles en adopción en este momento."></app-card-nodata>
     </div>
   </div>

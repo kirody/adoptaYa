@@ -1,6 +1,7 @@
 import { MessageModule } from 'primeng/message';
 import { FirebaseService } from './../../../services/firebase.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormGroup, Validators, ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
@@ -17,7 +18,8 @@ import { PanelModule } from 'primeng/panel';
 import { TextareaModule } from 'primeng/textarea';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { PROVINCES_SPAIN, RACES_BY_SPECIES, SPECIES } from '../../../constants/form-data.constants';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { GENDERS, PROVINCES_SPAIN, RACES_BY_SPECIES, SIZES, SPECIES, STATES } from '../../../constants/form-data.constants';
 import { Subscription } from 'rxjs';
 import { GeminiService } from '../../../services/gemini.service';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
@@ -43,7 +45,8 @@ import { HeaderPageComponent } from '../../../components/header-page/header-page
     InputGroupModule,
     InputGroupAddonModule,
     FormsModule,
-    HeaderPageComponent
+    HeaderPageComponent,
+    ToggleButtonModule
   ],
   templateUrl: './animal-form.component.html',
   styleUrls: ['./animal-form.component.css'],
@@ -51,12 +54,20 @@ import { HeaderPageComponent } from '../../../components/header-page/header-page
 })
 export class AnimalFormComponent implements OnInit, OnDestroy {
   animalForm!: FormGroup;
+  isEditMode = false;
+  pageTitle = 'Añadir Animal';
+  submitButtonText = 'Añadir Animal';
+  private animalId: string | null = null;
+
   blockedPanel: boolean = false;
 
   // Constantes para el template
   provinces = PROVINCES_SPAIN;
   species = SPECIES;
   races: string[] = [];
+  genders = GENDERS;
+  sizes = SIZES;
+  states = STATES;
 
   private speciesChangesSubscription!: Subscription;
 
@@ -64,19 +75,33 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private messageService: MessageService,
     private firebaseService: FirebaseService,
-    private geminiService: GeminiService) { }
+    private geminiService: GeminiService,
+    private route: ActivatedRoute,
+    private router: Router) { }
 
   ngOnInit(): void {
+    this.animalId = this.route.snapshot.paramMap.get('id');
+    console.log(this.animalId);
+
+    this.isEditMode = !!this.animalId;
+
+    if (this.isEditMode) {
+      this.pageTitle = 'Editar Animal';
+      this.submitButtonText = 'Actualizar Animal';
+      this.loadAnimalData(this.animalId!);
+    }
     this.animalForm = this.fb.group({
       name: ['', Validators.required],
       specie: ['', Validators.required],
       age: ['', [Validators.required, Validators.min(0), Validators.max(150)]],
       race: ['', Validators.required],
       province: ['', Validators.required],
-      description: [''],
+      description: ['', Validators.required],
       urlImage: ['', Validators.required],
-      state: [''], // Opcional
-      published: [''],
+      gender: ['', Validators.required],
+      size: ['', Validators.required],
+      state: ['', Validators.required], // Opcional
+      published: [false],
       protectressName: ['', Validators.required],
       protectressPhone: ['', Validators.required],
       protectressEmail: ['', [Validators.required, Validators.email]],
@@ -97,19 +122,44 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  async addAnimal(): Promise<void> {
+  private async loadAnimalData(id: string): Promise<void> {
+    this.blockedPanel = true;
+    try {
+      const animalData = await this.firebaseService.getAnimalById(id);
+      if (animalData) {
+        this.animalForm.patchValue(animalData);
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontró el animal para editar.' });
+        this.router.navigate(['/panel-gestion']); // Redirigir si no se encuentra
+      }
+    } catch (err) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la información del animal.' });
+    } finally {
+      this.blockedPanel = false;
+    }
+  }
+
+  async saveAnimal(): Promise<void> {
     if (this.animalForm.invalid) {
       this.animalForm.markAllAsTouched();
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Por favor, completa todos los campos requeridos.' });
       return;
     }
     this.blockedPanel = true;
+
     try {
-      await this.firebaseService.addAnimal(this.animalForm.value);
-      this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Animal añadido correctamente.' });
-      this.animalForm.reset();
+      if (this.isEditMode && this.animalId) {
+        await this.firebaseService.updateAnimal(this.animalId, this.animalForm.value);
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Animal actualizado correctamente.' });
+        this.router.navigate(['/panel-gestion']);
+      } else {
+        await this.firebaseService.addAnimal(this.animalForm.value);
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Animal añadido correctamente.' });
+        this.animalForm.reset();
+      }
     } catch (err: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: err.message || 'Ha ocurrido un error al añadir el animal.' });
+      const action = this.isEditMode ? 'actualizar' : 'añadir';
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: err.message || `Ha ocurrido un error al ${action} el animal.` });
     } finally {
       this.blockedPanel = false;
       this.animalForm.enable(); // Vuelve a habilitar los campos
@@ -134,6 +184,24 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       // Esto se ejecuta siempre, tanto si hay éxito como si hay error.
       this.blockedPanel = false;
       this.animalForm.enable(); // Vuelve a habilitar los campos
+    }
+  }
+
+  async paste() {
+    try {
+      // Lee el texto del portapapeles del usuario
+      const textoPegado = await navigator.clipboard.readText();
+
+      if (textoPegado) {
+        this.animalForm.patchValue({ urlImage: textoPegado }); // Asigna el texto al modelo
+        // Opcional: Muestra una notificación de éxito
+        this.messageService.add({ severity: 'success', summary: 'Pegado', detail: 'URL copiada del portapapeles.' });
+      }
+
+    } catch (err) {
+      console.error('Error al leer el portapapeles: ', err);
+      // Opcional: Muestra una notificación de error
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo acceder al portapapeles.' });
     }
   }
 }

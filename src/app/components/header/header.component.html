@@ -1,9 +1,29 @@
 <div class="container-header">
-  <p-menubar [model]="items">
-    <div>
-      <p-button label="Iniciar sesión" class="mr-3" [routerLink]="['/login']" icon="fas fa-sign-in-alt"/>
-      <p-avatar icon="pi pi-user" style="background-color: #dee9fc; color: #1a2551; cursor: pointer;" shape="circle" (click)="menu.toggle($event)"/>
-      <p-menu #menu [model]="profileItems" [popup]="true"></p-menu>
-    </div>
+  <p-menubar [model]="items" styleClass="custom-menubar">
+    <ng-template pTemplate="end">
+      <!-- Usamos @if con el pipe async para manejar el observable -->
+      @if ((currentUser$ | async); as user) {
+      <!-- Bloque que se muestra si el usuario está logueado -->
+      <div class="flex align-items-center gap-2">
+        <span class="font-light text-sm">Hola, {{ user.username }}</span>
+        <div>
+          <p-tag *ngIf="user.role === 'ROLE_ADMIN'" icon="fa fa-user-cog" severity="danger" value="Admin"
+            [rounded]="true" />
+        </div>
+        <p-avatar icon="pi pi-user" styleClass="cursor-pointer" shape="circle" (click)="menu.toggle($event)"/>
+      </div>
+      } @else {
+      <!-- Bloque que se muestra si NO hay usuario -->
+      <div class="flex align-items-center gap-2">
+        <p-button label="Iniciar sesión" icon="pi pi-sign-in" styleClass="p-button-sm p-button-text"
+          routerLink="/login" />
+        <p-button label="Registro" icon="pi pi-user-plus" styleClass="p-button-sm" routerLink="/register" />
+      </div>
+      }
+    </ng-template>
   </p-menubar>
+
 </div>
+
+
+<p-menu #menu [model]="profileItems" [popup]="true"/>

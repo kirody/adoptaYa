@@ -1,9 +1,27 @@
 .container-header {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: fixed; /* Fija el header en la ventana */
-  top: 0; /* Lo posiciona en la parte superior */
-  left: 0; /* Lo alinea a la izquierda */
-  width: 100%; /* Ocupa todo el ancho */
-  z-index: 1000; /* Asegura que esté por encima de otros elementos */
-  background-color: white; /* Evita que el contenido de abajo se vea a través */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: white;
+  padding-left: 6rem;
+  padding-right: 6rem;
+}
+
+:host ::ng-deep p-tag .p-tag-label {
+  margin-left: 5px !important;
+  font-size: 12px;
+}
+
+:host ::ng-deep p-menu, .p-menu-list .custom-menu {
+  position: static;
+  top: 0 !important;
+  left: 0;
+}
+
+:host ::ng-deep p-menubar, .p-menubar  .custom-menubar {
+  border: 0;
+  padding: 0.5rem 0;
 }

@@ -3,9 +3,10 @@
   <app-header-page [title]="'Añadir Animal'" [icon]="'fas fa-plus'"></app-header-page>
   <p-blockui [target]="pnl" [blocked]="blockedPanel" showHeader />
   <p-panel #pnl showHeader="false">
-    <form [formGroup]="animalForm" (ngSubmit)="addAnimal()">
+    <form [formGroup]="animalForm" (ngSubmit)="saveAnimal()">
       <div class="flex justify-content-end mt-3">
-        <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" [loading]="blockedPanel" severity="secondary" [raised]="true" [rounded]="true">
+        <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" [loading]="blockedPanel"
+          severity="secondary" [raised]="true" [rounded]="true">
         </p-button>
       </div>
       <div>
@@ -25,6 +26,13 @@
               </div>
 
               <div class="field">
+                <label for="gender" class="form-label">Género</label>
+                <p-select id="gender" formControlName="gender" [options]="genders" placeholder="Selecciona un género"
+                  filterBy="label" styleClass="w-full">
+                </p-select>
+              </div>
+
+              <div class="field">
                 <label for="animalProvince" class="form-label">Provincia</label>
                 <p-select id="province" formControlName="province" [options]="provinces"
                   placeholder="Selecciona una provincia" filterBy="label" styleClass="w-full">
@@ -35,7 +43,7 @@
             <div class="col">
               <div class="field">
                 <label for="animalAge" class="form-label">Edad</label>
-                <p-inputnumber inputId="integeronly" formControlName="age" class="w-full"/>
+                <p-inputnumber inputId="integeronly" formControlName="age" class="w-full" />
               </div>
 
               <div class="field">
@@ -48,7 +56,17 @@
 
               <div class="field">
                 <label for="animalUrlImage" class="form-label">URL de la Imagen</label>
-                <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-full" />
+                <div class="flex items-center">
+                  <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-full" />
+                  <button type="button" pButton icon="pi pi-clipboard" (click)="paste()"
+                    pTooltip="Pegar URL del portapapeles" tooltipPosition="top"></button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="size" class="form-label">Tamaño</label>
+                <p-select id="size" formControlName="size" [options]="sizes" placeholder="Selecciona un tamaño"
+                  filterBy="label" styleClass="w-full">
+                </p-select>
               </div>
             </div>
           </div>
@@ -63,7 +81,7 @@
           </div>
         </p-fieldset>
 
-        <p-fieldset legend="Datos de Contacto" [toggleable]="true" styleClass="mt-4">
+        <p-fieldset legend="Datos de Protectora" [toggleable]="true" styleClass="mt-4">
           <div class="card grid grid-cols-1 md:grid-cols-2">
             <div class="field col">
               <label for="protectressName" class="form-label">Nombre de la Protectora</label>
@@ -76,6 +94,26 @@
             <div class="field col">
               <label for="protectressEmail" class="form-label">Email</label>
               <input id="protectressEmail" type="email" pInputText formControlName="protectressEmail" class="w-full" />
+            </div>
+          </div>
+        </p-fieldset>
+
+        <p-fieldset legend="Configuración adicional" collapsed="true" [toggleable]="true" [style]="{'border-color': 'lightgrey'}">
+          <div class="flex">
+            <div class="col">
+              <div class="field">
+                <label for="animalState" class="form-label">Estado</label>
+                <p-select id="state" formControlName="state" [options]="states" optionLabel="label" optionValue="value" placeholder="Selecciona un estado"
+                  styleClass="w-full">
+                </p-select>
+              </div>
+            </div>
+            <div class="col">
+              <div class="field">
+                <label for="animalPublish" class="form-label">Publicar</label>
+                <p-togglebutton formControlName="published" [onIcon]="'fa fa-eye'" [onLabel]="'Visible'"
+                  [offLabel]="'No visible'" [offIcon]="'fa fa-eye-slash'" class="w-full sm:w-40" aria-label="Confirmation" />
+              </div>
             </div>
           </div>
         </p-fieldset>
