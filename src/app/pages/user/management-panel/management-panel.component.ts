@@ -130,8 +130,13 @@ export class ManagementPanelComponent {
             summary: 'Éxito',
             detail: 'El estado de publicación del animal ha sido actualizado.',
           });
+          // Si estás en la pestaña "Animales" (valueTab === 0), recarga su tabla.
+          if (this.valueTab === 0) {
+            this.tabAnimals();
+          }
+          // Si estás en la pestaña "Pendientes" (valueTab === 1), recarga su tabla.
           if (this.valueTab === 1) {
-            this.updateTablePending();
+            this.tabPending();
           }
           this.getCountPending();
           this.isLoading = false;
