@@ -1,0 +1,19 @@
+:host ::ng-deep .p-tooltip {
+  max-width: 300px;
+  /* Aumenta el ancho máximo del tooltip */
+  width: auto;
+  /* Permite que el ancho se ajuste al contenido */
+}
+
+
+.tooltip-size {
+  height: 500px;
+  width: 900px;
+}
+
+.content-message {
+  background-color: #88b78a;
+  color: white;
+  padding: 5px 15px 5px 15px;
+  border-radius: 8px;
+}

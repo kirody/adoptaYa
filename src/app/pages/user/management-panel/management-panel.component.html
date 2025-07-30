@@ -4,33 +4,37 @@
     <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
       [style]="{ width: '50px', height: '50px' }" />
   </div>
-  <div class="card h-50" *ngIf="!isLoading">
+  <div class="card h-50" *ngIf="!isLoading && user">
     <p-tabs value="{{ valueTab }}" scrollable>
       <p-tablist>
         <ng-template #previcon>
           <i class="pi pi-minus"></i>
         </ng-template>
-        <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()">
+        <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()"
+          *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
           <i class="fa fa-paw"></i>
           <span class="font-bold whitespace-nowrap">Animales</span>
           <p-tag severity="warn" [value]="countTabAnimals" [rounded]="true" />
         </p-tab>
-        <p-tab value="1" class="flex items-center !gap-2" (click)="tabPending()">
+        <p-tab value="1" class="flex items-center !gap-2" (click)="tabPending()"
+          *ngIf="['ROLE_ADMIN', 'ROLE_MOD'].includes(user()?.role)">
           <i class="fa fa-clock"></i>
           <span class="font-bold whitespace-nowrap">Pendientes</span>
           <p-tag severity="warn" [value]="countTabPending" [rounded]="true" />
         </p-tab>
-        <p-tab value="2" class="flex items-center !gap-2">
+        <p-tab value="2" class="flex items-center !gap-2" (click)="tabScaled()"
+          *ngIf="['ROLE_ADMIN', 'ROLE_MOD'].includes(user()?.role)">
           <i class="fa fa-exclamation-triangle"></i>
           <span class="font-bold whitespace-nowrap">Escalados</span>
           <p-tag severity="warn" value="0" [rounded]="true" />
         </p-tab>
-        <p-tab value="3" class="flex items-center !gap-2">
+        <p-tab value="3" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
           <i class="fa fa-file"></i>
           <span class="font-bold whitespace-nowrap">Solicitudes</span>
           <p-tag severity="warn" value="0" [rounded]="true" />
         </p-tab>
-        <p-tab value="4" class="flex items-center !gap-2" (click)="tabUsers()">
+        <p-tab value="4" class="flex items-center !gap-2" (click)="tabUsers()"
+          *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
           <i class="fa fa-users"></i>
           <span class="font-bold whitespace-nowrap">Usuarios</span>
           <!-- <p-tag severity="warn" value="0" [rounded]="true" /> -->
@@ -120,6 +124,80 @@
                 <th>Edad</th>
                 <th>Estado</th>
                 <th>Publicado</th>
+                <th>Notas de Escalado</th>
+                <th>Protectora</th>
+                <th>Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-animal>
+              <tr>
+                <td>
+                  <img [src]="animal.urlImage" [alt]="animal.name" class="w-2rem rounded" />
+                </td>
+                <td>{{ animal.name }} </td>
+                <td>
+                  <i class="fa-solid"
+                    [ngClass]="{'fa-cat': animal.specie === 'Gato', 'fa-dog': animal.specie === 'Perro'}"></i>
+                </td>
+                <td>
+                  <i class="fa-solid"
+                    [ngClass]="{'fa-mars': animal.gender === 'Macho', 'fa-venus': animal.gender === 'Hembra'}"></i>
+                </td>
+                <td>{{ animal.age | formattedAge}}</td>
+                <td>
+                  <p-tag [value]="formattedStates(animal)" [severity]="getStatus(animal)" [rounded]="true" />
+                </td>
+                <td>
+                  <i *ngIf="animal.published" class="fa-solid fa-circle-check" style="color: #47d021;"
+                    aria-hidden="true"></i>
+                  <i *ngIf="!animal.published" class="fa-solid fa-circle-xmark" style="color: #ff4343;"
+                    aria-hidden="true"></i>
+                </td>
+                <td>
+                  <p-button *ngIf="animal.scaled?.length > 0" icon="fa-solid fa-circle-info"
+                    styleClass="p-button-rounded p-button-warning p-button-text"
+                    (click)="openModalScaled(animal)"></p-button>
+                  {{ animal.scaled?.length > 0 ? 'Revisando' : 'Sin Escalado' }}
+                </td>
+                <td>{{ animal.protectressName }}</td>
+                <td>
+                  <p-button icon="fa-solid fa-pen-to-square"
+                    styleClass="p-button-rounded p-button-warning p-button-text"
+                    (click)="editAnimal(animal.id)"></p-button>
+                  <p-button icon="fa-solid"
+                    [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
+                    styleClass="p-button-rounded p-button-warning p-button-text"
+                    (click)="modalconfirmation($event, animal, 'publish')"></p-button>
+                  <p-button *ngIf="['ROLE_MOD'].includes(user()?.role)" icon="fa-solid fa-reply-all"
+                    styleClass="p-button-rounded p-button-warning p-button-text" (click)="scaledAnimal(animal)"
+                    [disabled]="animal?.scaled[0]?.moderator.uid === user()?.uid"></p-button><!-- [disabled]="animal.published" -->
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #footer>
+              <tr>
+                <td colspan="5" class="font-bold">Total {{ dataTable() ? dataTable().length : 0 }} animales.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+          } @else {
+          <app-card-nodata message="No hay animales disponibles para gestionar."></app-card-nodata>
+          }
+        </p-tabpanel>
+        <p-tabpanel value="2">
+          @if (dataTable() && dataTable().length > 0) {
+          <p-table [value]="dataTable()" [tableStyle]="{ 'min-width': '60rem' }">
+            <ng-template #caption>
+            </ng-template>
+            <ng-template #header>
+              <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Especie</th>
+                <th>Género</th>
+                <th>Edad</th>
+                <th>Estado</th>
+                <th>Publicado</th>
                 <th>Protectora</th>
                 <th>Acciones</th>
               </tr>
@@ -158,7 +236,11 @@
                   <p-button icon="fa-solid"
                     [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
                     styleClass="p-button-rounded p-button-warning p-button-text"
-                    (click)="modalconfirmation($event, animal, 'publish')"></p-button><!-- [disabled]="animal.published" -->
+                    (click)="modalconfirmation($event, animal, 'publish')"></p-button>
+                  <p-button *ngIf="['ROLE_MOD'].includes(user()?.role)" icon="fa-solid fa-reply-all"
+                    [ngClass]="{'fa-reply-all': animal.published}"
+                    styleClass="p-button-rounded p-button-warning p-button-text"
+                    (click)="scaledAnimal(animal)"></p-button>
                 </td>
               </tr>
             </ng-template>
@@ -171,9 +253,6 @@
           } @else {
           <app-card-nodata message="No hay animales disponibles para gestionar."></app-card-nodata>
           }
-        </p-tabpanel>
-        <p-tabpanel value="2">
-          <app-card-nodata [message]="'En contrucción...'"></app-card-nodata>
         </p-tabpanel>
         <p-tabpanel value="3">
           <app-card-nodata [message]="'En contrucción...'"></app-card-nodata>
@@ -221,17 +300,61 @@
   </div>
 </div>
 
-<p-button (click)="showDialog()" label="Show" />
-<p-dialog header="Escalar a un Admin" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
-  <span class="p-text-secondary block mb-4">Envia un mensaje a un Administrador para que revise tu caso</span>
-  <div class="flex items-center gap-4 mb-4">
-    <input pInputText id="text" class="flex-auto" autocomplete="off" />
+<p-dialog header="Escalar a {{selectedScaledAnimal?.name}} a un administrador" [modal]="true"
+  [(visible)]="showModalScaled" [style]="{ width: '25rem' }">
+  <span class="p-text-secondary block mb-4">Envia un mensaje a un administrador para que revise tu cas</span>
+  <div class="flex items-center mb-4">
+    <textarea rows="5" cols="50" pTextarea [(ngModel)]="scaleComment"
+      placeholder="Escribe tu mensaje aqui..."></textarea>
   </div>
   <div class="flex justify-end gap-2">
-    <p-button label="Cancelar" severity="secondary" (click)="visible = false" />
-    <p-button label="Enviar" (click)="visible = false" />
+    <p-button label="Cancelar" severity="secondary" (click)="showModalScaled = false" />
+    <p-button label="Enviar" icon="pi pi-send" (click)="sendScaledAnimal()" />
   </div>
 </p-dialog>
 
 <p-toast />
 <p-confirmdialog />
+
+<p-dialog header="Información de Escalado" [modal]="true" [(visible)]="showInfoScaled" [styleClass]="'modern-dialog'"
+  [style]="{ width: '28rem' }">
+  <div class="p-fluid" *ngIf="selectedScaledAnimal?.scaled?.length > 0">
+    <p-message severity="error" styleClass="w-full mt-1 mb-3">
+      <div class="flex items-center">
+        <i class="pi pi-clock text-xl mr-3"></i>
+        <div>
+          <strong>Su petición se esta revisando.</strong>
+          <p class="mt-1">Un administrador esta revisando su caso y le responderá en la mayor brevedad posible.</p>
+        </div>
+      </div>
+    </p-message>
+    <div class="flex mb-2">
+      <div class="col">
+        <div class="field mb-2 text-sm">
+          <div class="text-color-secondary mb-1">Ficha Escalada:</div>
+          <div class="font-medium">{{selectedScaledAnimal.scaled[0].moderator.animalData.name}}</div>
+        </div>
+
+        <div class="field mb-2 text-sm">
+          <div class="text-color-secondary mb-1">Escalado por:</div>
+          <div class="font-medium">{{selectedScaledAnimal.scaled[0].moderator.email}}</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="field mb-2 text-sm">
+          <div class="text-color-secondary mb-1">Fecha y hora:</div>
+          <div class="font-medium">{{selectedScaledAnimal.scaled[0].moderator.dateHour.date }}
+            {{selectedScaledAnimal.scaled[0].moderator.dateHour.hour }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="content-message">
+      <div class="field mb-2 text-sm">
+        <div class="">{{selectedScaledAnimal.scaled[0].moderator.comment}}</div>
+      </div>
+    </div>
+    <div class="flex justify-content-end pt-3 border-top-1 surface-border">
+      <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
+    </div>
+  </div>
+</p-dialog>

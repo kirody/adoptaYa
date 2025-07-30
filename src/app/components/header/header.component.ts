@@ -49,7 +49,6 @@ export class HeaderComponent {
     this.currentUser$ = this.authService.currentUser$;
     this.currentUser$.subscribe((user: UserData | undefined) => {
       this.user = user;
-      console.log(user);
       this.loadMenu();
     });
   }
@@ -91,13 +90,17 @@ export class HeaderComponent {
         icon: 'fas fa-user',
         routerLink: '/mi-perfil',
       },
-      ...(this.user && this.user.role === 'ROLE_ADMIN'
+      ...(this.user && ['ROLE_ADMIN', 'ROLE_MOD'].includes(this.user.role)
         ? [
             {
               label: 'Panel de gestión',
               icon: 'fas fa-cog',
               routerLink: '/panel-gestion',
             },
+          ]
+        : []),
+        ...(this.user && ['ROLE_ADMIN'].includes(this.user.role)
+        ? [
             {
               label: 'Añadir animal',
               icon: 'fas fa-plus',
@@ -110,7 +113,6 @@ export class HeaderComponent {
         icon: 'fas fa-sign-out-alt',
         routerLink: '/',
         command: () => {
-          console.log('Sesión cerrada');
           this.authService.logout().subscribe();
         },
       },

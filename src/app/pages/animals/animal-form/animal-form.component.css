@@ -6,6 +6,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   max-width: 45rem;
 }
+
 /* Título del formulario */
 .title {
   font-size: 1.6rem;
@@ -54,4 +55,8 @@
   font-size: 1.1rem;
   font-weight: 500;
   color: #34495e;
+}
+
+:host ::ng-deep .p-panel {
+  padding-top: 20px;
 }

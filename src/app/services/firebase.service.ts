@@ -23,24 +23,54 @@ const db = getFirestore(app);
 })
 export class FirebaseService {
   itemSelected: any;
-  firestore: any;
 
   constructor() {}
 
   //ANIMALES
   async getAnimals() {
-    const q = collection(db, 'animals');
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => doc.data());
+    const animalsCollectionRef = collection(db, 'animals');
+    const animalsSnapshot = await getDocs(animalsCollectionRef);
+
+    const animalsWithSubcollections = await Promise.all(
+      animalsSnapshot.docs.map(async (animalDoc) => {
+        const animalData = animalDoc.data();
+
+        // Obtener la subcolección 'scaled'
+        const scaledCollectionRef = collection(animalDoc.ref, 'scaled');
+        const scaledSnapshot = await getDocs(scaledCollectionRef);
+        const scaledData = scaledSnapshot.docs.map((doc) => doc.data());
+
+        // Aquí se podrían añadir consultas para otras subcolecciones si existieran
+
+        return {
+          ...animalData,
+          scaled: scaledData, // Añade la subcolección al objeto del animal
+        };
+      })
+    );
+
+    return animalsWithSubcollections;
   }
 
   async getAnimalById(id: string) {
-    const animalDoc = doc(db, 'animals', id);
-    const docSnap = await getDoc(animalDoc);
-    if (docSnap.exists()) {
-      return docSnap.data();
-    } else {
-      throw new Error('No such document!');
+    try {
+      const animalDocRef = doc(db, 'animals', id);
+      const animalDocSnap = await getDoc(animalDocRef);
+
+      if (!animalDocSnap.exists()) {
+        throw new Error('No such document!');
+      }
+
+      const animalData = animalDocSnap.data();
+
+      const scaledCollectionRef = collection(animalDocRef, 'scaled');
+      const scaledSnapshot = await getDocs(scaledCollectionRef);
+      const scaledData = scaledSnapshot.docs.map((doc) => doc.data());
+
+      return { ...animalData, scaled: scaledData };
+    } catch (error) {
+      console.error('Error al obtener el animal y sus subcolecciones:', error);
+      throw error;
     }
   }
 
@@ -64,16 +94,28 @@ export class FirebaseService {
   }
 
   async getAnimalsByPublishState(): Promise<Animal[]> {
-    const q = collection(db, 'animals');
-    const queryPublished = query(q, where('published', '==', false));
+    const animalsCollectionRef = collection(db, 'animals');
+    const queryPublished = query(animalsCollectionRef, where('published', '==', false));
 
     try {
       const querySnapshot = await getDocs(queryPublished);
-      const animals = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Animal[];
-      return animals;
+
+      const animalsWithSubcollections = await Promise.all(
+        querySnapshot.docs.map(async (animalDoc) => {
+          const animalData = { id: animalDoc.id, ...animalDoc.data() };
+
+          // Obtener la subcolección 'scaled'
+          const scaledCollectionRef = collection(animalDoc.ref, 'scaled');
+          const scaledSnapshot = await getDocs(scaledCollectionRef);
+          const scaledData = scaledSnapshot.docs.map((doc) => doc.data());
+
+          return {
+            ...animalData,
+            scaled: scaledData,
+          };
+        })
+      );
+      return animalsWithSubcollections as Animal[];
     } catch (error) {
       console.error('Error al obtener animales por estado de publicación:', error);
       // Opcional: relanzar un error personalizado o simplemente lanzar el original
@@ -110,6 +152,26 @@ export class FirebaseService {
 
   async deleteUser(id: any) {
     await deleteDoc(doc(db, 'users', id));
+  }
+
+  /**
+   * Crea un registro de escalar para un animal en una subcolección.
+   * @param animalId - El ID del animal a escalar.
+   * @param scaleData - Los datos del escalado (comentario, datos del mod, etc.).
+   * @returns Una promesa que se resuelve cuando se completa la operación.
+   */
+  async scaleAnimal(animalId: string, scaleData: any): Promise<any> {
+    try {
+      // 1. Creamos una referencia al documento del animal específico.
+      const animalDocRef = doc(db, 'animals', animalId);
+      // 2. Creamos una referencia a la subcolección 'scaled' dentro de ese documento.
+      const scaleCollectionRef = collection(animalDocRef, 'scaled');
+      // 3. Añadimos un nuevo documento con los datos del destaque a la subcolección.
+      return await addDoc(scaleCollectionRef, scaleData);
+    } catch (error) {
+      console.error('Error al destacar el animal:', error);
+      throw error;
+    }
   }
 
   //FAVORITOS

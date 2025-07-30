@@ -1,10 +1,19 @@
 <p-toast></p-toast>
 <div class="animal-form-container">
   <app-header-page [title]="'Añadir Animal'" [icon]="'fas fa-plus'"></app-header-page>
-  <p-blockui [target]="pnl" [blocked]="blockedPanel" showHeader />
   <p-panel #pnl showHeader="false">
+    <p-blockui [target]="pnl" [blocked]="blockedPanel" showHeader />
+    <p-message *ngIf="isAnimalScaled" severity="error" styleClass="w-full mb-4">
+      <div class="flex items-center">
+        <i class="pi pi-lock text-xl mr-3"></i>
+        <div>
+          <strong>Edición no disponible</strong>
+          <p class="mt-1">Para proteger el historial, los campos de un animal escalado no se pueden modificar.</p>
+        </div>
+      </div>
+    </p-message>
     <form [formGroup]="animalForm" (ngSubmit)="saveAnimal()">
-      <div class="flex justify-content-end mt-3">
+      <div class="flex justify-content-end mt-3" *ngIf="!isEditMode">
         <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" [loading]="blockedPanel"
           severity="secondary" [raised]="true" [rounded]="true">
         </p-button>
@@ -59,7 +68,7 @@
                 <div class="flex items-center">
                   <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-full" />
                   <button type="button" pButton icon="pi pi-clipboard" (click)="paste()"
-                    pTooltip="Pegar URL del portapapeles" tooltipPosition="top"></button>
+                    pTooltip="Pegar URL del portapapeles" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
                 </div>
               </div>
               <div class="field">
@@ -98,13 +107,14 @@
           </div>
         </p-fieldset>
 
-        <p-fieldset legend="Configuración adicional" collapsed="true" [toggleable]="true" [style]="{'border-color': 'lightgrey'}">
+        <p-fieldset legend="Configuración adicional" collapsed="true" [toggleable]="true"
+          [style]="{'border-color': 'lightgrey'}">
           <div class="flex">
             <div class="col">
               <div class="field">
                 <label for="animalState" class="form-label">Estado</label>
-                <p-select id="state" formControlName="state" [options]="states" optionLabel="label" optionValue="value" placeholder="Selecciona un estado"
-                  styleClass="w-full">
+                <p-select id="state" formControlName="state" [options]="states" optionLabel="label" optionValue="value"
+                  placeholder="Selecciona un estado" styleClass="w-full">
                 </p-select>
               </div>
             </div>
@@ -112,7 +122,8 @@
               <div class="field">
                 <label for="animalPublish" class="form-label">Publicar</label>
                 <p-togglebutton formControlName="published" [onIcon]="'fa fa-eye'" [onLabel]="'Visible'"
-                  [offLabel]="'No visible'" [offIcon]="'fa fa-eye-slash'" class="w-full sm:w-40" aria-label="Confirmation" />
+                  [offLabel]="'No visible'" [offIcon]="'fa fa-eye-slash'" class="w-full sm:w-40"
+                  aria-label="Confirmation" />
               </div>
             </div>
           </div>

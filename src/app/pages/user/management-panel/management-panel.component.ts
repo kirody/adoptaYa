@@ -1,3 +1,4 @@
+import { MessageModule } from 'primeng/message';
 import { Component, inject } from '@angular/core';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
 import { TabsModule } from 'primeng/tabs';
@@ -18,7 +19,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { FormattedAgePipe } from '../../../pipes/formatted-age.pipe';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { AuthService } from '../../../services/auth.service';
+import { UserData } from '../../../models/user-data';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-management-panel',
@@ -37,7 +41,8 @@ import { InputTextModule } from 'primeng/inputtext';
     FormattedAgePipe,
     FormsModule,
     DialogModule,
-    InputTextModule,
+    TextareaModule ,
+    MessageModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
@@ -45,12 +50,16 @@ import { InputTextModule } from 'primeng/inputtext';
 })
 export class ManagementPanelComponent {
   private firebaseService = inject(FirebaseService);
+  private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
+  currentUser$: Observable<any | null>;
+  /*  user!: UserData; */
   isLoading = false;
   dataTable = signal<any>([]);
+  user = signal<any>([]);
   valueTab = 0;
   countTabAnimals = '';
   countTabPending = '';
@@ -61,11 +70,40 @@ export class ManagementPanelComponent {
     { label: 'Default', value: 'ROLE_DEFAULT' },
     { label: 'Mod', value: 'ROLE_MOD' },
   ];
-  visible: boolean = false;
+
+  showModalScaled: boolean = false;
+  scaleComment = '';
+  selectedScaledAnimal: any;
+  showInfoScaled: boolean = false;
+
+  constructor() {
+    this.currentUser$ = this.authService.currentUser$;
+    this.currentUser$.subscribe((user: UserData) => {
+      this.user.set(user);
+      //this.valueTab = this.user?.role === 'ROLE_ADMIN' ? 0 : 1;
+      console.log(this.user()?.role);
+    });
+    if (this.user) {
+      this.valueTab = this.user()?.role === 'ROLE_ADMIN' ? 0 : 1;
+    }
+  }
 
   ngOnInit() {
-    this.tabAnimals();
+    this.initTabs();
     this.getCountPending();
+  }
+
+  initTabs() {
+    if (this.valueTab === 0) {
+      this.tabAnimals();
+    } else if (this.valueTab === 1) {
+      this.tabPending();
+    } else if (this.valueTab === 2) {
+    } else if (this.valueTab === 3) {
+    } else if (this.valueTab === 4) {
+      this.tabUsers();
+    } else {
+    }
   }
 
   getStatus(animal: Animal) {
@@ -119,41 +157,49 @@ export class ManagementPanelComponent {
 
   publishAnimal(animal: any) {
     this.isLoading = true;
-    const animalAux = this.dataTable().find((a: Animal) => a.id === animal.id);
-    if (!animalAux) return;
-    if (animal) {
-      this.firebaseService
-        .updateAnimal(animal.id, { published: !animal.published })
-        .then(() => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'El estado de publicación del animal ha sido actualizado.',
-          });
-          // Si estás en la pestaña "Animales" (valueTab === 0), recarga su tabla.
-          if (this.valueTab === 0) {
-            this.tabAnimals();
-          }
-          // Si estás en la pestaña "Pendientes" (valueTab === 1), recarga su tabla.
-          if (this.valueTab === 1) {
-            this.tabPending();
-          }
-          this.getCountPending();
-          this.isLoading = false;
-        })
-        .catch((error) => {
-          console.error(
-            'Error al actualizar la publicación del animal:',
-            error
-          );
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo actualizar la publicación.',
-          });
-          this.isLoading = false;
-        });
+    if (!animal || !animal.id) {
+      this.isLoading = false;
+      return;
     }
+
+    const newPublishedState = !animal.published;
+
+    this.firebaseService
+      .updateAnimal(animal.id, { published: newPublishedState })
+      .then(() => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'El estado de publicación del animal ha sido actualizado.',
+        });
+
+        // Actualiza el signal 'dataTable' de forma reactiva
+        if (this.valueTab === 1) {
+          // En "Pendientes", el animal publicado se elimina de la lista
+          this.dataTable.update((animals) =>
+            animals.filter((a: Animal) => a.id !== animal.id)
+          );
+        } else {
+          // En "Animales", solo se actualiza el estado del animal
+          this.dataTable.update((animals) =>
+            animals.map((a: Animal) =>
+              a.id === animal.id ? { ...a, published: newPublishedState } : a
+            )
+          );
+        }
+
+        this.getCountPending(); // El contador de pendientes siempre se actualiza
+        this.isLoading = false;
+      })
+      .catch((error) => {
+        console.error('Error al actualizar la publicación del animal:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo actualizar la publicación.',
+        });
+        this.isLoading = false;
+      });
   }
 
   modalconfirmation(event: Event, animal: any, type: string) {
@@ -203,6 +249,7 @@ export class ManagementPanelComponent {
       this.dataTable.set([...data.slice(0, 12)]);
       this.countTabAnimals = String(data.length);
       this.isLoading = false;
+      console.log(this.dataTable());
     });
   }
 
@@ -213,6 +260,7 @@ export class ManagementPanelComponent {
       this.dataTable.set([...data.slice(0, 12)]);
       this.countTabPending = String(data.length);
       this.isLoading = false;
+      console.log(this.dataTable());
     });
   }
 
@@ -222,13 +270,8 @@ export class ManagementPanelComponent {
     });
   }
 
-  updateTablePending() {
-    this.isLoading = true;
-    this.firebaseService.getAnimalsByPublishState().then((data: Animal[]) => {
-      this.dataTable.set([...data.slice(0, 12)]);
-      this.countTabPending = String(data.length);
-      this.isLoading = false;
-    });
+  tabScaled() {
+    this.valueTab = 2;
   }
 
   tabUsers() {
@@ -236,38 +279,127 @@ export class ManagementPanelComponent {
     this.isLoading = true;
     this.firebaseService.getUsers().then((data) => {
       this.dataTable.set([...data.slice(0, 12)]);
-      console.log(data);
-
       this.isLoading = false;
     });
   }
 
   updateRolUser(user: any) {
     this.isLoading = true;
-    if (user && user.uid && user.role) {
-      this.firebaseService
-        .updateUser(user.uid, { role: user.role })
-        .then(() => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: `Rol de "${user.username}" actualizado con éxito.`,
-          });
-          this.isLoading = false;
-        })
-        .catch((error) => {
-          console.error('Error al actualizar el rol del usuario:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo actualizar el rol.',
-          });
-          this.isLoading = false;
+    if (!user || !user.uid || !user.role) {
+      this.isLoading = false;
+      return;
+    }
+    const newRole = user.role;
+    this.firebaseService
+      .updateUser(user.uid, { role: newRole })
+      .then(() => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Rol de "${user.username}" actualizado con éxito.`,
         });
+        // Actualiza el signal 'dataTable' de forma reactiva
+        this.dataTable.update((users) =>
+          users.map((u: any) =>
+            u.uid === user.uid ? { ...u, role: newRole } : u
+          )
+        );
+        this.isLoading = false;
+      })
+      .catch((error) => {
+        console.error('Error al actualizar el rol del usuario:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo actualizar el rol.',
+        });
+        this.isLoading = false;
+      });
+  }
+
+  scaledAnimal(animal: Animal) {
+    this.showModalScaled = true;
+    console.log(animal);
+    console.log(this.user);
+    this.selectedScaledAnimal = animal;
+  }
+
+  /**
+   * Recopila los datos y llama al servicio de Firebase para destacar el animal.
+   */
+  async scaleAnimal() {
+    if (!this.scaleComment.trim() || !this.selectedScaledAnimal) {
+      return;
+    }
+
+    this.isLoading = true;
+
+    try {
+      if (!this.user) {
+        throw new Error('No se pudo obtener la información del moderador.');
+      }
+
+      const scaleData = {
+        moderator: {
+          uid: this.user().uid,
+          email: this.user().email,
+          comment: this.scaleComment,
+          dateHour: {
+            date: new Date().toLocaleDateString(),
+            hour: new Date().toLocaleTimeString()
+          },
+          animalData: {
+            id: this.selectedScaledAnimal.id,
+            name: this.selectedScaledAnimal.name,
+          },
+        },
+      };
+      await this.firebaseService.scaleAnimal(
+        this.selectedScaledAnimal.id,
+        scaleData
+      );
+
+      // Actualiza el signal 'dataTable' de forma reactiva
+      this.dataTable.update((animals) =>
+        animals.map((animal: Animal) => {
+          if (animal.id === this.selectedScaledAnimal.id) {
+            // Añade el nuevo destaque al array 'scaled' del animal
+            const updatedScaled = animal.scaled
+              ? [...animal.scaled, scaleData]
+              : [scaleData];
+            return { ...animal, scaled: updatedScaled };
+          }
+          return animal;
+        })
+      );
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `El animal ${this.selectedScaledAnimal.name} ha sido destacado.`,
+      });
+      this.showModalScaled = false;
+      this.scaleComment = '';
+      this.selectedScaledAnimal = null;
+      this.isLoading = false;
+    } catch (error) {
+      console.error('Error al destacar el animal:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo destacar el animal.',
+      });
+      this.isLoading = false;
     }
   }
 
-  showDialog() {
-    this.visible = true;
+  sendScaledAnimal() {
+    this.scaleAnimal();
+  }
+
+  openModalScaled(animal: Animal) {
+    this.showInfoScaled = true;
+    this.selectedScaledAnimal = animal;
+    console.log(this.selectedScaledAnimal);
   }
 }

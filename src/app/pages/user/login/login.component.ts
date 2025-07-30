@@ -56,8 +56,6 @@ export class LoginComponent {
           .getUserById(user.user.uid)
           .then((userData: any) => {
             if (userData.role === 'ROLE_ADMIN') {
-              console.log('Sesión iniciada como administrador');
-
               this.router.navigate(['/panel-gestion']);
             } else {
               this.router.navigate(['/publish']);

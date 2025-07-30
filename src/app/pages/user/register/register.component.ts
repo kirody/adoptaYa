@@ -69,8 +69,6 @@ export class RegisterComponent {
           role: 'ROLE_DEFAULT',
         };
         this.firebaseService.addUser(data as any).then(() => {
-          console.log('Has iniciado sesión correctamente');
-
           this.authService.logout(); // Cerrar sesión
           setTimeout(() => {
             this.router.navigate(['/login']); // Redirige a la página de inicio u otra página
