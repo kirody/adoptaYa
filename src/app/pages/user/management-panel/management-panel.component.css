@@ -14,6 +14,12 @@
 .content-message {
   background-color: #88b78a;
   color: white;
-  padding: 5px 15px 5px 15px;
+  padding: 10px 15px 10px 15px;
   border-radius: 8px;
+  width: 45%;
+}
+
+
+:host ::ng-deep .p-dialog {
+  width: 50vw!important;
 }

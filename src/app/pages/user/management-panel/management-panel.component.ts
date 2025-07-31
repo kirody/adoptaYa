@@ -19,6 +19,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { FormattedAgePipe } from '../../../pipes/formatted-age.pipe';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../../../services/auth.service';
 import { UserData } from '../../../models/user-data';
@@ -41,8 +42,9 @@ import { Observable } from 'rxjs';
     FormattedAgePipe,
     FormsModule,
     DialogModule,
-    TextareaModule ,
-    MessageModule
+    TextareaModule,
+    TooltipModule,
+    MessageModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
@@ -80,27 +82,20 @@ export class ManagementPanelComponent {
     this.currentUser$ = this.authService.currentUser$;
     this.currentUser$.subscribe((user: UserData) => {
       this.user.set(user);
-      //this.valueTab = this.user?.role === 'ROLE_ADMIN' ? 0 : 1;
       console.log(this.user()?.role);
     });
-    if (this.user) {
-      this.valueTab = this.user()?.role === 'ROLE_ADMIN' ? 0 : 1;
-    }
   }
 
   ngOnInit() {
     this.initTabs();
-    this.getCountPending();
   }
 
   initTabs() {
     if (this.valueTab === 0) {
       this.tabAnimals();
     } else if (this.valueTab === 1) {
-      this.tabPending();
+      this.tabRequests();
     } else if (this.valueTab === 2) {
-    } else if (this.valueTab === 3) {
-    } else if (this.valueTab === 4) {
       this.tabUsers();
     } else {
     }
@@ -173,7 +168,7 @@ export class ManagementPanelComponent {
           detail: 'El estado de publicación del animal ha sido actualizado.',
         });
 
-        // Actualiza el signal 'dataTable' de forma reactiva
+        /* // Actualiza el signal 'dataTable' de forma reactiva
         if (this.valueTab === 1) {
           // En "Pendientes", el animal publicado se elimina de la lista
           this.dataTable.update((animals) =>
@@ -186,9 +181,13 @@ export class ManagementPanelComponent {
               a.id === animal.id ? { ...a, published: newPublishedState } : a
             )
           );
-        }
+        } */
 
-        this.getCountPending(); // El contador de pendientes siempre se actualiza
+        this.dataTable.update((animals) =>
+          animals.map((a: Animal) =>
+            a.id === animal.id ? { ...a, published: newPublishedState } : a
+          )
+        );
         this.isLoading = false;
       })
       .catch((error) => {
@@ -253,34 +252,17 @@ export class ManagementPanelComponent {
     });
   }
 
-  tabPending() {
-    this.valueTab = 1;
-    this.isLoading = true;
-    this.firebaseService.getAnimalsByPublishState().then((data: Animal[]) => {
-      this.dataTable.set([...data.slice(0, 12)]);
-      this.countTabPending = String(data.length);
-      this.isLoading = false;
-      console.log(this.dataTable());
-    });
-  }
-
-  getCountPending() {
-    this.firebaseService.getAnimalsByPublishState().then((data: Animal[]) => {
-      this.countTabPending = String(data.length);
-    });
-  }
-
-  tabScaled() {
-    this.valueTab = 2;
-  }
-
   tabUsers() {
-    this.valueTab = 4;
+    this.valueTab = 2;
     this.isLoading = true;
     this.firebaseService.getUsers().then((data) => {
       this.dataTable.set([...data.slice(0, 12)]);
       this.isLoading = false;
     });
+  }
+
+  tabRequests() {
+    this.valueTab = 1;
   }
 
   updateRolUser(user: any) {
@@ -336,24 +318,45 @@ export class ManagementPanelComponent {
 
     try {
       if (!this.user) {
-        throw new Error('No se pudo obtener la información del moderador.');
+        throw new Error('No se pudo obtener la información del user.');
+      }
+      let scaleData = {};
+      if (this.user()?.role === 'ROLE_MOD') {
+        scaleData = {
+          moderator: {
+            uid: this.user().uid,
+            email: this.user().email,
+            name: this.user().username,
+            comment: this.scaleComment,
+            dateHour: {
+              date: new Date().toLocaleDateString(),
+              hour: new Date().toLocaleTimeString(),
+            },
+            animalData: {
+              id: this.selectedScaledAnimal.id,
+              name: this.selectedScaledAnimal.name,
+            },
+          },
+        };
+      } else {
+        scaleData = {
+          admin: {
+            uid: this.user().uid,
+            email: this.user().email,
+            comment: this.scaleComment,
+            name: this.user().username,
+            dateHour: {
+              date: new Date().toLocaleDateString(),
+              hour: new Date().toLocaleTimeString(),
+            },
+            animalData: {
+              id: this.selectedScaledAnimal.id,
+              name: this.selectedScaledAnimal.name,
+            },
+          },
+        };
       }
 
-      const scaleData = {
-        moderator: {
-          uid: this.user().uid,
-          email: this.user().email,
-          comment: this.scaleComment,
-          dateHour: {
-            date: new Date().toLocaleDateString(),
-            hour: new Date().toLocaleTimeString()
-          },
-          animalData: {
-            id: this.selectedScaledAnimal.id,
-            name: this.selectedScaledAnimal.name,
-          },
-        },
-      };
       await this.firebaseService.scaleAnimal(
         this.selectedScaledAnimal.id,
         scaleData
@@ -401,5 +404,130 @@ export class ManagementPanelComponent {
     this.showInfoScaled = true;
     this.selectedScaledAnimal = animal;
     console.log(this.selectedScaledAnimal);
+  }
+
+  /**
+   * Se ejecuta cuando el diálogo de información de escalado se cierra.
+   * Limpia el estado para evitar que los datos persistan entre aperturas.
+   */
+  onInfoModalHide() {
+    this.selectedScaledAnimal = null;
+    this.scaleComment = '';
+  }
+
+  async resolveScaled(type: string) {
+    if (type === 'toMod') {
+      await this.scaleAnimal();
+      this.showInfoScaled = false;
+    } else {
+
+    }
+  }
+
+  /**
+   * Verifica si un animal específico ya ha sido escalado por un moderador.
+   * Se usa para deshabilitar el botón "escalar" en la tabla de pendientes.
+   * @param animal El objeto animal de la fila de la tabla.
+   * @returns `true` si ya ha sido escalado por un moderador, de lo contrario `false`.
+   */
+  hasModeratorScaled(animal: Animal): boolean {
+    if (!animal?.scaled || !Array.isArray(animal.scaled)) {
+      return false;
+    }
+    // Devuelve true si encuentra algún objeto en el array que tenga la clave 'moderator'.
+    return animal.scaled.some(
+      (item: any) => item && typeof item === 'object' && 'moderator' in item
+    );
+  }
+
+  getRolScaled(animal: any, typeRole: string): any {
+    if (
+      !animal?.scaled ||
+      !Array.isArray(animal.scaled)
+    ) {
+      return null;
+    }
+
+    const scaledEntry = animal.scaled.find(
+      (item: any) => item && typeof item === 'object' && typeRole in item
+    );
+
+    return scaledEntry ? scaledEntry[typeRole] : null;
+  }
+
+  getScaledStatusText(animal: any): string {
+    if (animal.scaled?.length > 0) {
+      const hasAdmin = this.getRolScaled(animal, 'admin');
+      const hasModerator = this.getRolScaled(animal, 'moderator');
+
+      if (hasAdmin && hasModerator) {
+        return 'Cerrado';
+      }
+      // Si un moderador lo ha escalado, pero un admin no ha respondido aún.
+      if (hasModerator && !hasAdmin) {
+        if (this.user()?.role === 'ROLE_ADMIN') {
+          return 'Pendiente';
+        }
+        if (this.user()?.role === 'ROLE_MOD') {
+          return 'Revisando';
+        }
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Determina si el botón de publicar/despublicar debe estar deshabilitado.
+   * El botón se deshabilita si se intenta publicar un animal que está pendiente
+   * de revisión por un administrador.
+   * @param animal El objeto animal.
+   * @returns `true` si el botón debe estar deshabilitado.
+   */
+  isPublishDisabled(animal: Animal): boolean {
+    if (animal.published) {
+      // Siempre se puede despublicar un animal.
+      return false;
+    }
+
+    // No se puede publicar un animal si ha sido escalado por un moderador
+    // y aún no ha sido revisado por un administrador.
+    const hasModerator = this.hasModeratorScaled(animal);
+    const hasAdmin = !!this.getRolScaled(animal, 'admin');
+
+    return hasModerator && !hasAdmin;
+  }
+
+  getPublishTooltip(animal: Animal): string {
+    if (this.isPublishDisabled(animal)) {
+      return 'Pendiente de revisión por un administrador';
+    }
+    return animal.published ? 'Despublicar' : 'Publicar';
+  }
+
+  /**
+   * Determina si el botón de editar debe estar deshabilitado.
+   * El botón se deshabilita si un animal está pendiente de revisión por un administrador.
+   * @param animal El objeto animal.
+   * @returns `true` si el botón debe estar deshabilitado.
+   */
+  isEditDisabled(animal: Animal): boolean {
+    // No se puede editar un animal si ha sido escalado por un moderador
+    // y aún no ha sido revisado por un administrador.
+    const hasModerator = this.hasModeratorScaled(animal);
+    const hasAdmin = !!this.getRolScaled(animal, 'admin');
+
+    return hasModerator && !hasAdmin;
+  }
+
+  /**
+   * Obtiene el texto para el tooltip del botón de editar.
+   * @param animal El objeto animal.
+   * @returns El texto del tooltip.
+   */
+  getEditTooltip(animal: Animal): string {
+    if (this.isEditDisabled(animal)) {
+      return 'Pendiente de revisión por un administrador';
+    }
+    return 'Editar ficha';
   }
 }

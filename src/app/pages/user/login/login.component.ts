@@ -55,7 +55,7 @@ export class LoginComponent {
         this.firebaseService
           .getUserById(user.user.uid)
           .then((userData: any) => {
-            if (userData.role === 'ROLE_ADMIN') {
+            if ( ['ROLE_ADMIN', 'ROLE_MOD'].includes(userData.role)) {
               this.router.navigate(['/panel-gestion']);
             } else {
               this.router.navigate(['/publish']);
