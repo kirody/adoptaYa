@@ -50,7 +50,9 @@
               </tr>
             </ng-template>
             <ng-template #body let-animal>
-              <tr>
+              <tr [ngClass]="{'bg-gray-100 opacity-70': user()?.role === 'ROLE_MOD' && animal.assignedToAdmin}"
+                [pTooltip]="(user()?.role === 'ROLE_MOD' && animal.assignedToAdmin) ? 'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
+                tooltipPosition="top">
                 <td>
                   <img [src]="animal.urlImage" [alt]="animal.name" class="w-2rem rounded" />
                 </td>
@@ -74,8 +76,10 @@
                 </td>
                 <td>
                   @if (animal.scaled?.length > 0) {
-                  @if (getScaledStatusText(animal); as status) {
-                  <p-button icon="fa-solid fa-circle-info" [severity]="status === 'Cerrado' ? 'secondary': 'warn'"
+                  @if (getScaledStatusTag(animal); as status) {
+                  <p-button
+                  [icon]="status === 'Pendiente' ? 'fa-solid fa-clock' : 'fa-solid fa-circle-info'"
+                  [severity]="setColorTagScaled(status)"
                     [rounded]="true" [text]="false" (click)="openModalScaled(animal)" pTooltip="Ver info"
                     tooltipPosition="top" [label]="status" size="small"></p-button>
                   }
@@ -86,13 +90,14 @@
                   <!-- Editar -->
                   <p-button icon="fa-solid fa-pen-to-square"
                     styleClass="p-button-rounded p-button-warning p-button-text" (click)="editAnimal(animal.id)"
-                    [disabled]="isEditDisabled(animal) || (user()?.role === 'ROLE_MOD' && animal.assignedToAdmin)" [pTooltip]="getEditTooltip(animal)"
-                    tooltipPosition="top"></p-button>
+                    [disabled]="isEditDisabled(animal) || (user()?.role === 'ROLE_MOD' && (animal.assignedToAdmin || animal.published))"
+                    [pTooltip]="getEditTooltip(animal)" tooltipPosition="top"></p-button>
                   <!-- Publicar -->
                   <p-button icon="fa-solid"
                     [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
                     styleClass="p-button-rounded p-button-warning p-button-text"
-                    (click)="modalconfirmation($event, animal, 'publish')" [disabled]="isPublishDisabled(animal) || (user()?.role === 'ROLE_MOD' && animal.assignedToAdmin)"
+                    (click)="modalconfirmation($event, animal, 'publish')"
+                    [disabled]="isPublishDisabled(animal) || (user()?.role === 'ROLE_MOD' && animal.assignedToAdmin)"
                     [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
                   @if (user()?.role === 'ROLE_MOD') {
                   <!-- Escalar -->
@@ -168,7 +173,7 @@
   </div>
 </div>
 
-<p-dialog header="Escalar a {{selectedScaledAnimal?.name}} a un administrador" [modal]="true"
+<p-dialog header="Escalar a {{selectedScaledAnimal()?.name}} a un administrador" [modal]="true"
   [(visible)]="showModalScaled" [style]="{ width: '25rem' }">
   <span class="p-text-secondary block mb-4">Envia un mensaje a un administrador para que revise tu caso.</span>
   <div class="flex items-center mb-4">
@@ -186,139 +191,140 @@
 
 <p-dialog header="Información de Escalado" [modal]="true" [(visible)]="showInfoScaled" (onHide)="onInfoModalHide()"
   [styleClass]="'modern-dialog'" [style]="{ width: '28rem' }">
-  @if (selectedScaledAnimal?.scaled?.length > 0) {
+  @if (selectedScaledAnimal()?.scaled?.length > 0) {
   <div class="p-fluid">
-    <!-- Mensajes para el Moderador -->
-    @if (user()?.role === 'ROLE_MOD') {
-    @if (!selectedScaledAnimal.scaled[0]?.admin) {
-    <p-message severity="info" styleClass="w-full mt-1 mb-3">
-      <div class="flex items-center">
-        <i class="pi pi-clock text-xl mr-3"></i>
-        <div>
-          <strong>Su petición se está revisando.</strong>
-          <p class="mt-1">Un administrador está revisando su caso y le responderá en la mayor brevedad posible.</p>
+    <!-- Mensajes de Estado -->
+    @if (showModPendingMessage()) {
+      <p-message severity="info" styleClass="w-full mt-1 mb-3">
+        <div class="flex items-center">
+          <i class="pi pi-clock text-xl mr-3"></i>
+          <div>
+            <strong>Su petición se está revisando.</strong>
+            <p class="mt-1">Un administrador está revisando su caso y le responderá en la mayor brevedad posible.</p>
+          </div>
         </div>
-      </div>
-    </p-message>
-    } @else {
-    <p-message severity="success" styleClass="w-full mt-1 mb-3">
-      <div class="flex items-center">
-        <i class="pi pi-check-circle text-xl mr-3"></i>
-        <div>
-          <strong>Caso revisado por un administrador.</strong>
-          <p class="mt-1">El administrador ha dejado un comentario. Por favor, revise la información y proceda a
-            publicar la ficha del animal.</p>
-        </div>
-      </div>
-    </p-message>
+      </p-message>
     }
+    @if (showModResolvedMessage()) {
+      <p-message severity="success" styleClass="w-full mt-1 mb-3">
+        <div class="flex items-center">
+          <i class="pi pi-check-circle text-xl mr-3"></i>
+          <div>
+            <strong>Caso revisado por un administrador.</strong>
+            <p class="mt-1">El administrador ha dejado un comentario. Por favor, revise la información y proceda a publicar la ficha del animal.</p>
+          </div>
+        </div>
+      </p-message>
     }
-    <!-- Mensajes para el Administrador -->
-    @if (user()?.role === 'ROLE_ADMIN') {
-    @if (!selectedScaledAnimal.scaled[0]?.admin) {
-    <p-message severity="warn" styleClass="w-full mt-1 mb-3">
-      <div class="flex items-center">
-        <i class="pi pi-exclamation-triangle text-xl mr-3"></i>
-        <div>
-          <strong>Revisión Requerida</strong>
-          <p class="mt-1">Este caso ha sido escalado por un moderador y necesita su atención.</p>
+    @if (showAdminPendingMessage()) {
+      <p-message severity="warn" styleClass="w-full mt-1 mb-3">
+        <div class="flex items-center">
+          <i class="pi pi-exclamation-triangle text-xl mr-3"></i>
+          <div>
+            <strong>Revisión Requerida</strong>
+            <p class="mt-1">Este caso ha sido escalado por un moderador y necesita su atención.</p>
+          </div>
         </div>
-      </div>
-    </p-message>
-    } @else {
-    <p-message severity="info" styleClass="w-full mt-1 mb-3">
-      <div class="flex items-center">
-        <i class="pi pi-info-circle text-xl mr-3"></i>
-        <div>
-          <strong>Caso devuelto al moderador.</strong>
-          <p class="mt-1">Ya ha respondido a este caso. El moderador revisará sus comentarios.</p>
-        </div>
-      </div>
-    </p-message>
+      </p-message>
     }
+    @if (showAdminResolvedMessage()) {
+      <p-message severity="info" styleClass="w-full mt-1 mb-3">
+        <div class="flex items-center">
+          <i class="pi pi-info-circle text-xl mr-3"></i>
+          <div>
+            <strong>Caso devuelto al moderador.</strong>
+            <p class="mt-1">Ya ha respondido a este caso. El moderador revisará sus comentarios.</p>
+          </div>
+        </div>
+      </p-message>
     }
-    @if (selectedScaledAnimal.scaled[0]?.moderator; as moderator) {
-    <div class="flex mb-2">
-      <div class="col">
-        <div class="field mb-2 text-sm">
-          <div class="text-color-secondary mb-1">Ficha Escalada:</div>
-          <div class="font-medium">{{moderator.animalData.name}}</div>
+    @if (showAdminToAssignedMessage()) {
+      <p-message severity="warn" styleClass="w-full mt-1 mb-3">
+        <div class="flex items-center">
+          <i class="pi pi-info-circle text-xl mr-3"></i>
+          <div>
+            <strong>Caso asignado a un administrador.</strong>
+            <p class="mt-1">Esta ficha ha sido asignada a un administrador para su revisión.</p>
+          </div>
         </div>
-        <div class="field mb-2 text-sm">
-          <div class="text-color-secondary mb-1">Escalado por:</div>
-          <div class="font-medium">{{moderator.email}}</div>
+      </p-message>
+    }
+    @if (showModToAssignedMessage()) {
+      <p-message severity="secondary" styleClass="w-full mt-1 mb-3">
+        <div class="flex items-center">
+          <i class="pi pi-info-circle text-xl mr-3"></i>
+          <div>
+            <strong>Un administrador se ha asignado el caso.</strong>
+            <p class="mt-1">Este caso está siendo gestionado por un administrador. No puedes realizar acciones.</p>
+          </div>
+        </div>
+      </p-message>
+    }
+
+    <!-- Datos del escalado (Moderador) -->
+    @if (moderatorData(); as moderator) {
+      <div class="flex mb-2">
+        <div class="col">
+          <div class="field mb-2 text-sm">
+            <div class="text-color-secondary mb-1">Ficha Escalada:</div>
+            <div class="font-medium">{{moderator.animalData.name}}</div>
+          </div>
+          <div class="field mb-2 text-sm">
+            <div class="text-color-secondary mb-1">Escalado por:</div>
+            <div class="font-medium">{{moderator.email}}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="field mb-2 text-sm">
+            <div class="text-color-secondary mb-1">Fecha y hora:</div>
+            <div class="font-medium">{{moderator.dateHour.date }} {{moderator.dateHour.hour }}</div>
+          </div>
         </div>
       </div>
-      <div class="col">
-        <div class="field mb-2 text-sm">
-          <div class="text-color-secondary mb-1">Fecha y hora:</div>
-          <div class="font-medium">{{moderator.dateHour.date }}
-            {{moderator.dateHour.hour }}</div>
-        </div>
-      </div>
-    </div> }
+    }
+
+    <!-- Comentarios de la conversación -->
     <div>
       <div class="field mb-4 text-sm">
-        @if (user()?.role === 'ROLE_ADMIN') {
-        <!-- Vista para el Administrador: su comentario arriba -->
-        @if (selectedScaledAnimal.scaled[0]?.moderator; as modData) {
-        <div class="flex justify-content-start">
-          <div class="content-message">
-            <p><strong>{{modData.name}}</strong> (Moderador)</p>
-            <p>{{ modData.comment }}</p>
+        <!-- Mensajes para el Administrador: su comentario a la derecha -->
+        @if (moderatorData(); as modData) {
+          <div class="flex justify-content-end">
+            <div class="content-message">
+              <p><strong>{{modData.name}}</strong> (Moderador)</p>
+              <p>{{ modData.comment }}</p>
+            </div>
           </div>
-        </div>
         }
-        @if (selectedScaledAnimal.scaled[0]?.admin; as adminData) {
-        <div class="flex justify-content-end">
-          <div class="content-message">
-            <p><strong>{{adminData.name}}</strong> (Administrador)</p>
-            <p>{{ adminData.comment }}</p>
+        @if (adminData(); as adminData) {
+          <div class="flex justify-content-start">
+            <div class="content-message">
+              <p><strong>{{adminData.name}}</strong> (Administrador)</p>
+              <p>{{ adminData.comment }}</p>
+            </div>
           </div>
-        </div>
-        }
-        } @else {
-        <!-- Vista para el Moderador: su comentario arriba -->
-        @if (selectedScaledAnimal.scaled[0]?.moderator; as modData) {
-        <div class="flex justify-content-end">
-          <div class="content-message">
-            <p><strong>{{modData.name}}</strong> (Moderador) </p>
-            <p>{{ modData.comment }}</p>
-          </div>
-        </div>
-        }
-        @if (selectedScaledAnimal.scaled[0]?.admin; as adminData) {
-        <div class="flex justify-content-start">
-          <div class="content-message">
-            <p><strong>{{adminData.name}}</strong> (Administrador)</p>
-            <p>{{ adminData.comment }}</p>
-          </div>
-        </div>
-        }
         }
       </div>
     </div>
-    @if (user()?.role === 'ROLE_ADMIN' && !selectedScaledAnimal.scaled[0]?.admin) {
-    <div class="flex items-center mb-4 mt-4">
-      <textarea rows="3" cols="100%" pTextarea [(ngModel)]="scaleComment"
-        placeholder="Escribe tu mensaje aqui..."></textarea>
-    </div> }
+
+    <!-- Panel de acción para el administrador -->
+    @if (showAdminActionPanel()) {
+      <div class="flex items-center mb-4 mt-4">
+        <textarea rows="3" cols="100%" pTextarea [(ngModel)]="scaleComment"
+          placeholder="Escribe tu mensaje aqui..."></textarea>
+      </div>
+    }
+
+    <!-- Botones de acción -->
     <div class="flex justify-content-end pt-3 border-top-1 surface-border gap-2">
-      <!-- Botones para el moderador -->
-      @if (user()?.role === 'ROLE_MOD') {
-      <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
+      @if (showModeratorCloseButton() || showAdminCloseButton()) {
+        <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
       }
-      <!-- Botones para el administrador -->
-      @if (user()?.role === 'ROLE_ADMIN') {
-        @if (!selectedScaledAnimal.scaled[0]?.admin) {
+      @if (showAdminActionPanel()) {
         <p-button label="Asignar a Administrador" severity="danger" class="p-button-outlined"
           (click)="resolveScaled('toAdmin')" [disabled]="scaleComment === ''"/>
         <p-button label="Enviar y devolver" severity="success" (click)="resolveScaled('toMod')" [disabled]="scaleComment === ''"/>
-        } @else {
-        <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
-        }
       }
     </div>
   </div>
-  }
+}
 </p-dialog>

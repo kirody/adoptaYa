@@ -1,5 +1,5 @@
 import { MessageModule } from 'primeng/message';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
 import { TabsModule } from 'primeng/tabs';
 import { TableModule } from 'primeng/table';
@@ -7,7 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { FirebaseService } from '../../../services/firebase.service';
 import { Animal } from '../../../models/animal';
 import { signal } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
+import { ButtonModule, ButtonSeverity } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
@@ -75,14 +75,61 @@ export class ManagementPanelComponent {
 
   showModalScaled: boolean = false;
   scaleComment = '';
-  selectedScaledAnimal: any;
+  selectedScaledAnimal = signal<any>([]);
   showInfoScaled: boolean = false;
+
+  // Datos principales de la revisión
+  moderatorData = computed(
+    () => this.selectedScaledAnimal()?.scaled[0]?.moderator
+  );
+  adminData = computed(() => this.selectedScaledAnimal()?.scaled[0]?.admin);
+
+  // Mensajes de estado
+  showModPendingMessage = computed(
+    () => this.user()?.role === 'ROLE_MOD' && !this.adminData()
+  );
+  showModResolvedMessage = computed(
+    () =>
+      this.user()?.role === 'ROLE_MOD' &&
+      !!this.adminData() &&
+      !this.selectedScaledAnimal()?.assignedToAdmin
+  );
+  showAdminPendingMessage = computed(
+    () => this.user()?.role === 'ROLE_ADMIN' && !this.adminData()
+  );
+  showAdminResolvedMessage = computed(
+    () =>
+      this.user()?.role === 'ROLE_ADMIN' &&
+      !!this.adminData() &&
+      !this.selectedScaledAnimal()?.assignedToAdmin
+  );
+
+  showAdminToAssignedMessage = computed(
+    () =>
+      this.user()?.role === 'ROLE_ADMIN' &&
+      this.selectedScaledAnimal()?.assignedToAdmin
+  );
+
+  showModToAssignedMessage = computed(
+    () =>
+      this.user()?.role === 'ROLE_MOD' &&
+      this.selectedScaledAnimal()?.assignedToAdmin
+  );
+
+  // Botones y campos de acción
+  showAdminActionPanel = computed(
+    () => this.user()?.role === 'ROLE_ADMIN' && !this.adminData()
+  );
+
+  showModeratorCloseButton = computed(() => this.user()?.role === 'ROLE_MOD');
+  showAdminCloseButton = computed(
+    () => this.user()?.role === 'ROLE_ADMIN' && !!this.adminData()
+  );
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
     this.currentUser$.subscribe((user: UserData) => {
       this.user.set(user);
-      console.log(this.user()?.role);
     });
   }
 
@@ -157,8 +204,25 @@ export class ManagementPanelComponent {
 
     const newPublishedState = !animal.published;
 
-    this.firebaseService
-      .updateAnimal(animal.id, { published: newPublishedState })
+    const updateData: any = { published: newPublishedState };
+
+    // Si se está publicando, se resetea el estado de escalado.
+    if (newPublishedState) {
+      updateData.assignedToAdmin = false;
+    }
+
+    const updatePromise = this.firebaseService.updateAnimal(
+      animal.id,
+      updateData
+    );
+    const promises = [updatePromise];
+
+    // Si se está publicando el animal y tiene un escalado, se elimina la subcolección.
+    if (newPublishedState && animal.scaled && animal.scaled.length > 0) {
+      promises.push(this.firebaseService.deleteScaledSubcollection(animal.id));
+    }
+
+    Promise.all(promises)
       .then(() => {
         this.messageService.add({
           severity: 'success',
@@ -166,15 +230,16 @@ export class ManagementPanelComponent {
           detail: 'El estado de publicación del animal ha sido actualizado.',
         });
         this.reloadData();
-        this.isLoading = false;
       })
       .catch((error) => {
         console.error('Error al actualizar la publicación del animal:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo actualizar la publicación.',
+          detail: 'No se pudo actualizar el estado de publicación.',
         });
+      })
+      .finally(() => {
         this.isLoading = false;
       });
   }
@@ -186,8 +251,8 @@ export class ManagementPanelComponent {
         type === 'publish' && !animal.published
           ? '¿Quieres <strong>publicar</strong> este animal?'
           : type === 'publish' && animal.published
-          ? '¿Quieres <strong>despublicar</strong> este animal?'
-          : '¿Quieres eliminar este animal?',
+            ? '¿Quieres <strong>despublicar</strong> este animal?'
+            : '¿Quieres eliminar este animal?',
       header: 'Aviso',
       closable: true,
       closeOnEscape: true,
@@ -197,8 +262,8 @@ export class ManagementPanelComponent {
         type === 'publish' && !animal.published
           ? 'Publicar'
           : type === 'publish' && animal.published
-          ? 'Despublicar'
-          : 'Eliminar',
+            ? 'Despublicar'
+            : 'Eliminar',
       acceptIcon: 'pi pi-check',
       rejectIcon: 'pi pi-times',
       rejectButtonProps: {
@@ -215,7 +280,7 @@ export class ManagementPanelComponent {
           this.deleteAnimal(animal.id);
         }
       },
-      reject: () => {},
+      reject: () => { },
     });
   }
 
@@ -235,7 +300,6 @@ export class ManagementPanelComponent {
       this.dataTable.set([...data.slice(0, 12)]);
       this.countTabAnimals = String(data.length);
       this.isLoading = false;
-      console.log(this.dataTable());
     });
   }
 
@@ -283,16 +347,14 @@ export class ManagementPanelComponent {
 
   scaledAnimal(animal: Animal) {
     this.showModalScaled = true;
-    console.log(animal);
-    console.log(this.user);
-    this.selectedScaledAnimal = animal;
+    this.selectedScaledAnimal.set(animal);
   }
 
   /**
    * Recopila los datos y llama al servicio de Firebase para destacar el animal.
    */
   async scaleAnimal() {
-    if (!this.scaleComment.trim() || !this.selectedScaledAnimal) {
+    if (!this.scaleComment.trim() || !this.selectedScaledAnimal()) {
       return;
     }
 
@@ -315,8 +377,8 @@ export class ManagementPanelComponent {
               hour: new Date().toLocaleTimeString(),
             },
             animalData: {
-              id: this.selectedScaledAnimal.id,
-              name: this.selectedScaledAnimal.name,
+              id: this.selectedScaledAnimal().id,
+              name: this.selectedScaledAnimal().name,
             },
           },
         };
@@ -332,15 +394,15 @@ export class ManagementPanelComponent {
               hour: new Date().toLocaleTimeString(),
             },
             animalData: {
-              id: this.selectedScaledAnimal.id,
-              name: this.selectedScaledAnimal.name,
+              id: this.selectedScaledAnimal().id,
+              name: this.selectedScaledAnimal().name,
             },
           },
         };
       }
 
       await this.firebaseService.scaleAnimal(
-        this.selectedScaledAnimal.id,
+        this.selectedScaledAnimal().id,
         scaleData
       );
 
@@ -348,11 +410,12 @@ export class ManagementPanelComponent {
       this.messageService.add({
         severity: 'success',
         summary: 'Éxito',
-        detail: `El animal ${this.selectedScaledAnimal.name} ha sido destacado.`,
+        detail: `El animal ${this.selectedScaledAnimal().name
+          } ha sido destacado.`,
       });
       this.showModalScaled = false;
       this.scaleComment = '';
-      this.selectedScaledAnimal = null;
+      this.selectedScaledAnimal.set(null);
       this.isLoading = false;
     } catch (error) {
       console.error('Error al destacar el animal:', error);
@@ -371,8 +434,8 @@ export class ManagementPanelComponent {
 
   openModalScaled(animal: Animal) {
     this.showInfoScaled = true;
-    this.selectedScaledAnimal = animal;
-    console.log(this.selectedScaledAnimal);
+    this.selectedScaledAnimal.set(animal);
+    console.log(this.selectedScaledAnimal());
   }
 
   /**
@@ -380,7 +443,7 @@ export class ManagementPanelComponent {
    * Limpia el estado para evitar que los datos persistan entre aperturas.
    */
   onInfoModalHide() {
-    this.selectedScaledAnimal = null;
+    this.selectedScaledAnimal.set(null);
     this.scaleComment = '';
   }
 
@@ -389,7 +452,11 @@ export class ManagementPanelComponent {
       await this.scaleAnimal();
       this.showInfoScaled = false;
     } else {
-      await this.firebaseService.assignAnimalToAdmin(this.selectedScaledAnimal, this.user(), this.scaleComment);
+      await this.firebaseService.assignAnimalToAdmin(
+        this.selectedScaledAnimal(),
+        this.user(),
+        this.scaleComment
+      );
       this.reloadData();
       this.showInfoScaled = false;
     }
@@ -411,14 +478,19 @@ export class ManagementPanelComponent {
     );
   }
 
-  getScaledStatusText(animal: any): string {
+  getScaledStatusTag(animal: any): string {
     if (animal.scaled?.length > 0) {
       const hasAdmin = animal.scaled.some((item: any) => item?.admin);
       const hasModerator = this.hasModeratorScaled(animal);
 
+      if (animal.assignedToAdmin) {
+        return 'Asignado a admin';
+      }
+
       if (hasAdmin && hasModerator) {
         return 'Cerrado';
       }
+
       // Si un moderador lo ha escalado, pero un admin no ha respondido aún.
       if (hasModerator && !hasAdmin) {
         if (this.user()?.role === 'ROLE_ADMIN') {
@@ -430,6 +502,20 @@ export class ManagementPanelComponent {
       }
     }
     return '';
+  }
+
+  setColorTagScaled(status: any): ButtonSeverity {
+    if (status === 'Asignado a admin' && this.user()?.role === 'ROLE_MOD') {
+      return 'secondary';
+    } else if (status === 'Asignado a admin' && this.user()?.role === 'ROLE_ADMIN') {
+      return 'info';
+    } else if (status === 'Cerrado') {
+      return 'secondary';
+    } else if (status === 'Pendiente' && this.user()?.role === 'ROLE_ADMIN') {
+      return 'warn';
+    } else {
+      return 'info';
+    }
   }
 
   /**

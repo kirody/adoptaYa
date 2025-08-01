@@ -198,6 +198,21 @@ export class FirebaseService {
     }
   }
 
+  /**
+   * Elimina la subcolección 'scaled' de un animal.
+   * @param animalId El ID del animal.
+   * @returns Una promesa que se resuelve cuando la subcolección ha sido eliminada.
+   */
+  async deleteScaledSubcollection(animalId: string): Promise<void> {
+    const scaledCollectionRef = collection(db, 'animals', animalId, 'scaled');
+    const scaledSnapshot = await getDocs(scaledCollectionRef);
+    const deletePromises: Promise<void>[] = [];
+    scaledSnapshot.forEach((doc) => {
+      deletePromises.push(deleteDoc(doc.ref));
+    });
+    await Promise.all(deletePromises);
+  }
+
   //USUARIOS
   async getUsers() {
     const q = collection(db, 'users');

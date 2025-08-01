@@ -129,7 +129,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         this.animalForm.get('race')?.reset(''); // Resetea la raza al cambiar de especie
         this.races = RACES_BY_SPECIES[specie] || [];
       });
-    console.log(this.animalForm);
   }
 
   ngOnDestroy(): void {
