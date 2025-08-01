@@ -8,6 +8,7 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  limit,
   query,
   setDoc,
   updateDoc,
@@ -95,7 +96,10 @@ export class FirebaseService {
 
   async getAnimalsByPublishState(): Promise<Animal[]> {
     const animalsCollectionRef = collection(db, 'animals');
-    const queryPublished = query(animalsCollectionRef, where('published', '==', false));
+    const queryPublished = query(
+      animalsCollectionRef,
+      where('published', '==', false)
+    );
 
     try {
       const querySnapshot = await getDocs(queryPublished);
@@ -117,9 +121,80 @@ export class FirebaseService {
       );
       return animalsWithSubcollections as Animal[];
     } catch (error) {
-      console.error('Error al obtener animales por estado de publicación:', error);
+      console.error(
+        'Error al obtener animales por estado de publicación:',
+        error
+      );
       // Opcional: relanzar un error personalizado o simplemente lanzar el original
-      throw new Error('No se pudieron cargar los animales. Inténtalo de nuevo más tarde.');
+      throw new Error(
+        'No se pudieron cargar los animales. Inténtalo de nuevo más tarde.'
+      );
+    }
+  }
+
+  /**
+   * Asigna un animal escalado a un administrador.
+   * @param animal - El ID del animal a asignar.
+   * @param adminId - El ID del administrador.
+   * @param adminComment - Comentario del administrador.
+   * @returns Una promesa que se resuelve cuando se completa la operación.
+   */
+  async assignAnimalToAdmin(
+    animal: any,
+    user: any,
+    adminComment: string
+  ): Promise<void> {
+    if (!adminComment) {
+      throw new Error(
+        'El ID del administrador y el comentario son obligatorios.'
+      );
+    }
+
+    try {
+      const animalDocRef = doc(db, 'animals', animal.id);
+
+      // 1. Actualiza el documento del animal para marcarlo como asignado.
+      await updateDoc(animalDocRef, {
+        assignedToAdmin: true,
+      });
+
+      // 2. Obtiene la referencia a la subcolección 'scaled'.
+      const scaledCollectionRef = collection(animalDocRef, 'scaled');
+
+      // 3. Obtiene el primer documento de la subcolección (asumiendo que solo hay uno para el moderador).
+      const q = query(scaledCollectionRef, limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // 4. Obtiene el documento de la subcolección y lo actualiza.
+        const scaledDocRef = querySnapshot.docs[0].ref;
+        await updateDoc(scaledDocRef, {
+          admin: {
+            uid: user.uid,
+            email: user.email,
+            comment: adminComment,
+            name: user.username,
+            dateHour: {
+              date: new Date().toLocaleDateString(),
+              hour: new Date().toLocaleTimeString(),
+            },
+            animalData: {
+              id: animal.id,
+              name: animal.name,
+            },
+          },
+        });
+      } else {
+        console.warn(
+          'No se encontró ningún documento en la subcolección "scaled" para actualizar.'
+        );
+      }
+    } catch (error) {
+      console.error(
+        'Error al asignar el animal y añadir el comentario:',
+        error
+      );
+      throw error;
     }
   }
 
@@ -154,22 +229,33 @@ export class FirebaseService {
     await deleteDoc(doc(db, 'users', id));
   }
 
-  /**
-   * Crea un registro de escalar para un animal en una subcolección.
-   * @param animalId - El ID del animal a escalar.
-   * @param scaleData - Los datos del escalado (comentario, datos del mod, etc.).
-   * @returns Una promesa que se resuelve cuando se completa la operación.
-   */
-  async scaleAnimal(animalId: string, scaleData: any): Promise<any> {
+  async scaleAnimal(animalId: string, scaleData: any): Promise<void> {
     try {
-      // 1. Creamos una referencia al documento del animal específico.
       const animalDocRef = doc(db, 'animals', animalId);
-      // 2. Creamos una referencia a la subcolección 'scaled' dentro de ese documento.
       const scaleCollectionRef = collection(animalDocRef, 'scaled');
-      // 3. Añadimos un nuevo documento con los datos del destaque a la subcolección.
-      return await addDoc(scaleCollectionRef, scaleData);
+
+      // Si es una respuesta del admin, actualizamos el documento existente.
+      if (scaleData.admin) {
+        // Buscamos el documento que ya tiene un moderador.
+        const q = query(scaleCollectionRef, where('moderator', '!=', null), limit(1));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const scaledDocRef = querySnapshot.docs[0].ref;
+          // Actualizamos ese documento para añadir la información del admin.
+          await updateDoc(scaledDocRef, scaleData);
+        } else {
+          // Este caso no debería ocurrir en un flujo normal.
+          throw new Error(`No se encontró un documento de escalado de moderador para el animal ${animalId}.`);
+        }
+      } else if (scaleData.moderator) {
+        // Si es un escalado del moderador, creamos un nuevo documento.
+        await addDoc(scaleCollectionRef, scaleData);
+      } else {
+        throw new Error('El objeto scaleData es inválido. Debe contener una clave "admin" o "moderator".');
+      }
     } catch (error) {
-      console.error('Error al destacar el animal:', error);
+      console.error('Error al procesar la operación de escalado:', error);
       throw error;
     }
   }

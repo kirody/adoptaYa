@@ -139,9 +139,7 @@ export class ManagementPanelComponent {
 
   deleteAnimal(animalID: string) {
     this.firebaseService.deleteAnimal(animalID).then(() => {
-      this.dataTable.update((animals) =>
-        animals.filter((animal: Animal) => animal.id !== animalID)
-      );
+      this.reloadData();
       this.messageService.add({
         severity: 'info',
         summary: 'Confirmado',
@@ -167,27 +165,7 @@ export class ManagementPanelComponent {
           summary: 'Éxito',
           detail: 'El estado de publicación del animal ha sido actualizado.',
         });
-
-        /* // Actualiza el signal 'dataTable' de forma reactiva
-        if (this.valueTab === 1) {
-          // En "Pendientes", el animal publicado se elimina de la lista
-          this.dataTable.update((animals) =>
-            animals.filter((a: Animal) => a.id !== animal.id)
-          );
-        } else {
-          // En "Animales", solo se actualiza el estado del animal
-          this.dataTable.update((animals) =>
-            animals.map((a: Animal) =>
-              a.id === animal.id ? { ...a, published: newPublishedState } : a
-            )
-          );
-        } */
-
-        this.dataTable.update((animals) =>
-          animals.map((a: Animal) =>
-            a.id === animal.id ? { ...a, published: newPublishedState } : a
-          )
-        );
+        this.reloadData();
         this.isLoading = false;
       })
       .catch((error) => {
@@ -241,6 +219,15 @@ export class ManagementPanelComponent {
     });
   }
 
+  reloadData() {
+    if (this.valueTab === 0) {
+      this.tabAnimals();
+    } else if (this.valueTab === 2) {
+      this.tabUsers();
+    }
+    // Puedes añadir lógica para otras pestañas aquí si es necesario
+  }
+
   tabAnimals() {
     this.valueTab = 0;
     this.isLoading = true;
@@ -280,12 +267,7 @@ export class ManagementPanelComponent {
           summary: 'Éxito',
           detail: `Rol de "${user.username}" actualizado con éxito.`,
         });
-        // Actualiza el signal 'dataTable' de forma reactiva
-        this.dataTable.update((users) =>
-          users.map((u: any) =>
-            u.uid === user.uid ? { ...u, role: newRole } : u
-          )
-        );
+        this.reloadData();
         this.isLoading = false;
       })
       .catch((error) => {
@@ -362,20 +344,7 @@ export class ManagementPanelComponent {
         scaleData
       );
 
-      // Actualiza el signal 'dataTable' de forma reactiva
-      this.dataTable.update((animals) =>
-        animals.map((animal: Animal) => {
-          if (animal.id === this.selectedScaledAnimal.id) {
-            // Añade el nuevo destaque al array 'scaled' del animal
-            const updatedScaled = animal.scaled
-              ? [...animal.scaled, scaleData]
-              : [scaleData];
-            return { ...animal, scaled: updatedScaled };
-          }
-          return animal;
-        })
-      );
-
+      this.reloadData();
       this.messageService.add({
         severity: 'success',
         summary: 'Éxito',
@@ -420,7 +389,9 @@ export class ManagementPanelComponent {
       await this.scaleAnimal();
       this.showInfoScaled = false;
     } else {
-
+      await this.firebaseService.assignAnimalToAdmin(this.selectedScaledAnimal, this.user(), this.scaleComment);
+      this.reloadData();
+      this.showInfoScaled = false;
     }
   }
 
@@ -440,25 +411,10 @@ export class ManagementPanelComponent {
     );
   }
 
-  getRolScaled(animal: any, typeRole: string): any {
-    if (
-      !animal?.scaled ||
-      !Array.isArray(animal.scaled)
-    ) {
-      return null;
-    }
-
-    const scaledEntry = animal.scaled.find(
-      (item: any) => item && typeof item === 'object' && typeRole in item
-    );
-
-    return scaledEntry ? scaledEntry[typeRole] : null;
-  }
-
   getScaledStatusText(animal: any): string {
     if (animal.scaled?.length > 0) {
-      const hasAdmin = this.getRolScaled(animal, 'admin');
-      const hasModerator = this.getRolScaled(animal, 'moderator');
+      const hasAdmin = animal.scaled.some((item: any) => item?.admin);
+      const hasModerator = this.hasModeratorScaled(animal);
 
       if (hasAdmin && hasModerator) {
         return 'Cerrado';
@@ -492,7 +448,7 @@ export class ManagementPanelComponent {
     // No se puede publicar un animal si ha sido escalado por un moderador
     // y aún no ha sido revisado por un administrador.
     const hasModerator = this.hasModeratorScaled(animal);
-    const hasAdmin = !!this.getRolScaled(animal, 'admin');
+    const hasAdmin = animal.scaled?.some((item: any) => item?.admin);
 
     return hasModerator && !hasAdmin;
   }
@@ -514,7 +470,7 @@ export class ManagementPanelComponent {
     // No se puede editar un animal si ha sido escalado por un moderador
     // y aún no ha sido revisado por un administrador.
     const hasModerator = this.hasModeratorScaled(animal);
-    const hasAdmin = !!this.getRolScaled(animal, 'admin');
+    const hasAdmin = animal.scaled?.some((item: any) => item?.admin);
 
     return hasModerator && !hasAdmin;
   }

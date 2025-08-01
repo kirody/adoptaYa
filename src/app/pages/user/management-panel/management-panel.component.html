@@ -86,13 +86,13 @@
                   <!-- Editar -->
                   <p-button icon="fa-solid fa-pen-to-square"
                     styleClass="p-button-rounded p-button-warning p-button-text" (click)="editAnimal(animal.id)"
-                    [disabled]="isEditDisabled(animal)" [pTooltip]="getEditTooltip(animal)"
+                    [disabled]="isEditDisabled(animal) || (user()?.role === 'ROLE_MOD' && animal.assignedToAdmin)" [pTooltip]="getEditTooltip(animal)"
                     tooltipPosition="top"></p-button>
                   <!-- Publicar -->
                   <p-button icon="fa-solid"
                     [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
                     styleClass="p-button-rounded p-button-warning p-button-text"
-                    (click)="modalconfirmation($event, animal, 'publish')" [disabled]="isPublishDisabled(animal)"
+                    (click)="modalconfirmation($event, animal, 'publish')" [disabled]="isPublishDisabled(animal) || (user()?.role === 'ROLE_MOD' && animal.assignedToAdmin)"
                     [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
                   @if (user()?.role === 'ROLE_MOD') {
                   <!-- Escalar -->
@@ -190,7 +190,7 @@
   <div class="p-fluid">
     <!-- Mensajes para el Moderador -->
     @if (user()?.role === 'ROLE_MOD') {
-    @if (!getRolScaled(selectedScaledAnimal, 'admin')) {
+    @if (!selectedScaledAnimal.scaled[0]?.admin) {
     <p-message severity="info" styleClass="w-full mt-1 mb-3">
       <div class="flex items-center">
         <i class="pi pi-clock text-xl mr-3"></i>
@@ -215,7 +215,7 @@
     }
     <!-- Mensajes para el Administrador -->
     @if (user()?.role === 'ROLE_ADMIN') {
-    @if (!getRolScaled(selectedScaledAnimal, 'admin')) {
+    @if (!selectedScaledAnimal.scaled[0]?.admin) {
     <p-message severity="warn" styleClass="w-full mt-1 mb-3">
       <div class="flex items-center">
         <i class="pi pi-exclamation-triangle text-xl mr-3"></i>
@@ -237,7 +237,7 @@
     </p-message>
     }
     }
-    @if (getRolScaled(selectedScaledAnimal, 'moderator'); as moderator) {
+    @if (selectedScaledAnimal.scaled[0]?.moderator; as moderator) {
     <div class="flex mb-2">
       <div class="col">
         <div class="field mb-2 text-sm">
@@ -261,7 +261,7 @@
       <div class="field mb-4 text-sm">
         @if (user()?.role === 'ROLE_ADMIN') {
         <!-- Vista para el Administrador: su comentario arriba -->
-        @if (getRolScaled(selectedScaledAnimal, 'moderator'); as modData) {
+        @if (selectedScaledAnimal.scaled[0]?.moderator; as modData) {
         <div class="flex justify-content-start">
           <div class="content-message">
             <p><strong>{{modData.name}}</strong> (Moderador)</p>
@@ -269,7 +269,7 @@
           </div>
         </div>
         }
-        @if (getRolScaled(selectedScaledAnimal, 'admin'); as adminData) {
+        @if (selectedScaledAnimal.scaled[0]?.admin; as adminData) {
         <div class="flex justify-content-end">
           <div class="content-message">
             <p><strong>{{adminData.name}}</strong> (Administrador)</p>
@@ -279,7 +279,7 @@
         }
         } @else {
         <!-- Vista para el Moderador: su comentario arriba -->
-        @if (getRolScaled(selectedScaledAnimal, 'moderator'); as modData) {
+        @if (selectedScaledAnimal.scaled[0]?.moderator; as modData) {
         <div class="flex justify-content-end">
           <div class="content-message">
             <p><strong>{{modData.name}}</strong> (Moderador) </p>
@@ -287,7 +287,7 @@
           </div>
         </div>
         }
-        @if (getRolScaled(selectedScaledAnimal, 'admin'); as adminData) {
+        @if (selectedScaledAnimal.scaled[0]?.admin; as adminData) {
         <div class="flex justify-content-start">
           <div class="content-message">
             <p><strong>{{adminData.name}}</strong> (Administrador)</p>
@@ -298,7 +298,7 @@
         }
       </div>
     </div>
-    @if (user()?.role === 'ROLE_ADMIN' && !getRolScaled(selectedScaledAnimal, 'admin')) {
+    @if (user()?.role === 'ROLE_ADMIN' && !selectedScaledAnimal.scaled[0]?.admin) {
     <div class="flex items-center mb-4 mt-4">
       <textarea rows="3" cols="100%" pTextarea [(ngModel)]="scaleComment"
         placeholder="Escribe tu mensaje aqui..."></textarea>
@@ -310,13 +310,13 @@
       }
       <!-- Botones para el administrador -->
       @if (user()?.role === 'ROLE_ADMIN') {
-      @if (!getRolScaled(selectedScaledAnimal, 'admin')) {
-      <p-button label="Asignar a Administrador" severity="danger" class="p-button-outlined"
-        (click)="resolveScaled('toAdmin')" />
-      <p-button label="Enviar y devolver" severity="success" (click)="resolveScaled('toMod')" />
-      } @else {
-      <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
-      }
+        @if (!selectedScaledAnimal.scaled[0]?.admin) {
+        <p-button label="Asignar a Administrador" severity="danger" class="p-button-outlined"
+          (click)="resolveScaled('toAdmin')" [disabled]="scaleComment === ''"/>
+        <p-button label="Enviar y devolver" severity="success" (click)="resolveScaled('toMod')" [disabled]="scaleComment === ''"/>
+        } @else {
+        <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
+        }
       }
     </div>
   </div>
