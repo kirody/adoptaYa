@@ -26,7 +26,7 @@ const db = getFirestore(app);
 export class FirebaseService {
   itemSelected: any;
 
-  constructor() {}
+  constructor() { }
 
   private async _getAnimalWithSubcollections(animalDoc: DocumentSnapshot) {
     const animalData = animalDoc.data();
@@ -46,6 +46,25 @@ export class FirebaseService {
     const animalsCollectionRef = collection(db, 'animals');
     const animalsSnapshot = await getDocs(animalsCollectionRef);
 
+    const animalsWithSubcollections = await Promise.all(
+      animalsSnapshot.docs.map(async (animalDoc) => {
+        const animalData = animalDoc.data();
+
+        // Obtener la subcolección 'scaled'
+        const scaledCollectionRef = collection(animalDoc.ref, 'scaled');
+        const scaledSnapshot = await getDocs(scaledCollectionRef);
+        const scaledData = scaledSnapshot.docs.map((doc) => doc.data());
+
+        // Aquí se podrían añadir consultas para otras subcolecciones si existieran
+
+        return {
+          ...animalData,
+          scaled: scaledData, // Añade la subcolección al objeto del animal
+        };
+      })
+    );
+
+    return animalsWithSubcollections;
   }
 
   async getAnimalById(id: string) {

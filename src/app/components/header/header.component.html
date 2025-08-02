@@ -7,10 +7,14 @@
       <div class="flex align-items-center gap-2">
         <span class="font-light text-sm">Hola, {{ user.username }}</span>
         <div>
-          <p-tag *ngIf="user.role === 'ROLE_ADMIN'" icon="fa fa-user-cog" severity="danger" value="Admin"
-            [rounded]="true" />
+          @if (user.role === 'ROLE_ADMIN') {
+          <p-tag icon="fa fa-user-cog" severity="danger" value="Admin" [rounded]="true" />
+          }
+          @if (user.role === 'ROLE_MOD') {
+          <p-tag icon="fa fa-user-pen" severity="warn" value="Mod" [rounded]="true" />
+          }
         </div>
-        <p-avatar icon="pi pi-user" styleClass="cursor-pointer" shape="circle" (click)="menu.toggle($event)"/>
+        <p-avatar icon="pi pi-user" styleClass="cursor-pointer" shape="circle" (click)="menu.toggle($event)" />
       </div>
       } @else {
       <!-- Bloque que se muestra si NO hay usuario -->
@@ -26,4 +30,4 @@
 </div>
 
 
-<p-menu #menu [model]="profileItems" [popup]="true"/>
+<p-menu #menu [model]="profileItems" [popup]="true" />
