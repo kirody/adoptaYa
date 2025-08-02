@@ -51,7 +51,7 @@ export class AnimalsComponent implements OnInit {
   loadAnimals() {
     this.isLoading = true;
     this.firebaseService.getAnimals().then((data) => {
-      this.animals.set([...data.slice(0, 12)]);
+      this.animals.set(data);
       this.isLoading = false;
     });
   }

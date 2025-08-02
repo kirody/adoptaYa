@@ -1,11 +1,11 @@
 <div class="animals-container">
   <app-header-page [title]="'Animales en Adopción'" [icon]="'fas fa-paw'"></app-header-page>
-  <div class="card flex justify-center" *ngIf="isLoading">
+  <div class="card flex justify-center content-spinner" *ngIf="isLoading">
     <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s" [style]="{ width: '50px', height: '50px' }" />
   </div>
   <div class="grid animals-grid">
     <p-dataview #dv [value]="animals()" [rows]="8" [paginator]="true" [layout]="layout"
-      *ngIf="!isLoading && animals().length > 0">
+      *ngIf="!isLoading && animals()?.length > 0">
       <ng-template #header>
         <div class="flex justify-content-between">
           <div class="">
@@ -63,7 +63,7 @@
           <div *ngFor="let animal of animals" class="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 p-2">
             <div
               class="p-4 border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 rounded flex flex-col">
-              <div *ngIf="animals === undefined || this.animals().length === 0" class="flex justify-center">
+              <div *ngIf="animals === undefined || this.animals()?.length === 0" class="flex justify-center">
                 <p-skeleton class="!w-9/12 sm:!w-64 xl:!w-40 !h-24 mx-auto" />
               </div>
               <div class="bg-surface-50 flex justify-center rounded">
@@ -102,7 +102,7 @@
         </div>
       </ng-template>
     </p-dataview>
-    <div *ngIf="!isLoading && animals().length === 0">
+    <div *ngIf="!isLoading && animals()?.length === 0">
       <app-card-nodata message="No hay animales disponibles en adopción en este momento."></app-card-nodata>
     </div>
   </div>

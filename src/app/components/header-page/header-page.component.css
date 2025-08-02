@@ -11,6 +11,9 @@
   border-radius: 8px 8px 0 0;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 h1 {
@@ -21,4 +24,23 @@ h1 {
 
 i {
   font-size: 25px;
+}
+
+
+/* Estilo para el texto y el icono del botón en estado normal */
+:host ::ng-deep .p-button.custom-button .p-button-label,
+:host ::ng-deep .p-button.custom-button .p-button-icon {
+  color: #ffffff;
+}
+
+/* Estilo para el botón al pasar el cursor (hover) */
+:host ::ng-deep .p-button.custom-button:hover {
+  background-color: #9dcaa0;
+  border-color: #9dcaa0;
+}
+
+/* Estilo para el texto y el icono del botón al pasar el cursor (hover) */
+:host ::ng-deep .p-button.custom-button:hover .p-button-label,
+:host ::ng-deep .p-button.custom-button:hover .p-button-icon {
+  color: #58705a; /* Color gris oscuro para el texto y el icono en hover */
 }

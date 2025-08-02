@@ -4,6 +4,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  DocumentSnapshot,
   doc,
   getDoc,
   getDocs,
@@ -27,30 +28,24 @@ export class FirebaseService {
 
   constructor() {}
 
+  private async _getAnimalWithSubcollections(animalDoc: DocumentSnapshot) {
+    const animalData = animalDoc.data();
+    const scaledCollectionRef = collection(animalDoc.ref, 'scaled');
+    const scaledSnapshot = await getDocs(scaledCollectionRef);
+    const scaledData = scaledSnapshot.docs.map((doc) => doc.data());
+
+    return {
+      id: animalDoc.id,
+      ...animalData,
+      scaled: scaledData,
+    };
+  }
+
   //ANIMALES
   async getAnimals() {
     const animalsCollectionRef = collection(db, 'animals');
     const animalsSnapshot = await getDocs(animalsCollectionRef);
 
-    const animalsWithSubcollections = await Promise.all(
-      animalsSnapshot.docs.map(async (animalDoc) => {
-        const animalData = animalDoc.data();
-
-        // Obtener la subcolección 'scaled'
-        const scaledCollectionRef = collection(animalDoc.ref, 'scaled');
-        const scaledSnapshot = await getDocs(scaledCollectionRef);
-        const scaledData = scaledSnapshot.docs.map((doc) => doc.data());
-
-        // Aquí se podrían añadir consultas para otras subcolecciones si existieran
-
-        return {
-          ...animalData,
-          scaled: scaledData, // Añade la subcolección al objeto del animal
-        };
-      })
-    );
-
-    return animalsWithSubcollections;
   }
 
   async getAnimalById(id: string) {
@@ -121,10 +116,6 @@ export class FirebaseService {
       );
       return animalsWithSubcollections as Animal[];
     } catch (error) {
-      console.error(
-        'Error al obtener animales por estado de publicación:',
-        error
-      );
       // Opcional: relanzar un error personalizado o simplemente lanzar el original
       throw new Error(
         'No se pudieron cargar los animales. Inténtalo de nuevo más tarde.'
@@ -213,37 +204,6 @@ export class FirebaseService {
     await Promise.all(deletePromises);
   }
 
-  //USUARIOS
-  async getUsers() {
-    const q = collection(db, 'users');
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => doc.data());
-  }
-
-  async addUser(user: any) {
-    const userDoc = doc(db, 'users', user.uid); // Usa el uid del usuario como id del documento
-    await setDoc(userDoc, user);
-  }
-
-  async getUserById(id: string) {
-    const userDoc = doc(db, 'users', id);
-    const docSnap = await getDoc(userDoc);
-    if (docSnap.exists()) {
-      return docSnap.data();
-    } else {
-      throw new Error('No such document!');
-    }
-  }
-
-  async updateUser(id: string, data: any) {
-    const userDoc = doc(db, 'users', id);
-    await updateDoc(userDoc, data);
-  }
-
-  async deleteUser(id: any) {
-    await deleteDoc(doc(db, 'users', id));
-  }
-
   async scaleAnimal(animalId: string, scaleData: any): Promise<void> {
     try {
       const animalDocRef = doc(db, 'animals', animalId);
@@ -273,6 +233,37 @@ export class FirebaseService {
       console.error('Error al procesar la operación de escalado:', error);
       throw error;
     }
+  }
+
+  //USUARIOS
+  async getUsers() {
+    const q = collection(db, 'users');
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => doc.data());
+  }
+
+  async addUser(user: any) {
+    const userDoc = doc(db, 'users', user.uid); // Usa el uid del usuario como id del documento
+    await setDoc(userDoc, user);
+  }
+
+  async getUserById(id: string) {
+    const userDoc = doc(db, 'users', id);
+    const docSnap = await getDoc(userDoc);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    } else {
+      throw new Error('No such document!');
+    }
+  }
+
+  async updateUser(id: string, data: any) {
+    const userDoc = doc(db, 'users', id);
+    await updateDoc(userDoc, data);
+  }
+
+  async deleteUser(id: any) {
+    await deleteDoc(doc(db, 'users', id));
   }
 
   //FAVORITOS

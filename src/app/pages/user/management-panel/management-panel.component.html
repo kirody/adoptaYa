@@ -1,6 +1,6 @@
 <div class="management-panel-container">
   <app-header-page [title]="'Panel de Gestión'" [icon]="'fas fa-cog'"></app-header-page>
-  <div class="card flex justify-center" *ngIf="isLoading">
+  <div class="card flex justify-center content-spinner" *ngIf="isLoading">
     <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
       [style]="{ width: '50px', height: '50px' }" />
   </div>
@@ -12,8 +12,9 @@
         </ng-template>
         <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()"
           *ngIf="['ROLE_ADMIN', 'ROLE_MOD'].includes(user()?.role)">
-          <i class="fa fa-paw"></i>
-          <span class="font-bold whitespace-nowrap">Animales</span>
+          <i [ngClass]="{'fa fa-paw': user()?.role === 'ROLE_ADMIN', 'fa fa-clock': user()?.role === 'ROLE_MOD'}"></i>
+          <span class="font-bold whitespace-nowrap">{{user()?.role === 'ROLE_MOD' ? 'Pendientes publicar' :
+            'Animales'}}</span>
           <p-tag severity="warn" [value]="countTabAnimals" [rounded]="true" />
         </p-tab>
         <p-tab value="1" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
@@ -33,8 +34,20 @@
       <p-tabpanels>
         <p-tabpanel value="0">
           @if (dataTable() && dataTable().length > 0) {
-          <p-table [value]="dataTable()" [tableStyle]="{ 'min-width': '60rem' }">
-            <ng-template #caption />
+          <p-table #dt2 [value]="dataTable()" [tableStyle]="{ 'min-width': '60rem' }"
+            [globalFilterFields]="['name', 'gender', 'published']" [paginator]="true" [rows]="5"
+            [rowsPerPageOptions]="[5, 10, 20]">
+            <ng-template #caption>
+              <div class="flex">
+                <p-iconfield iconPosition="left" class="ml-auto">
+                  <p-inputicon>
+                    <i class="pi pi-search"></i>
+                  </p-inputicon>
+                  <input pInputText type="text" (input)="dt2.filterGlobal(getEventValue($event), 'contains')"
+                    placeholder="Buscar palabra clave" />
+                </p-iconfield>
+              </div>
+            </ng-template>
             <ng-template #header>
               <tr>
                 <th>Imagen</th>
@@ -44,7 +57,7 @@
                 <th>Edad</th>
                 <th>Estado</th>
                 <th>Publicado</th>
-                <th>Notas de Escalado</th>
+                <th>Escalado</th>
                 <th>Protectora</th>
                 <th>Acciones</th>
               </tr>
@@ -77,11 +90,10 @@
                 <td>
                   @if (animal.scaled?.length > 0) {
                   @if (getScaledStatusTag(animal); as status) {
-                  <p-button
-                  [icon]="status === 'Pendiente' ? 'fa-solid fa-clock' : 'fa-solid fa-circle-info'"
-                  [severity]="setColorTagScaled(status)"
-                    [rounded]="true" [text]="false" (click)="openModalScaled(animal)" pTooltip="Ver info"
-                    tooltipPosition="top" [label]="status" size="small"></p-button>
+                  <p-button [icon]="status === 'Pendiente' ? 'fa-solid fa-clock' : 'fa-solid fa-circle-info'"
+                    [severity]="setColorTagScaled(status)" [rounded]="true" [text]="false"
+                    (click)="openModalScaled(animal)" pTooltip="Ver info" tooltipPosition="top" [label]="status"
+                    size="small"></p-button>
                   }
                   }
                 </td>
@@ -195,92 +207,93 @@
   <div class="p-fluid">
     <!-- Mensajes de Estado -->
     @if (showModPendingMessage()) {
-      <p-message severity="info" styleClass="w-full mt-1 mb-3">
-        <div class="flex items-center">
-          <i class="pi pi-clock text-xl mr-3"></i>
-          <div>
-            <strong>Su petición se está revisando.</strong>
-            <p class="mt-1">Un administrador está revisando su caso y le responderá en la mayor brevedad posible.</p>
-          </div>
+    <p-message severity="info" styleClass="w-full mt-1 mb-3">
+      <div class="flex items-center">
+        <i class="pi pi-clock text-xl mr-3"></i>
+        <div>
+          <strong>Su petición se está revisando.</strong>
+          <p class="mt-1">Un administrador está revisando su caso y le responderá en la mayor brevedad posible.</p>
         </div>
-      </p-message>
+      </div>
+    </p-message>
     }
     @if (showModResolvedMessage()) {
-      <p-message severity="success" styleClass="w-full mt-1 mb-3">
-        <div class="flex items-center">
-          <i class="pi pi-check-circle text-xl mr-3"></i>
-          <div>
-            <strong>Caso revisado por un administrador.</strong>
-            <p class="mt-1">El administrador ha dejado un comentario. Por favor, revise la información y proceda a publicar la ficha del animal.</p>
-          </div>
+    <p-message severity="success" styleClass="w-full mt-1 mb-3">
+      <div class="flex items-center">
+        <i class="pi pi-check-circle text-xl mr-3"></i>
+        <div>
+          <strong>Caso revisado por un administrador.</strong>
+          <p class="mt-1">El administrador ha dejado un comentario. Por favor, revise la información y proceda a
+            publicar la ficha del animal.</p>
         </div>
-      </p-message>
+      </div>
+    </p-message>
     }
     @if (showAdminPendingMessage()) {
-      <p-message severity="warn" styleClass="w-full mt-1 mb-3">
-        <div class="flex items-center">
-          <i class="pi pi-exclamation-triangle text-xl mr-3"></i>
-          <div>
-            <strong>Revisión Requerida</strong>
-            <p class="mt-1">Este caso ha sido escalado por un moderador y necesita su atención.</p>
-          </div>
+    <p-message severity="warn" styleClass="w-full mt-1 mb-3">
+      <div class="flex items-center">
+        <i class="pi pi-exclamation-triangle text-xl mr-3"></i>
+        <div>
+          <strong>Revisión Requerida</strong>
+          <p class="mt-1">Este caso ha sido escalado por un moderador y necesita su atención.</p>
         </div>
-      </p-message>
+      </div>
+    </p-message>
     }
     @if (showAdminResolvedMessage()) {
-      <p-message severity="info" styleClass="w-full mt-1 mb-3">
-        <div class="flex items-center">
-          <i class="pi pi-info-circle text-xl mr-3"></i>
-          <div>
-            <strong>Caso devuelto al moderador.</strong>
-            <p class="mt-1">Ya ha respondido a este caso. El moderador revisará sus comentarios.</p>
-          </div>
+    <p-message severity="info" styleClass="w-full mt-1 mb-3">
+      <div class="flex items-center">
+        <i class="pi pi-info-circle text-xl mr-3"></i>
+        <div>
+          <strong>Caso devuelto al moderador.</strong>
+          <p class="mt-1">Ya ha respondido a este caso. El moderador revisará sus comentarios.</p>
         </div>
-      </p-message>
+      </div>
+    </p-message>
     }
     @if (showAdminToAssignedMessage()) {
-      <p-message severity="warn" styleClass="w-full mt-1 mb-3">
-        <div class="flex items-center">
-          <i class="pi pi-info-circle text-xl mr-3"></i>
-          <div>
-            <strong>Caso asignado a un administrador.</strong>
-            <p class="mt-1">Esta ficha ha sido asignada a un administrador para su revisión.</p>
-          </div>
+    <p-message severity="warn" styleClass="w-full mt-1 mb-3">
+      <div class="flex items-center">
+        <i class="pi pi-info-circle text-xl mr-3"></i>
+        <div>
+          <strong>Caso asignado a un administrador.</strong>
+          <p class="mt-1">Esta ficha ha sido asignada a un administrador para su revisión.</p>
         </div>
-      </p-message>
+      </div>
+    </p-message>
     }
     @if (showModToAssignedMessage()) {
-      <p-message severity="secondary" styleClass="w-full mt-1 mb-3">
-        <div class="flex items-center">
-          <i class="pi pi-info-circle text-xl mr-3"></i>
-          <div>
-            <strong>Un administrador se ha asignado el caso.</strong>
-            <p class="mt-1">Este caso está siendo gestionado por un administrador. No puedes realizar acciones.</p>
-          </div>
+    <p-message severity="secondary" styleClass="w-full mt-1 mb-3">
+      <div class="flex items-center">
+        <i class="pi pi-info-circle text-xl mr-3"></i>
+        <div>
+          <strong>Un administrador se ha asignado el caso.</strong>
+          <p class="mt-1">Este caso está siendo gestionado por un administrador. No puedes realizar acciones.</p>
         </div>
-      </p-message>
+      </div>
+    </p-message>
     }
 
     <!-- Datos del escalado (Moderador) -->
     @if (moderatorData(); as moderator) {
-      <div class="flex mb-2">
-        <div class="col">
-          <div class="field mb-2 text-sm">
-            <div class="text-color-secondary mb-1">Ficha Escalada:</div>
-            <div class="font-medium">{{moderator.animalData.name}}</div>
-          </div>
-          <div class="field mb-2 text-sm">
-            <div class="text-color-secondary mb-1">Escalado por:</div>
-            <div class="font-medium">{{moderator.email}}</div>
-          </div>
+    <div class="flex mb-2">
+      <div class="col">
+        <div class="field mb-2 text-sm">
+          <div class="text-color-secondary mb-1">Ficha Escalada:</div>
+          <div class="font-medium">{{moderator.animalData.name}}</div>
         </div>
-        <div class="col">
-          <div class="field mb-2 text-sm">
-            <div class="text-color-secondary mb-1">Fecha y hora:</div>
-            <div class="font-medium">{{moderator.dateHour.date }} {{moderator.dateHour.hour }}</div>
-          </div>
+        <div class="field mb-2 text-sm">
+          <div class="text-color-secondary mb-1">Escalado por:</div>
+          <div class="font-medium">{{moderator.email}}</div>
         </div>
       </div>
+      <div class="col">
+        <div class="field mb-2 text-sm">
+          <div class="text-color-secondary mb-1">Fecha y hora:</div>
+          <div class="font-medium">{{moderator.dateHour.date }} {{moderator.dateHour.hour }}</div>
+        </div>
+      </div>
+    </div>
     }
 
     <!-- Comentarios de la conversación -->
@@ -288,43 +301,44 @@
       <div class="field mb-4 text-sm">
         <!-- Mensajes para el Administrador: su comentario a la derecha -->
         @if (moderatorData(); as modData) {
-          <div class="flex justify-content-end">
-            <div class="content-message">
-              <p><strong>{{modData.name}}</strong> (Moderador)</p>
-              <p>{{ modData.comment }}</p>
-            </div>
+        <div class="flex justify-content-end">
+          <div class="content-message">
+            <p><strong>{{modData.name}}</strong> (Moderador)</p>
+            <p>{{ modData.comment }}</p>
           </div>
+        </div>
         }
         @if (adminData(); as adminData) {
-          <div class="flex justify-content-start">
-            <div class="content-message">
-              <p><strong>{{adminData.name}}</strong> (Administrador)</p>
-              <p>{{ adminData.comment }}</p>
-            </div>
+        <div class="flex justify-content-start">
+          <div class="content-message">
+            <p><strong>{{adminData.name}}</strong> (Administrador)</p>
+            <p>{{ adminData.comment }}</p>
           </div>
+        </div>
         }
       </div>
     </div>
 
     <!-- Panel de acción para el administrador -->
     @if (showAdminActionPanel()) {
-      <div class="flex items-center mb-4 mt-4">
-        <textarea rows="3" cols="100%" pTextarea [(ngModel)]="scaleComment"
-          placeholder="Escribe tu mensaje aqui..."></textarea>
-      </div>
+    <div class="flex items-center mb-4 mt-4">
+      <textarea rows="3" cols="100%" pTextarea [(ngModel)]="scaleComment"
+        placeholder="Escribe tu mensaje aqui..."></textarea>
+    </div>
     }
 
     <!-- Botones de acción -->
     <div class="flex justify-content-end pt-3 border-top-1 surface-border gap-2">
       @if (showModeratorCloseButton() || showAdminCloseButton()) {
-        <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
+      <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
       }
       @if (showAdminActionPanel()) {
-        <p-button label="Asignar a Administrador" severity="danger" class="p-button-outlined"
-          (click)="resolveScaled('toAdmin')" [disabled]="scaleComment === ''"/>
-        <p-button label="Enviar y devolver" severity="success" (click)="resolveScaled('toMod')" [disabled]="scaleComment === ''"/>
+      <p-button label="Asignar a Administrador" severity="danger" class="p-button-outlined"
+        (click)="resolveScaled('toAdmin')" [disabled]="scaleComment === ''" />
+      <p-button label="Enviar y devolver" severity="success" (click)="resolveScaled('toMod')"
+        [disabled]="scaleComment === ''" />
       }
     </div>
   </div>
-}
+  }
 </p-dialog>

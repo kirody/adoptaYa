@@ -1,8 +1,8 @@
 import { MessageModule } from 'primeng/message';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit, ViewChild } from '@angular/core';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
 import { TabsModule } from 'primeng/tabs';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { FirebaseService } from '../../../services/firebase.service';
 import { Animal } from '../../../models/animal';
@@ -21,9 +21,12 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { TextareaModule } from 'primeng/textarea';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { AuthService } from '../../../services/auth.service';
 import { UserData } from '../../../models/user-data';
 import { Observable } from 'rxjs';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-management-panel',
@@ -45,12 +48,15 @@ import { Observable } from 'rxjs';
     TextareaModule,
     TooltipModule,
     MessageModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
   styleUrl: './management-panel.component.css',
 })
-export class ManagementPanelComponent {
+export class ManagementPanelComponent implements OnInit {
   private firebaseService = inject(FirebaseService);
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
@@ -79,62 +85,49 @@ export class ManagementPanelComponent {
   showInfoScaled: boolean = false;
 
   // Datos principales de la revisión
-  moderatorData = computed(
-    () => this.selectedScaledAnimal()?.scaled[0]?.moderator
-  );
+  moderatorData = computed(() => this.selectedScaledAnimal()?.scaled[0]?.moderator);
   adminData = computed(() => this.selectedScaledAnimal()?.scaled[0]?.admin);
 
   // Mensajes de estado
-  showModPendingMessage = computed(
-    () => this.user()?.role === 'ROLE_MOD' && !this.adminData()
-  );
-  showModResolvedMessage = computed(
-    () =>
-      this.user()?.role === 'ROLE_MOD' &&
-      !!this.adminData() &&
-      !this.selectedScaledAnimal()?.assignedToAdmin
-  );
-  showAdminPendingMessage = computed(
-    () => this.user()?.role === 'ROLE_ADMIN' && !this.adminData()
-  );
-  showAdminResolvedMessage = computed(
-    () =>
-      this.user()?.role === 'ROLE_ADMIN' &&
-      !!this.adminData() &&
-      !this.selectedScaledAnimal()?.assignedToAdmin
+  showModPendingMessage = computed(() => this.user()?.role === 'ROLE_MOD' && !this.adminData()
   );
 
-  showAdminToAssignedMessage = computed(
-    () =>
-      this.user()?.role === 'ROLE_ADMIN' &&
-      this.selectedScaledAnimal()?.assignedToAdmin
+  showModResolvedMessage = computed(() => this.user()?.role === 'ROLE_MOD' &&
+    !!this.adminData() &&
+    !this.selectedScaledAnimal()?.assignedToAdmin
   );
 
-  showModToAssignedMessage = computed(
-    () =>
-      this.user()?.role === 'ROLE_MOD' &&
-      this.selectedScaledAnimal()?.assignedToAdmin
+  showAdminPendingMessage = computed(() => this.user()?.role === 'ROLE_ADMIN' && !this.adminData()
+  );
+
+  showAdminResolvedMessage = computed(() => this.user()?.role === 'ROLE_ADMIN' &&
+    !!this.adminData() &&
+    !this.selectedScaledAnimal()?.assignedToAdmin
+  );
+
+  showAdminToAssignedMessage = computed(() => this.user()?.role === 'ROLE_ADMIN' &&
+    this.selectedScaledAnimal()?.assignedToAdmin
+  );
+
+  showModToAssignedMessage = computed(() => this.user()?.role === 'ROLE_MOD' &&
+    this.selectedScaledAnimal()?.assignedToAdmin
   );
 
   // Botones y campos de acción
-  showAdminActionPanel = computed(
-    () => this.user()?.role === 'ROLE_ADMIN' && !this.adminData()
-  );
-
+  showAdminActionPanel = computed(() => this.user()?.role === 'ROLE_ADMIN' && !this.adminData());
   showModeratorCloseButton = computed(() => this.user()?.role === 'ROLE_MOD');
-  showAdminCloseButton = computed(
-    () => this.user()?.role === 'ROLE_ADMIN' && !!this.adminData()
-  );
+  showAdminCloseButton = computed(() => this.user()?.role === 'ROLE_ADMIN' && !!this.adminData());
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
     this.currentUser$.subscribe((user: UserData) => {
       this.user.set(user);
+      this.initTabs();
     });
   }
 
   ngOnInit() {
-    this.initTabs();
+    // this.initTabs();
   }
 
   initTabs() {
@@ -296,10 +289,17 @@ export class ManagementPanelComponent {
   tabAnimals() {
     this.valueTab = 0;
     this.isLoading = true;
-    this.firebaseService.getAnimals().then((data) => {
-      this.dataTable.set([...data.slice(0, 12)]);
-      this.countTabAnimals = String(data.length);
-      this.isLoading = false;
+    const animalsPromise =
+      this.user()?.role === 'ROLE_MOD'
+        ? this.firebaseService.getAnimalsByPublishState()
+        : this.firebaseService.getAnimals();
+
+    animalsPromise.then((data) => {
+      if (data) {
+        this.dataTable.set(data);
+        this.countTabAnimals = String(data?.length);
+        this.isLoading = false;
+      }
     });
   }
 
@@ -307,7 +307,7 @@ export class ManagementPanelComponent {
     this.valueTab = 2;
     this.isLoading = true;
     this.firebaseService.getUsers().then((data) => {
-      this.dataTable.set([...data.slice(0, 12)]);
+      this.dataTable.set(data);
       this.isLoading = false;
     });
   }
@@ -571,5 +571,10 @@ export class ManagementPanelComponent {
       return 'Pendiente de revisión por un administrador';
     }
     return 'Editar ficha';
+  }
+
+  // Función auxiliar para obtener el valor del evento (para usar en el HTML)
+  getEventValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
   }
 }

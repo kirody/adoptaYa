@@ -21,5 +21,9 @@
 
 
 :host ::ng-deep .p-dialog {
-  width: 50vw!important;
-  }
+  width: 50vw !important;
+}
+
+.hide-filter {
+  visibility: hidden !important;
+}

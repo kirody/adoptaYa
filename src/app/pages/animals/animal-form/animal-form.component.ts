@@ -265,7 +265,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  //TODO:
   checkAnimalScaled() {
     this.isAnimalScaled =
       this.animalForm.value.scaled[0]?.animalData?.id ===

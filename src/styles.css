@@ -15,3 +15,7 @@ html {
 .p-progressspinner-circle {
   stroke: #88b78a !important; /* ¡Usa el color que prefieras! */
 }
+
+.content-spinner {
+  margin-top: 30vh;
+}
