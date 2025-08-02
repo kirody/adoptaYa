@@ -286,21 +286,33 @@ export class ManagementPanelComponent implements OnInit {
     // Puedes añadir lógica para otras pestañas aquí si es necesario
   }
 
-  tabAnimals() {
-    this.valueTab = 0;
+  async tabAnimals() {
     this.isLoading = true;
-    const animalsPromise =
-      this.user()?.role === 'ROLE_MOD'
-        ? this.firebaseService.getAnimalsByPublishState()
-        : this.firebaseService.getAnimals();
-
-    animalsPromise.then((data) => {
-      if (data) {
-        this.dataTable.set(data);
-        this.countTabAnimals = String(data?.length);
-        this.isLoading = false;
+    this.valueTab = 0;
+    try {
+      let animalsData: Animal[] = [];
+      if (this.user()?.role === 'ROLE_MOD') {
+        animalsData = await this.firebaseService.getAnimalsByPublishState();
+      } else {
+        animalsData = (await this.firebaseService.getAnimals()) as Animal[];
       }
-    });
+
+      // Transformamos los datos para añadir el campo de texto para el filtro
+      const processedAnimals = animalsData.map(animal => ({
+        ...animal,
+        publishedText: animal.published ? 'Publicado' : 'Sin publicar'
+      }));
+
+      this.dataTable.set(processedAnimals);
+      this.countTabAnimals = this.dataTable().length;
+      console.log(this.dataTable());
+
+    } catch (error) {
+      console.error('Error al cargar los animales:', error);
+      // Manejo de errores
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   tabUsers() {

@@ -11,6 +11,8 @@ export interface Animal {
   gender: string;
   state?: string;
   published?: boolean;
+  publishedText?: string;
+  assignedToAdmin?: boolean;
   scaled: any;
   protectressName: string;
   protectressPhone: string;

@@ -22,10 +22,13 @@
           <span class="font-bold whitespace-nowrap">Solicitudes</span>
           <p-tag severity="warn" value="0" [rounded]="true" />
         </p-tab>
-        <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()"
-          *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+        <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
           <i class="fa fa-users"></i>
           <span class="font-bold whitespace-nowrap">Usuarios</span>
+        </p-tab>
+        <p-tab value="3" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+          <i class="fa fa-file"></i>
+          <span class="font-bold whitespace-nowrap">Estadísticas</span>
         </p-tab>
         <ng-template #nexticon>
           <i class="pi pi-plus"></i>
@@ -35,7 +38,7 @@
         <p-tabpanel value="0">
           @if (dataTable() && dataTable().length > 0) {
           <p-table #dt2 [value]="dataTable()" [tableStyle]="{ 'min-width': '60rem' }"
-            [globalFilterFields]="['name', 'gender', 'published']" [paginator]="true" [rows]="5"
+            [globalFilterFields]="['name', 'gender', 'specie', 'protectressName', 'publishedText']" [paginator]="true" [rows]="10"
             [rowsPerPageOptions]="[5, 10, 20]">
             <ng-template #caption>
               <div class="flex">
@@ -64,7 +67,8 @@
             </ng-template>
             <ng-template #body let-animal>
               <tr [ngClass]="{'bg-gray-100 opacity-70': user()?.role === 'ROLE_MOD' && animal.assignedToAdmin}"
-                [pTooltip]="(user()?.role === 'ROLE_MOD' && animal.assignedToAdmin) ? 'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
+                [pTooltip]="(user()?.role === 'ROLE_MOD' && animal.assignedToAdmin) ?
+                'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
                 tooltipPosition="top">
                 <td>
                   <img [src]="animal.urlImage" [alt]="animal.name" class="w-2rem rounded" />
@@ -85,7 +89,7 @@
                 <td>
                   <i class="fa-solid"
                     [ngClass]="{'fa-circle-check text-green-500': animal.published, 'fa-circle-xmark text-red-500': !animal.published}"
-                    [pTooltip]="animal.published ? 'Publicado' : 'No Publicado'" tooltipPosition="top"></i>
+                    [pTooltip]="animal.published ? 'Publicado' : 'Sin publicar'" tooltipPosition="top"></i>
                 </td>
                 <td>
                   @if (animal.scaled?.length > 0) {
@@ -179,6 +183,9 @@
           } @else {
           <app-card-nodata message="No hay usuarios disponibles para gestionar."></app-card-nodata>
           }
+        </p-tabpanel>
+        <p-tabpanel value="3">
+          <app-card-nodata [message]="'En contrucción...'"></app-card-nodata>
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
