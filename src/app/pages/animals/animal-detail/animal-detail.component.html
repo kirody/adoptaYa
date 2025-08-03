@@ -2,7 +2,8 @@
   <app-header-page [title]="animal()?.name || 'Detalle del Animal'" [icon]="icon"></app-header-page>
 
   <div class="card flex justify-center" *ngIf="isLoading()">
-    <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s" [style]="{ width: '50px', height: '50px' }" />
+    <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
+      [style]="{ width: '50px', height: '50px' }" />
   </div>
 
   <div *ngIf="!isLoading() && animal() as currentAnimal" class="animal-detail-container flex mt-4">
@@ -49,9 +50,8 @@
         </div>
 
         <div class="mt-8 flex gap-2">
-          <button pButton label="¡Adoptar ahora!" icon="pi pi-heart" class="w-full md:w-auto"></button>
-          <button pButton label="Volver" icon="pi pi-arrow-left" [outlined]="true" (click)="goBack()"
-            class="w-full md:w-auto"></button>
+          <button pButton label="Solicitar adopción" icon="pi pi-heart" class="w-full md:w-auto"
+            (click)="adoptionRequest()"></button>
         </div>
       </div>
     </div>
@@ -59,6 +59,41 @@
 
   <div *ngIf="!isLoading() && !animal()" class="text-center p-6">
     <p class="text-xl text-surface-500">No se pudo encontrar el animal.</p>
-    <button pButton label="Volver al listado" icon="pi pi-arrow-left" (click)="goBack()" class="mt-4"></button>
   </div>
 </div>
+
+<p-dialog header="Solicitud de adopción" [modal]="true" [(visible)]="showModalAdoption" [style]="{ width: '60rem' }">
+  <span class="p-text-secondary block mb-4"></span>
+  <div class="flex items-center mb-4">
+    <div class="col">
+      <div class="field">
+        <label for="animalName" class="form-label">Nombre del solicitante</label>
+        <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+      </div>
+
+      <div class="field">
+        <div class="field">
+          <label for="animalName" class="form-label">Teléfono</label>
+          <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="field">
+        <label for="animalName" class="form-label">Dirección</label>
+        <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+      </div>
+
+
+      <div class="field">
+        <label for="animalName" class="form-label">Correo electrónico</label>
+        <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+      </div>
+    </div>
+  </div>
+  <div class="flex justify-end gap-2">
+    <p-button label="Cancelar" severity="secondary" (click)="showModalAdoption = false" />
+    <p-button label="Enviar Solicitud" icon="pi pi-send" (click)="sendAdoptionRequest()" />
+  </div>
+</p-dialog>

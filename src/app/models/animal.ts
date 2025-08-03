@@ -14,7 +14,6 @@ export interface Animal {
   publishedText?: string;
   assignedToAdmin?: boolean;
   scaled: any;
+  protectressID: string;
   protectressName: string;
-  protectressPhone: string;
-  protectressEmail: string;
 }

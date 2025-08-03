@@ -28,6 +28,7 @@ import { UserData } from '../../../models/user-data';
 import { Observable } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { StatisticsComponent } from "../../../components/statistics/statistics.component";
+import { RequestsComponent } from '../../../components/requests/requests.component';
 
 @Component({
   selector: 'app-management-panel',
@@ -52,7 +53,8 @@ import { StatisticsComponent } from "../../../components/statistics/statistics.c
     IconFieldModule,
     InputIconModule,
     InputTextModule,
-    StatisticsComponent
+    StatisticsComponent,
+    RequestsComponent
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
@@ -292,17 +294,25 @@ export class ManagementPanelComponent implements OnInit {
     this.isLoading = true;
     this.valueTab = 0;
     try {
-      let animalsData: Animal[] = [];
-      if (this.user()?.role === 'ROLE_MOD') {
-        animalsData = await this.firebaseService.getAnimalsByPublishState();
-      } else {
-        animalsData = (await this.firebaseService.getAnimals()) as Animal[];
-      }
+      const [protectors, animalsDataResult] = await Promise.all([
+        this.firebaseService.getProtectors(),
+        this.user()?.role === 'ROLE_MOD'
+          ? this.firebaseService.getAnimalsByPublishState()
+          : this.firebaseService.getAnimals(),
+      ]);
 
-      // Transformamos los datos para añadir el campo de texto para el filtro
-      const processedAnimals = animalsData.map(animal => ({
+      const animalsData = animalsDataResult as Animal[];
+      const protectorsMap = new Map(
+        (protectors as any[]).map((p) => [p.id, p.name])
+      );
+
+      // Transformamos los datos para añadir campos para el filtro y visualización
+      const processedAnimals = animalsData.map((animal) => ({
         ...animal,
-        publishedText: animal.published ? 'Publicado' : 'Sin publicar'
+        publishedText: animal.published ? 'Publicado' : 'Sin publicar',
+        protectressName: animal.protectressID
+          ? protectorsMap.get(animal.protectressID) || 'N/A'
+          : 'N/A',
       }));
 
       //TODO: Transformar datos de la columna Escalado para filtrar
@@ -310,7 +320,6 @@ export class ManagementPanelComponent implements OnInit {
       this.dataTable.set(processedAnimals);
       this.countTabAnimals = this.dataTable().length;
       console.log(this.dataTable());
-
     } catch (error) {
       console.error('Error al cargar los animales:', error);
       // Manejo de errores

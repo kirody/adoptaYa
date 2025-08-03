@@ -1,0 +1,92 @@
+/* Estilo general del contenedor del formulario */
+.animal-form-container {
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  max-width: 55rem;
+}
+
+/* Etiqueta del formulario */
+.form-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #34495e;
+  font-weight: 600;
+  margin-bottom: 8px; /* Espacio entre la etiqueta y el input */
+}
+
+/* Espaciado de los campos de PrimeFlex */
+.field {
+  margin-bottom: 1.25rem;
+}
+
+/* Estilo de los inputs */
+:host ::ng-deep .p-inputtext:focus,
+:host ::ng-deep .p-inputnumber-input:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+/* Contenedor para los botones */
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.animal-form {
+  padding: 20px;
+}
+
+
+/* Define tus colores base para que sea consistente con tu app */
+:host {
+  --primary-color: #3B82F6; /* Un azul moderno */
+  --border-color: #E5E7EB;   /* Un gris claro */
+  --text-color-light: #6B7280; /* Un gris para texto secundario */
+  --card-bg: #F9FAFB;        /* Un fondo muy sutil para la tarjeta */
+}
+
+.protectora-display-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px; /* Espacio debajo de la tarjeta */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  &__body {
+    display: flex;
+    align-items: center;
+    gap: 16px; /* Espacio entre el ícono y la información */
+  }
+
+  &__icon {
+    font-size: 2rem; /* Tamaño del ícono */
+    color: var(--primary-color);
+    flex-shrink: 0; /* Evita que el ícono se encoja */
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__contact {
+    font-size: 0.9rem;
+    color: var(--text-color-light);
+    margin: 4px 0 0 0;
+  }
+}

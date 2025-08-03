@@ -8,6 +8,8 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { FirebaseService } from '../../../services/firebase.service';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-animal-detail',
@@ -19,7 +21,9 @@ import { FirebaseService } from '../../../services/firebase.service';
     ButtonModule,
     TagModule,
     ProgressSpinnerModule,
-],
+    DialogModule,
+    InputTextModule
+  ],
   templateUrl: './animal-detail.component.html',
   styleUrls: ['./animal-detail.component.css']
 })
@@ -32,6 +36,8 @@ export class AnimalDetailComponent implements OnInit {
   isLoading = signal<boolean>(true);
   icon = '';
   gender = '';
+
+  showModalAdoption: boolean = false;
 
   ngOnInit(): void {
     this.route.paramMap.pipe(
@@ -58,10 +64,6 @@ export class AnimalDetailComponent implements OnInit {
         // this.router.navigate(['/not-found']);
       }
     });
-  }
-
-  goBack(): void {
-    this.router.navigate(['/animales']);
   }
 
   formattedStates(animal: Animal) {
@@ -95,4 +97,10 @@ export class AnimalDetailComponent implements OnInit {
         return null;
     }
   }
+
+  adoptionRequest() {
+    this.showModalAdoption = true;
+  }
+
+  sendAdoptionRequest() { }
 }

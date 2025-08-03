@@ -103,8 +103,13 @@ export class HeaderComponent {
         ? [
             {
               label: 'Añadir animal',
-              icon: 'fas fa-plus',
+              icon: 'fa-solid fa-circle-plus',
               routerLink: '/form-animal',
+            },
+            {
+              label: 'Añadir protectora',
+              icon: 'fa-solid fa-circle-plus',
+              routerLink: '/form-protector',
             },
           ]
         : []),

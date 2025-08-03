@@ -11,6 +11,7 @@ import { AnimalDetailComponent } from './pages/animals/animal-detail/animal-deta
 import { AnimalFormComponent } from './pages/animals/animal-form/animal-form.component';
 import { ManagementPanelComponent } from './pages/user/management-panel/management-panel.component';
 import { roleGuard } from './guards/role.guard';
+import { ProtectorFormComponent } from './pages/protectors/protector-form/protector-form.component';
 
 export const routes: Routes = [
   {
@@ -52,6 +53,18 @@ export const routes: Routes = [
   {
     path: 'detail-animal/:id',
     component: AnimalDetailComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
+  },
+  {
+    path: 'form-protector',
+    component: ProtectorFormComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
+  },
+  {
+    path: 'form-protector/:id',
+    component: ProtectorFormComponent,
     canActivate: [roleGuard],
     data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
   },

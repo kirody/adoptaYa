@@ -1,8 +1,8 @@
 <p-toast></p-toast>
 <div class="animal-form-container">
-  <app-header-page [title]="'Añadir Animal'" [icon]="'fas fa-plus'"></app-header-page>
-  <p-panel #pnl showHeader="false">
-    <p-blockui [target]="pnl" [blocked]="blockedPanel" showHeader />
+  <app-header-page [title]="'Añadir Animal'" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
+  <div class="animal-form">
+    <span class="text-gray-400 text-sm" *ngIf="isEditMode">ID: {{ animalForm.value.id }}</span>
     <p-message *ngIf="isAnimalScaled" severity="error" styleClass="w-full mb-4">
       <div class="flex items-center">
         <i class="pi pi-lock text-xl mr-3"></i>
@@ -14,102 +14,91 @@
     </p-message>
     <form [formGroup]="animalForm" (ngSubmit)="saveAnimal()">
       <div class="flex justify-content-end mt-3" *ngIf="!isEditMode">
-        <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" [loading]="blockedPanel"
-          severity="secondary" [raised]="true" [rounded]="true">
+        <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" severity="secondary"
+          [raised]="true" [rounded]="true">
         </p-button>
       </div>
       <div>
-        <p-fieldset legend="Información del Animal" [toggleable]="true" [style]="{'border-color': 'lightgrey'}">
-          <div class="card grid grid-cols-1 md:grid-cols-2">
-            <div class="col">
-              <div class="field">
-                <label for="animalName" class="form-label">Nombre</label>
-                <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
-              </div>
 
-              <div class="field">
-                <label for="animalSpecies" class="form-label">Especie</label>
-                <p-select id="specie" formControlName="specie" [options]="species" placeholder="Selecciona una especie"
-                  styleClass="w-full">
-                </p-select>
-              </div>
-
-              <div class="field">
-                <label for="gender" class="form-label">Género</label>
-                <p-select id="gender" formControlName="gender" [options]="genders" placeholder="Selecciona un género"
-                  filterBy="label" styleClass="w-full">
-                </p-select>
-              </div>
-
-              <div class="field">
-                <label for="animalProvince" class="form-label">Provincia</label>
-                <p-select id="province" formControlName="province" [options]="provinces"
-                  placeholder="Selecciona una provincia" filterBy="label" styleClass="w-full">
-                </p-select>
-              </div>
+        <div class="card grid grid-cols-1 md:grid-cols-2">
+          <div class="col">
+            <div class="field">
+              <label for="animalName" class="form-label">Nombre</label>
+              <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
             </div>
 
-            <div class="col">
-              <div class="field">
-                <label for="animalAge" class="form-label">Edad</label>
-                <p-inputnumber inputId="integeronly" formControlName="age" class="w-full" />
-              </div>
+            <div class="field">
+              <label for="animalSpecies" class="form-label">Especie</label>
+              <p-select id="specie" formControlName="specie" [options]="species" placeholder="Selecciona una especie"
+                styleClass="w-full">
+              </p-select>
+            </div>
 
-              <div class="field">
-                <label for="animalRace" class="form-label">Raza</label>
-                <p-select id="race" formControlName="race" [options]="races" placeholder="Selecciona una raza"
-                  filterBy="label" styleClass="w-full" [disabled]="!animalForm.get('specie')?.value">
-                  <!-- Deshabilitado hasta que se elija especie -->
-                </p-select>
-              </div>
+            <div class="field">
+              <label for="gender" class="form-label">Género</label>
+              <p-select id="gender" formControlName="gender" [options]="genders" placeholder="Selecciona un género"
+                filterBy="label" styleClass="w-full">
+              </p-select>
+            </div>
 
-              <div class="field">
-                <label for="animalUrlImage" class="form-label">URL de la Imagen</label>
-                <div class="flex items-center">
-                  <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-full" />
-                  <button type="button" pButton icon="pi pi-clipboard" (click)="paste()"
-                    pTooltip="Pegar URL del portapapeles" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
-                </div>
-              </div>
-              <div class="field">
-                <label for="size" class="form-label">Tamaño</label>
-                <p-select id="size" formControlName="size" [options]="sizes" placeholder="Selecciona un tamaño"
-                  filterBy="label" styleClass="w-full">
-                </p-select>
-              </div>
+            <div class="field">
+              <label for="animalProvince" class="form-label">Provincia</label>
+              <p-select id="province" formControlName="province" [options]="provinces"
+                placeholder="Selecciona una provincia" filterBy="label" styleClass="w-full">
+              </p-select>
+            </div>
+
+            <div class="field">
+              <label for="animalProtectress" class="form-label">Protectora</label>
+              <p-select id="protectress" formControlName="protectressID" [options]="protectors"
+                placeholder="Selecciona una protectora" optionLabel="name" optionValue="id" filter="true"
+                styleClass="w-full">
+              </p-select>
             </div>
           </div>
-          <div class="card grid">
-            <div class="col">
-              <div class="field">
-                <label for="description" class="form-label">Descripción</label>
-                <textarea id="description" rows="5" cols="30" pTextarea formControlName="description"
-                  class="w-full"></textarea>
+
+          <div class="col">
+            <div class="field">
+              <label for="animalAge" class="form-label">Edad</label>
+              <p-inputnumber inputId="integeronly" formControlName="age" class="w-full" />
+            </div>
+
+            <div class="field">
+              <label for="animalRace" class="form-label">Raza</label>
+              <p-select id="race" formControlName="race" [options]="races" placeholder="Selecciona una raza"
+                filterBy="label" styleClass="w-full" [disabled]="!animalForm.get('specie')?.value">
+                <!-- Deshabilitado hasta que se elija especie -->
+              </p-select>
+            </div>
+
+            <div class="field">
+              <label for="animalUrlImage" class="form-label">URL de la Imagen</label>
+              <div class="flex items-center">
+                <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-full" />
+                <button type="button" pButton icon="pi pi-clipboard" (click)="paste()"
+                  pTooltip="Pegar URL del portapapeles" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
               </div>
             </div>
-          </div>
-        </p-fieldset>
-
-        <p-fieldset legend="Datos de Protectora" [toggleable]="true" styleClass="mt-4">
-          <div class="card grid grid-cols-1 md:grid-cols-2">
-            <div class="field col">
-              <label for="protectressName" class="form-label">Nombre de la Protectora</label>
-              <input id="protectressName" type="text" pInputText formControlName="protectressName" class="w-full" />
-            </div>
-            <div class="field col">
-              <label for="protectressPhone" class="form-label">Teléfono</label>
-              <input id="protectressPhone" type="text" pInputText formControlName="protectressPhone" class="w-full" />
-            </div>
-            <div class="field col">
-              <label for="protectressEmail" class="form-label">Email</label>
-              <input id="protectressEmail" type="email" pInputText formControlName="protectressEmail" class="w-full" />
+            <div class="field">
+              <label for="size" class="form-label">Tamaño</label>
+              <p-select id="size" formControlName="size" [options]="sizes" placeholder="Selecciona un tamaño"
+                filterBy="label" styleClass="w-full">
+              </p-select>
             </div>
           </div>
-        </p-fieldset>
-
-        <p-fieldset legend="Configuración adicional" collapsed="true" [toggleable]="true"
-          [style]="{'border-color': 'lightgrey'}">
-          <div class="flex">
+        </div>
+        <div class="card grid">
+          <div class="col">
+            <div class="field">
+              <label for="description" class="form-label">Descripción</label>
+              <textarea id="description" rows="5" cols="30" pTextarea formControlName="description"
+                class="w-full"></textarea>
+            </div>
+          </div>
+        </div>
+        <p-divider></p-divider>
+        <div class="flex align-items-center">
+          <div class="col">
             <div class="col">
               <div class="field">
                 <label for="animalState" class="form-label">Estado</label>
@@ -127,13 +116,44 @@
               </div>
             </div>
           </div>
-        </p-fieldset>
+          <div class="col">
+            <div *ngIf="animalForm.get('protectressName')?.value" class="protectora-display-card">
+              <div class="protectora-display-card__body">
+                <div class="protectora-display-card__icon">
+                  <i class="pi pi-shield text-default"></i>
+                </div>
+                <div class="protectora-display-card__info">
+                  <p class="protectora-display-card__name text-default">Datos de la protectora</p>
 
+                  <div class="protectora-display-card__contact">
+                    <div class="">
+                      <span class="text-default font-bold">Nombre:</span>
+                      {{ animalForm.get('protectressName')?.value }}
+                    </div>
+                    <div class="">
+                      <span class="text-default font-bold">Email:</span>
+                      {{ animalForm.get('protectressEmail')?.value }}
+                    </div>
+                    <div class="">
+                      <span class="text-default font-bold">Teléfono: </span>
+                      {{ animalForm.get('protectressPhone')?.value }}
+                    </div>
+                    <div class="">
+                      <span class="text-default font-bold">Provincia:</span>
+                      {{ animalForm.get('protectressProvince')?.value }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
         <div class="form-buttons">
-          <p-button label="Guardar cambios" icon="pi pi-save" type="submit" [loading]="blockedPanel"
-            [disabled]="!animalForm.valid || blockedPanel" [raised]="true" [rounded]="true"></p-button>
+          <p-button label="Guardar cambios" icon="pi pi-save" type="submit" [disabled]="!animalForm.valid"
+            [raised]="true" [rounded]="true"></p-button>
         </div>
       </div>
     </form>
-  </p-panel>
+  </div>
 </div>

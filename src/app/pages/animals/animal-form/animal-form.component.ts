@@ -25,6 +25,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ToggleButtonModule } from 'primeng/togglebutton';
+import { DividerModule } from 'primeng/divider';
 import {
   GENDERS,
   PROVINCES_SPAIN,
@@ -60,9 +61,10 @@ import { HeaderPageComponent } from '../../../components/header-page/header-page
     FormsModule,
     HeaderPageComponent,
     ToggleButtonModule,
+    DividerModule
   ],
   templateUrl: './animal-form.component.html',
-  styleUrls: ['./animal-form.component.css'],
+  styleUrls: ['./animal-form.component.scss'],
   providers: [MessageService],
 })
 export class AnimalFormComponent implements OnInit, OnDestroy {
@@ -71,8 +73,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   pageTitle = 'Añadir Animal';
   submitButtonText = 'Añadir Animal';
   private animalId: string | null = null;
-
-  blockedPanel: boolean = false;
 
   // Constantes para el template
   provinces = PROVINCES_SPAIN;
@@ -84,6 +84,8 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
   private speciesChangesSubscription!: Subscription;
   isAnimalScaled = false;
+  protectors: any[] = [];
+  dataProtector: any;
 
   constructor(
     private fb: FormBuilder,
@@ -92,9 +94,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     private geminiService: GeminiService,
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) { }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.animalId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.animalId;
 
@@ -102,7 +104,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       this.pageTitle = 'Editar Animal';
       this.submitButtonText = 'Actualizar Animal';
       this.loadAnimalData(this.animalId!);
+      this.firebaseService.getProtectorById
     }
+
     this.animalForm = this.fb.group({
       id: [''],
       name: ['', Validators.required],
@@ -117,10 +121,27 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       state: ['', Validators.required], // Opcional
       published: [false],
       scaled: [[]],
-      protectressName: ['', Validators.required],
-      protectressPhone: ['', Validators.required],
-      protectressEmail: ['', [Validators.required, Validators.email]],
+      protectressID: [''],
+      protectressName: [''],
+      protectressPhone: [''],
+      protectressProvince: [''],
+      protectressEmail: ['']
     });
+
+    await this.loadProtectors();
+    // Cuando el ID de la protectora cambia, actualizamos el nombre
+    this.animalForm.get('protectressID')?.valueChanges.subscribe(protectorId => {
+      if (protectorId) {
+        const selectedProtector = this.protectors.find(p => p.id === protectorId);
+        if (selectedProtector) {
+          this.animalForm.get('protectressName')?.setValue(selectedProtector.name, { emitEvent: false });
+          this.animalForm.get('protectressEmail')?.setValue(selectedProtector.email, { emitEvent: false });
+          this.animalForm.get('protectressProvince')?.setValue(selectedProtector.province, { emitEvent: false });
+          this.animalForm.get('protectressPhone')?.setValue(selectedProtector.phone, { emitEvent: false });
+        }
+      }
+    });
+
 
     // Escuchar cambios en el campo 'specie' para actualizar las razas
     this.speciesChangesSubscription = this.animalForm
@@ -128,7 +149,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       .valueChanges.subscribe((specie) => {
         this.animalForm.get('race')?.reset(''); // Resetea la raza al cambiar de especie
         this.races = RACES_BY_SPECIES[specie] || [];
-      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -138,12 +159,12 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   }
 
   private async loadAnimalData(id: string): Promise<void> {
-    this.blockedPanel = true;
     try {
       const animalData = await this.firebaseService.getAnimalById(id);
       if (animalData) {
         this.animalForm.patchValue(animalData);
         this.checkAnimalScaled();
+        console.log(this.animalForm.value);
       } else {
         this.messageService.add({
           severity: 'error',
@@ -158,9 +179,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         summary: 'Error',
         detail: 'No se pudo cargar la información del animal.',
       });
-    } finally {
-      this.blockedPanel = false;
-    }
+    } finally { }
   }
 
   async saveAnimal(): Promise<void> {
@@ -173,7 +192,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    this.blockedPanel = true;
 
     try {
       if (this.isEditMode && this.animalId) {
@@ -204,13 +222,11 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         detail: err.message || `Ha ocurrido un error al ${action} el animal.`,
       });
     } finally {
-      this.blockedPanel = false;
       this.animalForm.enable(); // Vuelve a habilitar los campos
     }
   }
 
   async generateAnimalAI(): Promise<void> {
-    this.blockedPanel = true;
     this.animalForm.disable(); // Deshabilita todos los campos del formulario
 
     try {
@@ -234,8 +250,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           'No se pudieron generar los datos. Inténtalo de nuevo.',
       });
     } finally {
-      // Esto se ejecuta siempre, tanto si hay éxito como si hay error.
-      this.blockedPanel = false;
       this.animalForm.enable(); // Vuelve a habilitar los campos
     }
   }
@@ -270,8 +284,17 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       this.animalForm.value.scaled[0]?.animalData?.id ===
       this.animalForm.value.id;
 
-      if (this.isAnimalScaled) {
-        this.animalForm.disable();
-      }
+    if (this.isAnimalScaled) {
+      this.animalForm.disable();
+    }
+  }
+
+  async loadProtectors(): Promise<void> {
+    try {
+      this.protectors = await this.firebaseService.getProtectors();
+    } catch (error) {
+      console.error('Error al cargar las protectoras:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario
+    }
   }
 }

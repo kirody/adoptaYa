@@ -1,25 +1,10 @@
 /* Estilo general del contenedor del formulario */
-.animal-form-container {
+.protector-form-container {
   margin: 0 auto;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   max-width: 55rem;
-}
-
-/* Título del formulario */
-.title {
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #ffffff;
-  background: #88b78a; /* Color de fondo verde */
-  padding: 1.25rem;
-  text-align: center;
-  /* Se ajusta al padding del p-panel para ocupar todo el ancho y pegarse arriba */
-  margin: -1.25rem -1.25rem 2rem -1.25rem;
-  border-radius: 8px 8px 0 0;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  letter-spacing: 0.5px;
 }
 
 /* Etiqueta del formulario */
@@ -50,13 +35,6 @@
   margin-top: 30px;
 }
 
-/* Leyenda de los fieldsets */
-:host ::ng-deep .p-fieldset-legend {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #34495e;
-}
-
-:host ::ng-deep .p-panel {
-  padding-top: 20px;
+.protector-form {
+  padding: 20px;
 }

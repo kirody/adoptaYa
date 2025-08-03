@@ -147,7 +147,7 @@
           }
         </p-tabpanel>
         <p-tabpanel value="1">
-          <app-card-nodata [message]="'En contrucción...'"></app-card-nodata>
+          <app-requests></app-requests>
         </p-tabpanel>
         <p-tabpanel value="2">
           @if (dataTable() && dataTable().length > 0) {
@@ -287,8 +287,8 @@
     <div class="flex mb-2">
       <div class="col">
         <div class="field mb-2 text-sm">
-          <div class="text-color-secondary mb-1">Ficha Escalada:</div>
-          <div class="font-medium">{{moderator.animalData.name}}</div>
+          <div class="text-color-secondary mb-1">ID Ficha:</div>
+          <div class="text-gray-400 text-sm">{{ moderator.animalData.id }}</div>
         </div>
         <div class="field mb-2 text-sm">
           <div class="text-color-secondary mb-1">Escalado por:</div>
@@ -296,6 +296,10 @@
         </div>
       </div>
       <div class="col">
+        <div class="field mb-2 text-sm">
+          <div class="text-color-secondary mb-1">Ficha Escalada:</div>
+          <div class="font-medium">{{moderator.animalData.name}}</div>
+        </div>
         <div class="field mb-2 text-sm">
           <div class="text-color-secondary mb-1">Fecha y hora:</div>
           <div class="font-medium">{{moderator.dateHour.date }} {{moderator.dateHour.hour }}</div>

@@ -1,0 +1,46 @@
+<p-toast></p-toast>
+<div class="protector-form-container">
+  <app-header-page [title]="'Añadir Protectora'" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
+  <div class="protector-form">
+    <span class="text-gray-400 text-sm" *ngIf="isEditMode">ID: {{ protectorForm.value.id }}</span>
+    <form [formGroup]="protectorForm" (ngSubmit)="saveProtector()">
+      <!-- div class="flex justify-content-end mt-3" *ngIf="!isEditMode">
+        <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateprotectorAI()" [loading]="blockedPanel"
+          severity="secondary" [raised]="true" [rounded]="true">
+        </p-button>
+      </div> -->
+      <div>
+
+        <div class="card grid grid-cols-1 md:grid-cols-2">
+          <div class="col">
+            <div class="field">
+              <label for="protectorName" class="form-label">Nombre</label>
+              <input id="protectorName" type="text" pInputText formControlName="name" class="w-full" />
+            </div>
+            <div class="field">
+              <label for="protectorPhone" class="form-label">Teléfono</label>
+              <input id="protectorPhone" type="text" pInputText formControlName="phone" class="w-full" />
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="field">
+              <label for="protectorEmail" class="form-label">Correo electrónico</label>
+              <input id="protectorEmail" type="text" pInputText formControlName="email" class="w-full" />
+            </div>
+            <div class="field">
+              <label for="protectorProvince" class="form-label">Provincia</label>
+              <p-select id="protectorProvince" formControlName="province" [options]="provinces"
+                placeholder="Selecciona una provincia" filterBy="label" styleClass="w-full">
+              </p-select>
+            </div>
+          </div>
+        </div>
+        <div class="form-buttons">
+          <p-button label="Guardar cambios" icon="pi pi-save" type="submit" [disabled]="!protectorForm.valid"
+            [raised]="true" [rounded]="true"></p-button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
