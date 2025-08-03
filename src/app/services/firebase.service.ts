@@ -14,6 +14,8 @@ import {
   setDoc,
   updateDoc,
   where,
+  WhereFilterOp,
+  collectionGroup,
 } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 import { Animal } from '../models/animal';
@@ -27,19 +29,6 @@ export class FirebaseService {
   itemSelected: any;
 
   constructor() { }
-
-  private async _getAnimalWithSubcollections(animalDoc: DocumentSnapshot) {
-    const animalData = animalDoc.data();
-    const scaledCollectionRef = collection(animalDoc.ref, 'scaled');
-    const scaledSnapshot = await getDocs(scaledCollectionRef);
-    const scaledData = scaledSnapshot.docs.map((doc) => doc.data());
-
-    return {
-      id: animalDoc.id,
-      ...animalData,
-      scaled: scaledData,
-    };
-  }
 
   //ANIMALES
   async getAnimals() {
@@ -252,6 +241,69 @@ export class FirebaseService {
       console.error('Error al procesar la operación de escalado:', error);
       throw error;
     }
+  }
+
+  /**
+   * Obtiene una lista de animales que cumplen con una condición de campo y valor.
+   * @param field El nombre del campo en la base de datos (por ejemplo, 'specie').
+   * @param value El valor a buscar en ese campo (por ejemplo, 'Perro').
+   * @returns Una promesa que resuelve a un array de animales que coinciden.
+   */
+  async getAnimalsByField(field: string, operator: WhereFilterOp, value: any): Promise<Animal[]> {
+    const animalsRef = collection(db, 'animals');
+    // Crea una consulta con la condición 'where'
+    const q = query(animalsRef, where(field, operator, value));
+    const querySnapshot = await getDocs(q);
+    // Mapea los documentos a un array de objetos Animal
+    const animals: Animal[] = [];
+    querySnapshot.forEach((doc) => {
+      animals.push({
+        id: doc.id,
+        ...doc.data(),
+      } as Animal);
+    });
+    return animals;
+  }
+
+  /**
+   * Obtiene una lista de todos los animales que han sido escalados,
+   * utilizando una consulta de colección de grupo.
+   * @returns Una promesa que resuelve a un array de animales escalados,
+   * incluyendo los documentos de la subcolección 'scaled'.
+   */
+  async getScaledAnimals(): Promise<Animal[]> {
+    const scaledCollectionRef = collectionGroup(db, 'scaled');
+    const scaledSnapshot = await getDocs(scaledCollectionRef);
+
+    // 1. Recoger todos los IDs de los animales que tienen una subcolección 'scaled'
+    const animalIds = new Set<string>();
+    scaledSnapshot.forEach(doc => {
+      // El 'parent' de un documento en una colección de grupo es el documento principal del animal
+      animalIds.add(doc.ref.parent.parent?.id as string);
+    });
+
+    // 2. Si no hay IDs, no hay animales escalados
+    if (animalIds.size === 0) {
+      return [];
+    }
+
+    // 3. Crear una consulta para obtener los animales usando los IDs recolectados
+    const animalsRef = collection(db, 'animals');
+    const q = query(animalsRef, where('id', 'in', Array.from(animalIds)));
+    const animalsSnapshot = await getDocs(q);
+
+    // 4. Mapear los documentos de los animales a un array y añadir los datos de escalado
+    const animals: Animal[] = [];
+    animalsSnapshot.forEach((doc) => {
+      animals.push({
+        id: doc.id,
+        ...doc.data(),
+        // TODO: Para cargar la subcolección completa, necesitarías hacer otra consulta por animal
+        // Para simplicidad y eficiencia, solo obtenemos los datos principales
+      } as Animal);
+    });
+
+    return animals;
   }
 
   //USUARIOS

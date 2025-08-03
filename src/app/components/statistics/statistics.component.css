@@ -1,0 +1,25 @@
+/* src/app/pages/statistics/statistics-page.component.css */
+.statistics-container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Rejilla para las métricas clave */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a56db; /* Usando un color de marca para destacar */
+  margin-top: 1rem;
+}

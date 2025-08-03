@@ -27,6 +27,7 @@ import { AuthService } from '../../../services/auth.service';
 import { UserData } from '../../../models/user-data';
 import { Observable } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
+import { StatisticsComponent } from "../../../components/statistics/statistics.component";
 
 @Component({
   selector: 'app-management-panel',
@@ -50,8 +51,9 @@ import { InputTextModule } from 'primeng/inputtext';
     MessageModule,
     IconFieldModule,
     InputIconModule,
-    InputTextModule
-  ],
+    InputTextModule,
+    StatisticsComponent
+],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
   styleUrl: './management-panel.component.css',
@@ -302,6 +304,8 @@ export class ManagementPanelComponent implements OnInit {
         ...animal,
         publishedText: animal.published ? 'Publicado' : 'Sin publicar'
       }));
+
+      //TODO: Transformar datos de la columna Escalado para filtrar
 
       this.dataTable.set(processedAnimals);
       this.countTabAnimals = this.dataTable().length;

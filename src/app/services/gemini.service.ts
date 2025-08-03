@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Animal } from '../models/animal';
 import { environment } from '../../environments/environment';
-import { PROVINCES_SPAIN, SPECIES, DOG_BREEDS, CAT_BREEDS } from '../constants/form-data.constants';
+import { PROVINCES_SPAIN, SPECIES, DOG_BREEDS, CAT_BREEDS, GENDERS, SIZES } from '../constants/form-data.constants';
 
 @Injectable({
   providedIn: 'root'
@@ -20,24 +20,24 @@ export class GeminiService {
     this.genAI = new GoogleGenerativeAI(environment.geminiApiKey);
   }
 
-  /* async generateAnimalDescription(animal: Animal): Promise<{ description: string }> {
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+  /**
+ * Genera una descripción de adopción más atractiva y emocional.
+ * @param animalData Datos básicos del animal (nombre, especie, edad, raza).
+ * @returns Una descripción optimizada para la adopción.
+ */
+  async generateAdoptionText(animalData: any): Promise<string> {
+    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const prompt = `Crea una descripción conmovedora y persuasiva para la adopción de un animal con las siguientes características:
+    - Nombre: ${animalData.name}
+    - Especie: ${animalData.specie}
+    - Edad: ${animalData.age} años
+    - Raza: ${animalData.race}
 
-    const prompt = `Crea una descripción corta, tierna y creativa para un animal en adopción.
-    Nombre: ${animal.name}
-    Especie: ${animal.species}
-    Edad: ${animal.age} años.
-    La descripción debe ser atractiva para que alguien quiera adoptarlo.`;
-
-    try {
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      return { description: text };
-    } catch (error) {
-      console.error('Error al generar contenido con Gemini:', error);
-      throw new Error('Fallo al generar la descripción.');
-    }
-  } */
+    El texto debe ser positivo y destacar los puntos fuertes del animal para atraer a posibles adoptantes.
+    `;
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  }
 
   async generateAnimal(): Promise<any> {
     const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
@@ -50,7 +50,8 @@ export class GeminiService {
     - "province" DEBE ser una de las siguientes provincias: [${PROVINCES_SPAIN.join(', ')}].
     - Si "specie" es "Perro", "race" DEBE ser uno de: [${DOG_BREEDS.join(', ')}].
     - Si "specie" es "Gato", "race" DEBE ser uno de: [${CAT_BREEDS.join(', ')}].
-    - Si "specie" es "Otro", "race" DEBE ser "No aplica".
+    - "gender" DEBE ser uno de los siguientes valores: [${GENDERS.join(', ')}].
+    - "size" DEBE ser uno de los siguientes valores: [${SIZES.join(', ')}].
     - "description" DEBE ser un texto descriptivo del animal, atractivo para adopción.
     - "age" debe ser un número entre 0 y 20.
     - "protectressName" DEBE ser un nombre válido para una protectora de animales.
@@ -59,10 +60,10 @@ export class GeminiService {
     Responde únicamente con el objeto JSON, sin texto adicional ni formato markdown.
   `;
 
-  // ...lógica para llamar a la API de Gemini con el prompt y parsear la respuesta.
-  const result = await model.generateContent(prompt);
-  const responseText = result.response.text().replace(/```json|```/g, '').trim(); // Limpia el string de respuesta
+    // ...lógica para llamar a la API de Gemini con el prompt y parsear la respuesta.
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text().replace(/```json|```/g, '').trim(); // Limpia el string de respuesta
 
-  return JSON.parse(responseText) as Animal;
+    return JSON.parse(responseText) as Animal;
   }
 }

@@ -10,6 +10,7 @@ import { RegisterComponent } from './pages/user/register/register.component';
 import { AnimalDetailComponent } from './pages/animals/animal-detail/animal-detail.component';
 import { AnimalFormComponent } from './pages/animals/animal-form/animal-form.component';
 import { ManagementPanelComponent } from './pages/user/management-panel/management-panel.component';
+import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -39,18 +40,26 @@ export const routes: Routes = [
   {
     path: 'form-animal',
     component: AnimalFormComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
   },
   {
     path: 'form-animal/:id',
     component: AnimalFormComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
   },
   {
     path: 'detail-animal/:id',
-    component: AnimalDetailComponent
+    component: AnimalDetailComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
   },
   {
     path: 'panel-gestion',
     component: ManagementPanelComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
   },
   {
     path: 'login',

@@ -22,7 +22,8 @@
           <span class="font-bold whitespace-nowrap">Solicitudes</span>
           <p-tag severity="warn" value="0" [rounded]="true" />
         </p-tab>
-        <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+        <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()"
+          *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
           <i class="fa fa-users"></i>
           <span class="font-bold whitespace-nowrap">Usuarios</span>
         </p-tab>
@@ -38,8 +39,8 @@
         <p-tabpanel value="0">
           @if (dataTable() && dataTable().length > 0) {
           <p-table #dt2 [value]="dataTable()" [tableStyle]="{ 'min-width': '60rem' }"
-            [globalFilterFields]="['name', 'gender', 'specie', 'protectressName', 'publishedText']" [paginator]="true" [rows]="10"
-            [rowsPerPageOptions]="[5, 10, 20]">
+            [globalFilterFields]="['name', 'gender', 'specie', 'protectressName', 'publishedText']" [paginator]="true"
+            [rows]="10" [rowsPerPageOptions]="[5, 10, 20]">
             <ng-template #caption>
               <div class="flex">
                 <p-iconfield iconPosition="left" class="ml-auto">
@@ -185,7 +186,7 @@
           }
         </p-tabpanel>
         <p-tabpanel value="3">
-          <app-card-nodata [message]="'En contrucción...'"></app-card-nodata>
+          <app-statistics></app-statistics>
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
