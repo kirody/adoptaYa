@@ -11,15 +11,15 @@ import {
 } from '@angular/fire/auth';
 import { from, Observable, of, BehaviorSubject } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
-import { FirebaseService } from './firebase.service';
 import { Router } from '@angular/router';
+import { UsersService } from './users.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private afAuth: Auth = inject(Auth);
-  private firebaseService: FirebaseService = inject(FirebaseService);
+  private userService = inject(UsersService);
   private router: Router = inject(Router);
 
   private _currentUser = new BehaviorSubject<User | null>(null);
@@ -32,7 +32,7 @@ export class AuthService {
   private initAuthStateListener() {
     authState(this.afAuth).subscribe((firebaseUser) => {
       if (firebaseUser && firebaseUser?.uid) {
-        this.firebaseService
+        this.userService
           .getUserById(firebaseUser?.uid)
           .then((user: any) => {
             if (user) {

@@ -1,11 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { CardModule } from 'primeng/card';
-import { ChartModule } from 'primeng/chart';
-import { PanelModule } from 'primeng/panel';
-import { TableModule } from 'primeng/table';
-import { TagModule } from 'primeng/tag';
-import { FirebaseService } from '../../services/firebase.service';
+import { AnimalsService } from '../../services/animals.service';
 
 @Component({
   selector: 'app-statistics',
@@ -18,7 +14,7 @@ import { FirebaseService } from '../../services/firebase.service';
   styleUrl: './statistics.component.css'
 })
 export class StatisticsComponent {
-private firebaseService = inject(FirebaseService);
+private animalService = inject(AnimalsService);
   animalsTotal = 0;
   animalsAdopted = 0;
   animalsInAdoption = 0;
@@ -40,49 +36,49 @@ private firebaseService = inject(FirebaseService);
   }
 
   totalAnimals() {
-    this.firebaseService.getAnimals().then((data) => {
+    this.animalService.getAnimals().then((data) => {
       this.animalsTotal = data.length;
     });
   }
 
   totalAdoptededAnimals() {
-    this.firebaseService.getAnimalsByField('state', '==', 'ADOPTED').then((data) => {
+    this.animalService.getAnimalsByField('state', '==', 'ADOPTED').then((data) => {
       this.animalsAdopted = data.length;
     });
   }
 
   totalInAdoptionAnimals() {
-    this.firebaseService.getAnimalsByField('state', '==', 'ADOPTION').then((data) => {
+    this.animalService.getAnimalsByField('state', '==', 'ADOPTION').then((data) => {
       this.animalsInAdoption = data.length;
     });
   }
 
   totalInHomeAnimals() {
-    this.firebaseService.getAnimalsByField('state', '==', 'HOME').then((data) => {
+    this.animalService.getAnimalsByField('state', '==', 'HOME').then((data) => {
       this.animalsInHome = data.length;
     });
   }
 
   totalPendingAnimals() {
-    this.firebaseService.getAnimalsByField('published', '==', false).then((data) => {
+    this.animalService.getAnimalsByField('published', '==', false).then((data) => {
       this.animalsPending = data.length;
     });
   }
 
   totalCats() {
-    this.firebaseService.getAnimalsByField('specie', '==', 'Gato').then((data) => {
+    this.animalService.getAnimalsByField('specie', '==', 'Gato').then((data) => {
       this.animalsCats = data.length;
     });
   }
 
   totalDogs() {
-    this.firebaseService.getAnimalsByField('specie', '==', 'Perro').then((data) => {
+    this.animalService.getAnimalsByField('specie', '==', 'Perro').then((data) => {
       this.animalsDogs = data.length;
     });
   }
 
   totalScaled() {
-    this.firebaseService.getScaledAnimals().then((data) => {
+    this.animalService.getScaledAnimals().then((data) => {
       this.animalsScaled = data.length;
     });
   }

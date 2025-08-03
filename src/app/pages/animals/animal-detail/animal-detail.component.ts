@@ -7,9 +7,10 @@ import { HeaderPageComponent } from '../../../components/header-page/header-page
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { FirebaseService } from '../../../services/firebase.service';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AnimalsService } from '../../../services/animals.service';
 
 @Component({
   selector: 'app-animal-detail',
@@ -22,7 +23,8 @@ import { InputTextModule } from 'primeng/inputtext';
     TagModule,
     ProgressSpinnerModule,
     DialogModule,
-    InputTextModule
+    InputTextModule,
+    ReactiveFormsModule
   ],
   templateUrl: './animal-detail.component.html',
   styleUrls: ['./animal-detail.component.css']
@@ -30,7 +32,8 @@ import { InputTextModule } from 'primeng/inputtext';
 export class AnimalDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private firebaseService = inject(FirebaseService);
+  private animalService = inject(AnimalsService);
+  private fb = inject(FormBuilder);
 
   animal = signal<Animal | null>(null);
   isLoading = signal<boolean>(true);
@@ -39,13 +42,15 @@ export class AnimalDetailComponent implements OnInit {
 
   showModalAdoption: boolean = false;
 
+  requestForm!: FormGroup;
+
   ngOnInit(): void {
     this.route.paramMap.pipe(
       switchMap(params => {
         const id = params.get('id');
         if (id) {
           this.isLoading.set(true);
-          return this.firebaseService.getAnimalById(id);
+          return this.animalService.getAnimalById(id);
         }
         this.router.navigate(['/animals']); // Redirige si no hay ID
         return [];
@@ -59,10 +64,13 @@ export class AnimalDetailComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.animal.set(null); // Asegura que no se muestre un animal anterior
-        // Opcional: redirigir a una página 404
-        // this.router.navigate(['/not-found']);
+        this.animal.set(null);
       }
+    });
+
+    this.requestForm = this.fb.group({
+      id: [''],
+      name: ['', Validators.required],
     });
   }
 

@@ -3,11 +3,11 @@ import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { map, switchMap, take } from 'rxjs/operators';
 import { from, of } from 'rxjs';
-import { FirebaseService } from '../services/firebase.service';
+import { UsersService } from '../services/users.service';
 
 export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
-  const firebaseService = inject(FirebaseService);
+  const usersService = inject(UsersService);
   const router = inject(Router);
 
   // Obtener los roles permitidos de la configuración de la ruta
@@ -29,7 +29,7 @@ export const roleGuard: CanActivateFn = (route, state) => {
         return of(false); // Devolvemos un observable que emite false.
       }
       // Si hay usuario en Firebase, buscamos sus datos (incluido el rol) en nuestra BBDD.
-      return from(firebaseService.getUserById(firebaseUser.uid));
+      return from(usersService.getUserById(firebaseUser.uid));
     }),
     map((user: any) => {
       // Si no encontramos el usuario en nuestra BBDD, o no tiene rol, denegamos acceso.

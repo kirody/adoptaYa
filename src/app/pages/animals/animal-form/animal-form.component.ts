@@ -1,5 +1,5 @@
+import { ProtectorsService } from './../../../services/protectors.service';
 import { MessageModule } from 'primeng/message';
-import { FirebaseService } from './../../../services/firebase.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -37,6 +37,7 @@ import {
 import { Subscription } from 'rxjs';
 import { GeminiService } from '../../../services/gemini.service';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
+import { AnimalsService } from '../../../services/animals.service';
 
 @Component({
   selector: 'app-animal-form',
@@ -90,7 +91,8 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private firebaseService: FirebaseService,
+    private animalService: AnimalsService,
+    private protectorsService: ProtectorsService,
     private geminiService: GeminiService,
     private route: ActivatedRoute,
     private router: Router
@@ -104,7 +106,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       this.pageTitle = 'Editar Animal';
       this.submitButtonText = 'Actualizar Animal';
       this.loadAnimalData(this.animalId!);
-      this.firebaseService.getProtectorById
     }
 
     this.animalForm = this.fb.group({
@@ -160,7 +161,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
   private async loadAnimalData(id: string): Promise<void> {
     try {
-      const animalData = await this.firebaseService.getAnimalById(id);
+      const animalData = await this.animalService.getAnimalById(id);
       if (animalData) {
         this.animalForm.patchValue(animalData);
         this.checkAnimalScaled();
@@ -195,7 +196,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
     try {
       if (this.isEditMode && this.animalId) {
-        await this.firebaseService.updateAnimal(
+        await this.animalService.updateAnimal(
           this.animalId,
           this.animalForm.value
         );
@@ -206,7 +207,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         });
         this.router.navigate(['/panel-gestion']);
       } else {
-        await this.firebaseService.addAnimal(this.animalForm.value);
+        await this.animalService.addAnimal(this.animalForm.value);
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -291,7 +292,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
   async loadProtectors(): Promise<void> {
     try {
-      this.protectors = await this.firebaseService.getProtectors();
+      this.protectors = await this.protectorsService.getProtectors();
     } catch (error) {
       console.error('Error al cargar las protectoras:', error);
       // Aquí podrías mostrar un mensaje de error al usuario

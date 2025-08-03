@@ -1,10 +1,10 @@
+import { AnimalsService } from './../../services/animals.service';
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { Animal } from '../../models/animal';
-import { FirebaseService } from '../../services/firebase.service';
 import { DataViewModule } from 'primeng/dataview';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
@@ -40,7 +40,7 @@ export class AnimalsComponent implements OnInit {
   isLoading = true;
 
   constructor(
-    private firebaseService: FirebaseService,
+    private animalService: AnimalsService,
     private router: Router
   ) {}
 
@@ -50,7 +50,7 @@ export class AnimalsComponent implements OnInit {
 
   loadAnimals() {
     this.isLoading = true;
-    this.firebaseService.getAnimals().then((data) => {
+    this.animalService.getAnimals().then((data) => {
       this.animals.set(data);
       this.isLoading = false;
     });

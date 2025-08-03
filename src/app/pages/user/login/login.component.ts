@@ -1,4 +1,3 @@
-import { FirebaseService } from './../../../services/firebase.service';
 import { Component } from '@angular/core';
 import { PasswordModule } from 'primeng/password';
 import {
@@ -14,6 +13,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../../services/auth.service';
+import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-login',
@@ -37,7 +37,7 @@ export class LoginComponent {
   constructor(
     public formBuilder: FormBuilder,
     private authService: AuthService,
-    private firebaseService: FirebaseService,
+    private usersService: UsersService,
     private router: Router
   ) {}
 
@@ -52,7 +52,7 @@ export class LoginComponent {
     const { email, password } = this.form.value;
     this.authService.login(email, password).subscribe({
       next: (user) => {
-        this.firebaseService
+        this.usersService
           .getUserById(user.user.uid)
           .then((userData: any) => {
             if ( ['ROLE_ADMIN', 'ROLE_MOD'].includes(userData.role)) {

@@ -4,7 +4,6 @@ import { HeaderPageComponent } from '../../../components/header-page/header-page
 import { TabsModule } from 'primeng/tabs';
 import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { FirebaseService } from '../../../services/firebase.service';
 import { Animal } from '../../../models/animal';
 import { signal } from '@angular/core';
 import { ButtonModule, ButtonSeverity } from 'primeng/button';
@@ -29,6 +28,9 @@ import { Observable } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { StatisticsComponent } from "../../../components/statistics/statistics.component";
 import { RequestsComponent } from '../../../components/requests/requests.component';
+import { AnimalsService } from '../../../services/animals.service';
+import { ProtectorsService } from '../../../services/protectors.service';
+import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-management-panel',
@@ -61,7 +63,9 @@ import { RequestsComponent } from '../../../components/requests/requests.compone
   styleUrl: './management-panel.component.css',
 })
 export class ManagementPanelComponent implements OnInit {
-  private firebaseService = inject(FirebaseService);
+  private animalService = inject(AnimalsService);
+  private protectorService = inject(ProtectorsService);
+  private userService = inject(UsersService);
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -182,7 +186,7 @@ export class ManagementPanelComponent implements OnInit {
   }
 
   deleteAnimal(animalID: string) {
-    this.firebaseService.deleteAnimal(animalID).then(() => {
+    this.animalService.deleteAnimal(animalID).then(() => {
       this.reloadData();
       this.messageService.add({
         severity: 'info',
@@ -208,7 +212,7 @@ export class ManagementPanelComponent implements OnInit {
       updateData.assignedToAdmin = false;
     }
 
-    const updatePromise = this.firebaseService.updateAnimal(
+    const updatePromise = this.animalService.updateAnimal(
       animal.id,
       updateData
     );
@@ -216,7 +220,7 @@ export class ManagementPanelComponent implements OnInit {
 
     // Si se está publicando el animal y tiene un escalado, se elimina la subcolección.
     if (newPublishedState && animal.scaled && animal.scaled.length > 0) {
-      promises.push(this.firebaseService.deleteScaledSubcollection(animal.id));
+      promises.push(this.animalService.deleteScaledSubcollection(animal.id));
     }
 
     Promise.all(promises)
@@ -295,10 +299,10 @@ export class ManagementPanelComponent implements OnInit {
     this.valueTab = 0;
     try {
       const [protectors, animalsDataResult] = await Promise.all([
-        this.firebaseService.getProtectors(),
+        this.protectorService.getProtectors(),
         this.user()?.role === 'ROLE_MOD'
-          ? this.firebaseService.getAnimalsByPublishState()
-          : this.firebaseService.getAnimals(),
+          ? this.animalService.getAnimalsByPublishState()
+          : this.animalService.getAnimals(),
       ]);
 
       const animalsData = animalsDataResult as Animal[];
@@ -331,7 +335,7 @@ export class ManagementPanelComponent implements OnInit {
   tabUsers() {
     this.valueTab = 2;
     this.isLoading = true;
-    this.firebaseService.getUsers().then((data) => {
+    this.userService.getUsers().then((data) => {
       this.dataTable.set(data);
       this.isLoading = false;
     });
@@ -348,7 +352,7 @@ export class ManagementPanelComponent implements OnInit {
       return;
     }
     const newRole = user.role;
-    this.firebaseService
+    this.userService
       .updateUser(user.uid, { role: newRole })
       .then(() => {
         this.messageService.add({
@@ -426,7 +430,7 @@ export class ManagementPanelComponent implements OnInit {
         };
       }
 
-      await this.firebaseService.scaleAnimal(
+      await this.animalService.scaleAnimal(
         this.selectedScaledAnimal().id,
         scaleData
       );
@@ -477,7 +481,7 @@ export class ManagementPanelComponent implements OnInit {
       await this.scaleAnimal();
       this.showInfoScaled = false;
     } else {
-      await this.firebaseService.assignAnimalToAdmin(
+      await this.animalService.assignAnimalToAdmin(
         this.selectedScaledAnimal(),
         this.user(),
         this.scaleComment

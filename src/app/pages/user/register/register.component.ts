@@ -1,3 +1,4 @@
+import { UsersService } from './../../../services/users.service';
 import { Component, inject } from '@angular/core';
 import { PasswordModule } from 'primeng/password';
 import {
@@ -13,7 +14,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../../services/auth.service';
-import { FirebaseService } from '../../../services/firebase.service';
 import { UserData } from '../../../models/user-data';
 
 @Component({
@@ -36,7 +36,7 @@ export class RegisterComponent {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
-  private firebaseService = inject(FirebaseService);
+  private userService = inject(UsersService);
 
   registerForm: FormGroup = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
@@ -68,7 +68,7 @@ export class RegisterComponent {
           email: email,
           role: 'ROLE_DEFAULT',
         };
-        this.firebaseService.addUser(data as any).then(() => {
+        this.userService.addUser(data as any).then(() => {
           this.authService.logout(); // Cerrar sesión
           setTimeout(() => {
             this.router.navigate(['/login']); // Redirige a la página de inicio u otra página

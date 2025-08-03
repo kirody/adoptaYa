@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { FirebaseService } from '../../../services/firebase.service';
 import { GeminiService } from '../../../services/gemini.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PROVINCES_SPAIN } from '../../../constants/form-data.constants';
@@ -14,6 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { BlockUIModule } from 'primeng/blockui';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
+import { ProtectorsService } from '../../../services/protectors.service';
 
 @Component({
   selector: 'app-protector-form',
@@ -46,7 +46,7 @@ export class ProtectorFormComponent {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private firebaseService: FirebaseService,
+    private protectorService: ProtectorsService,
     private geminiService: GeminiService,
     private route: ActivatedRoute,
     private router: Router
@@ -78,7 +78,7 @@ export class ProtectorFormComponent {
 
     try {
       if (this.isEditMode && this.protectorId) {
-        await this.firebaseService.updateProtector(
+        await this.protectorService.updateProtector(
           this.protectorId,
           this.protectorForm.value
         );
@@ -89,7 +89,7 @@ export class ProtectorFormComponent {
         });
         this.router.navigate(['/panel-gestion']);
       } else {
-        await this.firebaseService.addProtector(this.protectorForm.value);
+        await this.protectorService.addProtector(this.protectorForm.value);
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
