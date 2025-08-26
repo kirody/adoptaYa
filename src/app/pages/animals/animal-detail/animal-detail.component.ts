@@ -1,3 +1,4 @@
+import { FirebaseService } from './../../../services/firebase.service';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Animal } from '../../../models/animal';
@@ -11,6 +12,8 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AnimalsService } from '../../../services/animals.service';
+import { TextareaModule } from 'primeng/textarea';
+import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-animal-detail',
@@ -24,7 +27,8 @@ import { AnimalsService } from '../../../services/animals.service';
     ProgressSpinnerModule,
     DialogModule,
     InputTextModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TextareaModule
   ],
   templateUrl: './animal-detail.component.html',
   styleUrls: ['./animal-detail.component.css']
@@ -33,6 +37,8 @@ export class AnimalDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private animalService = inject(AnimalsService);
+  private firebaseService = inject(FirebaseService);
+  private userService = inject(UsersService);
   private fb = inject(FormBuilder);
 
   animal = signal<Animal | null>(null);
@@ -71,6 +77,12 @@ export class AnimalDetailComponent implements OnInit {
     this.requestForm = this.fb.group({
       id: [''],
       name: ['', Validators.required],
+      phone: ['', Validators.required],
+      address: ['', Validators.required],
+      email: ['', Validators.required],
+      question1: ['', Validators.required],
+      question2: ['', Validators.required],
+      question3: ['', Validators.required],
     });
   }
 
@@ -110,5 +122,8 @@ export class AnimalDetailComponent implements OnInit {
     this.showModalAdoption = true;
   }
 
-  sendAdoptionRequest() { }
+  sendAdoptionRequest() {
+    this.firebaseService.addRequest(this.requestForm.value);
+    this.showModalAdoption = false;
+  }
 }

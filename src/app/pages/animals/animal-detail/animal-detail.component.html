@@ -64,38 +64,51 @@
 
 <p-dialog header="Solicitud de adopción" [modal]="true" [(visible)]="showModalAdoption" [style]="{ width: '60rem' }">
   <span class="p-text-secondary block mb-4"></span>
-  <div class="flex items-center mb-4">
-    <form [formGroup]="requestForm" (ngSubmit)="sendAdoptionRequest()">
-      <div class="col">
+  <form [formGroup]="requestForm">
+    <div class="flex gap-6">
+      <div class="w-1/2">
         <div class="field">
-          <label for="animalName" class="form-label">Nombre del solicitante</label>
-          <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+          <label for="name" class="form-label">Nombre del solicitante</label>
+          <input id="name" type="text" pInputText formControlName="name" class="w-full" />
         </div>
-
         <div class="field">
           <div class="field">
-            <label for="animalName" class="form-label">Teléfono</label>
-            <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+            <label for="phone" class="form-label">Teléfono</label>
+            <input id="phone" type="text" pInputText formControlName="phone" class="w-full" />
           </div>
         </div>
-      </div>
-
-      <div class="col">
         <div class="field">
-          <label for="animalName" class="form-label">Dirección</label>
-          <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+          <label for="address" class="form-label">Dirección</label>
+          <input id="address" type="text" pInputText formControlName="address" class="w-full" />
         </div>
-
-
         <div class="field">
-          <label for="animalName" class="form-label">Correo electrónico</label>
-          <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+          <label for="email" class="form-label">Correo electrónico</label>
+          <input id="email" type="text" pInputText formControlName="email" class="w-full" />
         </div>
       </div>
-    </form>
-  </div>
+
+      <div class="w-1/2">
+        <div class="field">
+          <label for="question1" class="form-label">¿Cuántas horas al día pasaría el animal solo en casa?</label>
+          <textarea id="question1" rows="2" cols="10" pTextarea formControlName="question1"
+            class="w-full"></textarea>
+        </div>
+        <div class="field">
+          <label for="question2" class="form-label">Si vives en un piso, ¿tienes terraza o balcón?
+            ¿Están debidamente protegidos para evitar caídas (redes, cerramientos)?</label>
+          <textarea id="question2" rows="2" cols="10" pTextarea formControlName="question2"
+            class="w-full"></textarea>
+        </div>
+        <div class="field">
+          <label for="question3" class="form-label">¿Hay zonas de la casa a las que el animal no podrá acceder?</label>
+          <textarea id="question3" rows="2" cols="10" pTextarea formControlName="question3"
+            class="w-full"></textarea>
+        </div>
+      </div>
+    </div>
+  </form>
   <div class="flex justify-end gap-2">
     <p-button label="Cancelar" severity="secondary" (click)="showModalAdoption = false" />
-    <p-button label="Enviar Solicitud" icon="pi pi-send" type="submit"/>
+    <p-button label="Enviar Solicitud" icon="pi pi-send" [disabled]="!requestForm.valid" (click)="sendAdoptionRequest()"/>
   </div>
 </p-dialog>
