@@ -29,6 +29,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { StatisticsComponent } from "../../../components/statistics/statistics.component";
 import { RequestsComponent } from '../../../components/requests/requests.component';
 import { AnimalsService } from '../../../services/animals.service';
+import { RequestsService } from '../../../services/requests.service';
 import { ProtectorsService } from '../../../services/protectors.service';
 import { UsersService } from '../../../services/users.service';
 
@@ -66,6 +67,7 @@ export class ManagementPanelComponent implements OnInit {
   private animalService = inject(AnimalsService);
   private protectorService = inject(ProtectorsService);
   private userService = inject(UsersService);
+  private requestsService = inject(RequestsService);
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -79,6 +81,7 @@ export class ManagementPanelComponent implements OnInit {
   valueTab = 0;
   countTabAnimals = '';
   countTabPending = '';
+  countTabRequests = '0';
 
   newRole = '';
   roles = [
@@ -135,10 +138,14 @@ export class ManagementPanelComponent implements OnInit {
   }
 
   ngOnInit() {
-    // this.initTabs();
+    this.loadRequestsCount();
   }
 
   initTabs() {
+    if (this.user()?.role === 'ROLE_ADMIN') {
+      this.loadRequestsCount();
+    }
+
     if (this.valueTab === 0) {
       this.tabAnimals();
     } else if (this.valueTab === 1) {
@@ -146,6 +153,18 @@ export class ManagementPanelComponent implements OnInit {
     } else if (this.valueTab === 2) {
       this.tabUsers();
     } else {
+    }
+  }
+
+  async loadRequestsCount() {
+    if (this.user()?.role !== 'ROLE_ADMIN') {
+      return;
+    }
+    try {
+      const requests = await this.requestsService.getRequests();
+      this.countTabRequests = String(requests.length);
+    } catch (error) {
+      console.error('Error al cargar el contador de solicitudes:', error);
     }
   }
 
@@ -250,10 +269,10 @@ export class ManagementPanelComponent implements OnInit {
       target: event.target as EventTarget,
       message:
         type === 'publish' && !animal.published
-          ? '¿Quieres <strong>publicar</strong> este animal?'
+          ? '¿Quieres <strong>publicar</strong> a ' + animal.name + '?'
           : type === 'publish' && animal.published
-            ? '¿Quieres <strong>despublicar</strong> este animal?'
-            : '¿Quieres eliminar este animal?',
+            ? '¿Quieres <strong>despublicar</strong> a ' + animal.name + '?'
+            : '¿Quieres eliminar a ' + animal.name + '?',
       header: 'Aviso',
       closable: true,
       closeOnEscape: true,
@@ -440,7 +459,7 @@ export class ManagementPanelComponent implements OnInit {
         severity: 'success',
         summary: 'Éxito',
         detail: `El animal ${this.selectedScaledAnimal().name
-          } ha sido destacado.`,
+          } ha sido escalado con éxito.`,
       });
       this.showModalScaled = false;
       this.scaleComment = '';
@@ -530,7 +549,7 @@ export class ManagementPanelComponent implements OnInit {
         }
       }
     }
-    return '';
+    return 'Hola';
   }
 
   setColorTagScaled(status: any): ButtonSeverity {

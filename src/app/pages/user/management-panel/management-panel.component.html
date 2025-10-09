@@ -20,7 +20,7 @@
         <p-tab value="1" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
           <i class="fa fa-file"></i>
           <span class="font-bold whitespace-nowrap">Solicitudes</span>
-          <p-tag severity="warn" value="0" [rounded]="true" />
+          <p-tag severity="warn" [value]="countTabRequests" [rounded]="true" />
         </p-tab>
         <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()"
           *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
@@ -100,6 +100,8 @@
                     (click)="openModalScaled(animal)" pTooltip="Ver info" tooltipPosition="top" [label]="status"
                     size="small"></p-button>
                   }
+                  } @else {
+                  <i class="fa-solid fa-circle-xmark text-red-500" pTooltip="No escalado" tooltipPosition="top"></i>
                   }
                 </td>
                 <td>{{ animal.protectressName }}</td>
@@ -123,7 +125,7 @@
                     [ngClass]="{'fa-comment': !hasModeratorScaled(animal), 'fa-comment-slash': hasModeratorScaled(animal)}"
                     styleClass="p-button-rounded p-button-warning p-button-text" (click)="scaledAnimal(animal)"
                     [disabled]="hasModeratorScaled(animal)"
-                    [pTooltip]="hasModeratorScaled(animal) ? 'Ya escalado' : 'Escalar a administrador'"
+                    [pTooltip]="hasModeratorScaled(animal) ? 'Escalado' : 'Escalar a administrador'"
                     tooltipPosition="top"></p-button>
                   }
                   }

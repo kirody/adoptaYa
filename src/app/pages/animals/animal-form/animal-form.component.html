@@ -145,7 +145,7 @@
 
         <p-divider></p-divider>
 
-        <div class="flex gap-4">
+        <div class="flex gap-4" *ngIf="isEditMode">
           <div class="w-1/3 p-4">
             <div class="flex flex-column">
               <span class="text-neutral-600 text-lg">
@@ -159,10 +159,31 @@
           <div class="w-full p-4">
             <div class="flex gap-4">
               <div class="w-1/2">
+                <div class="field">
+                  <label for="protectressName" class="form-label">Nombre</label>
+                  <input id="protectressName" type="text" pInputText [value]="dataProtector?.name" class="w-full"
+                    disabled />
+                </div>
 
+                <div class="field">
+                  <label for="protectressPhone" class="form-label">Teléfono</label>
+                  <input id="protectressPhone" type="text" pInputText [value]="dataProtector?.phone" class="w-full"
+                    disabled />
+                </div>
               </div>
-              <div class="w-1/2">
 
+              <div class="w-1/2">
+                <div class="field">
+                  <label for="protectressEmail" class="form-label">Email</label>
+                  <input id="protectressEmail" type="text" pInputText [value]="dataProtector?.email" class="w-full"
+                    disabled />
+                </div>
+
+                <div class="field">
+                  <label for="protectressProvince" class="form-label">Provincia</label>
+                  <input id="protectressProvince" type="text" pInputText [value]="dataProtector?.province"
+                    class="w-full" disabled />
+                </div>
               </div>
             </div>
           </div>

@@ -27,3 +27,17 @@ h3 {
     color: #88b78a;
   }
 }
+
+.request-sent-message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--p-green-50);
+  border-left: 5px solid var(--p-green-500);
+  border-radius: 8px;
+}
+
+.dark .request-sent-message {
+  background-color: #1a2e29;
+}

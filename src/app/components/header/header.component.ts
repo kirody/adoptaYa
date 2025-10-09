@@ -56,7 +56,7 @@ export class HeaderComponent {
   ngOnInit(): void {}
 
   loadMenu(): void {
-    this.items = [
+    this.items = this.user?.role === 'ROLE_DEFAULT' ? [
       {
         label: 'AdoptaYa',
         icon: '',
@@ -82,7 +82,7 @@ export class HeaderComponent {
         icon: 'fas fa-address-book',
         routerLink: '/contacto',
       },
-    ];
+    ] : [];
 
     this.profileItems = [
       {

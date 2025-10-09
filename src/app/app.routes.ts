@@ -54,7 +54,7 @@ export const routes: Routes = [
     path: 'detail-animal/:id',
     component: AnimalDetailComponent,
     canActivate: [roleGuard],
-    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD', 'ROLE_DEFAULT'] }
   },
   {
     path: 'form-protector',

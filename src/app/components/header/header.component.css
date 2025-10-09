@@ -21,7 +21,11 @@
   left: 0;
 }
 
-:host ::ng-deep p-menubar, .p-menubar  .custom-menubar {
+:host ::ng-deep p-menubar, .p-menubar .custom-menubar {
   border: 0;
   padding: 0.5rem 0;
+}
+
+.header-admin {
+  background-color: #767676; /* Color de fondo amarillo */
 }

@@ -165,7 +165,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       if (animalData) {
         this.animalForm.patchValue(animalData);
         this.checkAnimalScaled();
-        console.log(this.animalForm.value);
+        this.loadProtectorData(this.animalForm.value.protectressID);
       } else {
         this.messageService.add({
           severity: 'error',
@@ -297,5 +297,26 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       console.error('Error al cargar las protectoras:', error);
       // Aquí podrías mostrar un mensaje de error al usuario
     }
+  }
+
+  private async loadProtectorData(id: string): Promise<void> {
+    try {
+      const protectorData = await this.protectorsService.getProtectorById(id);
+      if (protectorData) {
+        this.dataProtector = protectorData;
+      } else {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al mostrar la protectora.',
+        });
+      }
+    } catch (err) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo cargar la información de la protectora.',
+      });
+    } finally { }
   }
 }
