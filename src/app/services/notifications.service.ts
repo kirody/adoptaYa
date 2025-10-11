@@ -9,7 +9,7 @@ import {
   Timestamp,
   updateDoc,
 } from 'firebase/firestore';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -38,17 +38,22 @@ export class NotificationsService {
    * @param userId El ID del usuario.
    * @returns Un Observable que emite un array de notificaciones.
    */
-  getUserNotifications(userId: string): Observable<any[]> {
+  getUserNotifications(userId: string): Observable<{ notifications: any[], unreadCount: number }> {
     const notificationsCol = collection(this.db, `users/${userId}/notifications`);
     const q = query(notificationsCol, orderBy('date', 'desc'));
 
     return new Observable(subscriber => {
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const notifications: any[] = [];
+        let unreadCount = 0;
         querySnapshot.forEach((doc) => {
-          notifications.push({ id: doc.id, ...doc.data() });
+          const data = doc.data();
+          if (!data['read']) {
+            unreadCount++;
+          }
+          notifications.push({ id: doc.id, ...data });
         });
-        subscriber.next(notifications);
+        subscriber.next({ notifications, unreadCount });
       }, (error) => {
         subscriber.error(error);
       });

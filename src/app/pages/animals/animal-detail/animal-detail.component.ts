@@ -61,18 +61,19 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
   requestForm!: FormGroup;
   requestStatus: 'pending' | 'approved' | 'rejected' | null = null;
   private requestStatusSubscription: Subscription | undefined;
+  private userSubscription: Subscription | undefined;
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
-    this.currentUser$.subscribe((user: UserData | undefined) => {
-      this.user = user;
-    });
   }
 
   ngOnInit(): void {
-    this.currentUser$ = this.authService.currentUser$;
-    this.currentUser$.subscribe((user: UserData | undefined) => {
+    this.userSubscription = this.authService.currentUser$.subscribe((user: any) => {
       this.user = user;
+      // Si el usuario cambia, volvemos a comprobar el estado de la solicitud
+      if (this.animal()) {
+        this.checkHasRequest(this.animal()!.id ?? '');
+      }
     });
 
     this.route.paramMap.pipe(
@@ -196,5 +197,6 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Nos aseguramos de cancelar la suscripción al destruir el componente
     this.requestStatusSubscription?.unsubscribe();
+    this.userSubscription?.unsubscribe();
   }
 }

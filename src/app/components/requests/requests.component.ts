@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { RequestsService } from '../../services/requests.service';
 import { CommonModule } from '@angular/common';
 import { TableModule, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
@@ -8,6 +8,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { AnimalsService } from '../../services/animals.service';
 import { NotificationsService } from '../../services/notifications.service';
+import { UsersService } from '../../services/users.service';
+import { AuthService } from '../../services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-requests',
@@ -23,21 +26,32 @@ import { NotificationsService } from '../../services/notifications.service';
   providers: [MessageService],
   standalone: true,
 })
-export class RequestsComponent implements OnInit {
+export class RequestsComponent implements OnInit, OnDestroy {
   requests: any[] = [];
   isLoading = true;
   error: string | null = null;
   expandedRows = {};
+  currentUserRole: string | null = null;
+  private userSubscription: Subscription | undefined;
 
   constructor(
     private requestsService: RequestsService,
     private animalService: AnimalsService,
     private messageService: MessageService,
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
+    private usersService: UsersService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.userSubscription = this.authService.currentUser$.subscribe((user: any) => {
+      this.currentUserRole = user?.role || null;
+    });
     this.loadRequests();
+  }
+
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
   }
 
   /**
@@ -142,6 +156,41 @@ export class RequestsComponent implements OnInit {
     } catch (err) {
       console.error('Error al rechazar la solicitud:', err);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo rechazar la solicitud.' });
+    }
+  }
+
+  /**
+   * Notifica a todos los administradores sobre una solicitud que requiere su atención.
+   * @param request La solicitud a escalar.
+   */
+  async escalateRequest(request: any): Promise<void> {
+    if (!request?.animalData?.name || !request?.animalID) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se puede escalar, faltan datos del animal.' });
+      return;
+    }
+
+    try {
+      const admins = await this.usersService.getUsersByRole('ROLE_ADMIN');
+      if (admins.length === 0) {
+        this.messageService.add({ severity: 'warn', summary: 'Sin Administradores', detail: 'No se encontraron administradores a quienes notificar.' });
+        return;
+      }
+
+      const notificationPromises = admins.map((admin: any) => {
+        const notification = {
+          title: 'Solicitud Escalada para Revisión',
+          message: `La solicitud para adoptar a "${request.animalData.name}" ha sido escalada y requiere tu atención.`,
+          severity: 'warn',
+          link: `/detail-animal/${request.animalID}`
+        };
+        return this.notificationsService.addNotification(admin.uid, notification);
+      });
+
+      await Promise.all(notificationPromises);
+      this.messageService.add({ severity: 'success', summary: 'Escalado', detail: 'Se ha notificado a los administradores.' });
+    } catch (err) {
+      console.error('Error al escalar la solicitud:', err);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo notificar a los administradores.' });
     }
   }
 

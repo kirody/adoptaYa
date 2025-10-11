@@ -29,3 +29,12 @@
 .header-admin {
   background-color: #767676; /* Color de fondo amarillo */
 }
+
+:host ::ng-deep p-badge, .p-badge-circle {
+  font-size: 0.6rem;
+}
+
+:host ::ng-deep p-badge, .p-badge {
+  min-width: 16px;
+  height: 16px;
+}

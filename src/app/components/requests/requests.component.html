@@ -42,20 +42,26 @@
                 class="p-button-text p-button-rounded p-button-plain"
                 [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
             </td>
-            <td>{{ request.animalData.name || 'N/A' }}</td>
-            <td>{{ request.name || 'N/A' }}</td>
-            <td>{{ request.email || 'N/A' }}</td>
-            <td>{{ request.phone || 'N/A' }}</td>
-            <td>{{ request.address || 'N/A' }}</td>
+            <td>{{ request.animalData?.name || 'N/A' }}</td>
+            <td>{{ request?.name || 'N/A' }}</td>
+            <td>{{ request?.email || 'N/A' }}</td>
+            <td>{{ request?.phone || 'N/A' }}</td>
+            <td>{{ request?.address || 'N/A' }}</td>
             <td>
               <p-tag [value]="getTranslatedStatus(request.status)" [severity]="getStatusSeverity(request.status)" [icon]="getStatusIcon(request.status)"></p-tag>
             </td>
             <td>
               <div class="action-buttons">
-                <button pButton pRipple icon="pi pi-check" class="p-button-rounded p-button-success"
-                  (click)="approveRequest(request)" pTooltip="Aprobar" tooltipPosition="top"></button>
-                <button pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-danger"
-                  (click)="rejectRequest(request)" pTooltip="Rechazar" tooltipPosition="top"></button>
+                <!-- Botones para Administradores -->
+                <ng-container *ngIf="currentUserRole === 'ROLE_ADMIN'">
+                  <button pButton pRipple icon="pi pi-check" class="p-button-rounded p-button-success"
+                    (click)="approveRequest(request)" pTooltip="Aprobar" tooltipPosition="top"></button>
+                  <button pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-danger"
+                    (click)="rejectRequest(request)" pTooltip="Rechazar" tooltipPosition="top"></button>
+                </ng-container>
+                <!-- Botón para Moderadores -->
+                <button *ngIf="currentUserRole === 'ROLE_MOD'" pButton pRipple icon="pi pi-shield" class="p-button-rounded p-button-help"
+                    (click)="escalateRequest(request)" pTooltip="Escalar a Admin" tooltipPosition="top"></button>
               </div>
             </td>
           </tr>

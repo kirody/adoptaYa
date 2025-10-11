@@ -47,15 +47,16 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   subscribeToNotifications(userId: string): void {
     this.notificationsSubscription?.unsubscribe();
-    this.notificationsSubscription = this.notificationsService.getUserNotifications(userId).subscribe(notifications => {
-      this.notifications = notifications;
-      this.unreadCount = notifications.filter(n => !n.read).length;
+    this.notificationsSubscription = this.notificationsService.getUserNotifications(userId).subscribe(data => {
+      this.notifications = data.notifications;
+      this.unreadCount = data.unreadCount;
     });
   }
 
   async handleNotificationClick(notification: any, event: Event) {
     event.stopPropagation();
     if (this.userId && !notification.read) {
+      notification.read = true; // Actualización optimista para la UI
       await this.notificationsService.markAsRead(this.userId, notification.id);
     }
     if (notification.link) {

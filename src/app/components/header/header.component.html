@@ -6,8 +6,8 @@
       @if ((currentUser$ | async); as user) {
       <!-- Bloque que se muestra si el usuario está logueado -->
       <div class="flex align-items-center gap-2">
-        <p-overlaybadge severity="danger" (click)="op.toggle($event)">
-          <i class="pi pi-bell" style="font-size: 1rem; cursor: pointer;"></i>
+        <p-overlaybadge [value]="unreadCount > 0 ? unreadCount : 0" severity="danger" (click)="op.toggle($event)">
+          <i class="pi pi-bell p-overlay-badge" style="font-size: 1.2rem; cursor: pointer;"></i>
         </p-overlaybadge>
         <p-popover #op>
           <app-notifications></app-notifications>

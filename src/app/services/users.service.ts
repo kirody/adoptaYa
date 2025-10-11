@@ -9,8 +9,11 @@ import {
   getFirestore,
   setDoc,
   updateDoc,
+  query,
+  where,
 } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
+import { UserData } from '../models/user-data';
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -49,5 +52,21 @@ export class UsersService {
 
   async deleteUser(id: any) {
     await deleteDoc(doc(db, 'users', id));
+  }
+
+  /**
+   * Obtiene todos los usuarios que coinciden con un rol específico.
+   * @param role El rol a buscar (ej. 'ROLE_ADMIN').
+   * @returns Una promesa que se resuelve con un array de usuarios.
+   */
+  async getUsersByRole(role: string): Promise<UserData[]> {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('role', '==', role));
+    const querySnapshot = await getDocs(q);
+    const users: UserData[] = [];
+    querySnapshot.forEach(doc => {
+      users.push({ uid: doc.id, ...doc.data() } as UserData);
+    });
+    return users;
   }
 }

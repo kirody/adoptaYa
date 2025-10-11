@@ -1,5 +1,5 @@
 import { UserData } from './../../models/user-data';
-import { Component, HostListener, inject, ViewChild } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { BadgeModule, Badge } from 'primeng/badge';
 import { AvatarModule } from 'primeng/avatar';
@@ -10,12 +10,13 @@ import { RouterModule } from '@angular/router';
 import { MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { TagModule } from 'primeng/tag';
 import { Menu } from 'primeng/menu';
 import { NotificationsComponent } from "../notifications/notifications.component";
 import { PopoverModule } from 'primeng/popover';
 import { OverlayBadgeModule } from 'primeng/overlaybadge';
+import { NotificationsService } from '../../services/notifications.service';
 
 @Component({
   selector: 'app-header',
@@ -37,13 +38,18 @@ import { OverlayBadgeModule } from 'primeng/overlaybadge';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
+  private notificationsService = inject(NotificationsService);
   currentUser$: Observable<any | null>;
   items: MenuItem[] | undefined;
   profileItems: MenuItem[] | undefined;
   user: UserData | undefined;
+  unreadCount = 0;
+
   @ViewChild('menu') menu: Menu | undefined;
+  private userSubscription: Subscription | undefined;
+  private notificationsSubscription: Subscription | undefined;
 
   // Detector de eventos de scroll en la ventana
   @HostListener('window:scroll', ['$event'])
@@ -54,13 +60,28 @@ export class HeaderComponent {
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
-    this.currentUser$.subscribe((user: UserData | undefined) => {
+  }
+
+  ngOnInit(): void {
+    this.userSubscription = this.authService.currentUser$.subscribe((user: any) => {
       this.user = user;
       this.loadMenu();
+
+      if (user) {
+        this.subscribeToNotifications(user.uid);
+      } else {
+        this.unreadCount = 0;
+        this.notificationsSubscription?.unsubscribe();
+      }
     });
   }
 
-  ngOnInit(): void {}
+  subscribeToNotifications(userId: string): void {
+    this.notificationsSubscription?.unsubscribe();
+    this.notificationsSubscription = this.notificationsService.getUserNotifications(userId).subscribe(data => {
+      this.unreadCount = data.unreadCount;
+    });
+  }
 
   loadMenu(): void {
     this.items = this.user?.role === 'ROLE_DEFAULT' ? [
@@ -129,5 +150,10 @@ export class HeaderComponent {
         },
       },
     ];
+  }
+
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
+    this.notificationsSubscription?.unsubscribe();
   }
 }

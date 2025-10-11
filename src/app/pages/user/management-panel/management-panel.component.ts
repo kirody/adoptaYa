@@ -32,6 +32,7 @@ import { AnimalsService } from '../../../services/animals.service';
 import { RequestsService } from '../../../services/requests.service';
 import { ProtectorsService } from '../../../services/protectors.service';
 import { UsersService } from '../../../services/users.service';
+import { NotificationsService } from '../../../services/notifications.service';
 
 @Component({
   selector: 'app-management-panel',
@@ -69,6 +70,7 @@ export class ManagementPanelComponent implements OnInit {
   private userService = inject(UsersService);
   private requestsService = inject(RequestsService);
   private authService = inject(AuthService);
+  private notificationsService = inject(NotificationsService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private router = inject(Router);
@@ -430,6 +432,20 @@ export class ManagementPanelComponent implements OnInit {
             },
           },
         };
+
+        // Notificar a los administradores
+        const admins = await this.userService.getUsersByRole('ROLE_ADMIN');
+        const notificationPromises = admins.map((admin: any) => {
+          const notification = {
+            title: 'Animal Escalado para Revisión',
+            message: `El moderador ${this.user().username} ha escalado el animal "${this.selectedScaledAnimal().name}" para su revisión.`,
+            severity: 'warn',
+            link: `/panel-gestion` // O un enlace directo si es posible
+          };
+          return this.notificationsService.addNotification(admin.uid, notification);
+        });
+        await Promise.all(notificationPromises);
+
       } else {
         scaleData = {
           admin: {
