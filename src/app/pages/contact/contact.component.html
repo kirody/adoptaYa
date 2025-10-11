@@ -1,3 +1,52 @@
-<div class="protectors-container">
+<div class="contact-container">
   <app-header-page [title]="'Contacto'" [icon]="'fas fa-address-book'"></app-header-page>
+
+  <div class="grid px-4 py-8 md:px-6 lg:px-8">
+    <!-- Columna del Formulario -->
+    <div class="col-12 md:col-8">
+      <p-card>
+        <ng-template pTemplate="title">
+          <h2 class="m-0">Envíanos un mensaje</h2>
+        </ng-template>
+        <ng-template pTemplate="subtitle">
+          ¿Tienes alguna pregunta o sugerencia? Estaremos encantados de escucharte.
+        </ng-template>
+        <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+          <div class="formgrid grid">
+            <div class="field col-12 md:col-6">
+              <label for="name">Nombre</label>
+              <input pInputText id="name" formControlName="name" class="w-full" />
+            </div>
+            <div class="field col-12 md:col-6">
+              <label for="email">Email</label>
+              <input pInputText id="email" type="email" formControlName="email" class="w-full" />
+            </div>
+            <div class="field col-12">
+              <label for="subject">Asunto</label>
+              <input pInputText id="subject" formControlName="subject" class="w-full" />
+            </div>
+            <div class="field col-12">
+              <label for="message">Mensaje</label>
+              <textarea pTextarea id="message" formControlName="message" rows="5" class="w-full"></textarea>
+            </div>
+          </div>
+          <div class="flex justify-content-end">
+            <p-button type="submit" label="Enviar Mensaje" icon="pi pi-send" [disabled]="contactForm.invalid"></p-button>
+          </div>
+        </form>
+      </p-card>
+    </div>
+
+    <!-- Columna de Información -->
+    <div class="col-12 md:col-4">
+      <p-card styleClass="contact-info-card">
+        <ng-template pTemplate="title">Información de Contacto</ng-template>
+        <ul class="list-none p-0 m-0">
+          <li class="flex items-center mb-3"><i class="pi pi-envelope mr-3"></i><span>info&#64;adoptaya.com</span></li>
+          <li class="flex items-center mb-3"><i class="pi pi-phone mr-3"></i><span>+34 123 456 789</span></li>
+          <li class="flex items-center"><i class="pi pi-map-marker mr-3"></i><span>Valencia, España</span></li>
+        </ul>
+      </p-card>
+    </div>
+  </div>
 </div>

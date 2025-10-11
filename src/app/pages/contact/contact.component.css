@@ -1,0 +1,7 @@
+.contact-info-card {
+  background-color: var(--p-primary-50);
+}
+
+.dark .contact-info-card {
+  background-color: var(--p-primary-900);
+}
