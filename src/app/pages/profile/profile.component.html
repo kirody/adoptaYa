@@ -1,3 +1,79 @@
 <div class="profile-container">
   <app-header-page [title]="'Mi perfil'" [icon]="'fas fa-user'"></app-header-page>
+
+  <div class="card flex justify-center" *ngIf="!(currentUser$ | async)">
+    <p-progressSpinner strokeWidth="4" animationDuration=".5s" [style]="{ width: '50px', height: '50px' }" />
+  </div>
+
+  <div *ngIf="currentUser$ | async as user" class="mt-4">
+
+    <!-- Vista para Administradores y Moderadores -->
+    <div *ngIf="user.role === 'ROLE_ADMIN' || user.role === 'ROLE_MOD'" class="max-w-2xl mx-5rem mx-auto">
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="profile-header admin-header flex items-center p-4">
+            <p-avatar icon="pi pi-user" styleClass="mr-4" size="xlarge" shape="circle"></p-avatar>
+            <div>
+              <h2 class="text-2xl font-bold m-0">{{ user.username }}</h2>
+              <p class="text-lg m-0 text-surface-500">{{ user.email }}</p>
+            </div>
+          </div>
+        </ng-template>
+        <div class="flex items-center">
+          <p class="font-semibold mr-3">Rol en la plataforma:</p>
+          <p-tag *ngIf="user.role === 'ROLE_ADMIN'" icon="fa fa-user-cog" severity="danger" value="Administrador" [rounded]="true" />
+          <p-tag *ngIf="user.role === 'ROLE_MOD'" icon="fa fa-user-pen" severity="warn" value="Moderador" [rounded]="true" />
+        </div>
+        <p class="mt-3" *ngIf="user.role === 'ROLE_MOD'">Tienes acceso a funciones de gestión. Puedes acceder al panel de control para gestionar animales pendientes de publicar.</p>
+        <p class="mt-3" *ngIf="user.role === 'ROLE_ADMIN'">Tienes acceso a funciones avanzadas de gestión. Puedes acceder al panel de control para administrar animales, solicitudes y usuarios.</p>
+        <ng-template pTemplate="footer">
+          <div class="flex justify-end">
+            <p-button label="Ir al Panel de Gestión" icon="pi pi-cog" routerLink="/panel-gestion"></p-button>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+
+    <!-- Vista para Usuarios por defecto -->
+    <div *ngIf="user.role === 'ROLE_DEFAULT'" class="max-w-4xl mx-auto">
+      <p-card>
+        <ng-template pTemplate="title">
+          <div class="flex items-center gap-4">
+            <p-avatar icon="pi pi-user" size="xlarge" shape="circle"></p-avatar>
+            <div>
+              <h2 class="text-2xl font-bold m-0">{{ user.username }}</h2>
+              <p class="text-lg m-0 text-surface-500">{{ user.email }}</p>
+            </div>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <p-divider></p-divider>
+          <div class="mt-4">
+            <h3 class="font-semibold text-xl mb-3">Mis Solicitudes de Adopción</h3>
+            <p class="text-surface-600 mb-4">Aquí podrás ver el estado de las solicitudes que has enviado.</p>
+
+            <!-- Placeholder para la lista de solicitudes -->
+            <div class="requests-placeholder">
+              <div class="request-item">
+                <div class="flex items-center gap-3">
+                  <img src="https://primefaces.org/cdn/primeng/images/demo/product/bamboo-watch.jpg" alt="Animal"
+                    class="w-16 h-16 rounded-md object-cover">
+                  <div>
+                    <p class="font-bold m-0">Milo (Ejemplo)</p>
+                    <p class="text-sm text-surface-500 m-0">Solicitud enviada el 15/05/2024</p>
+                  </div>
+                </div>
+                <p-tag severity="warning" value="Pendiente"></p-tag>
+              </div>
+              <div class="mt-4 p-3 border rounded-lg bg-surface-50 text-center">
+                <i class="pi pi-info-circle mr-2"></i>
+                <span>Esta sección se encuentra en desarrollo.</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+
+  </div>
 </div>
