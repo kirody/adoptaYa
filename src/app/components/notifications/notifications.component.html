@@ -1,0 +1,20 @@
+<div class="notification-panel">
+  <div class="panel-header">
+    <h3>Notificaciones</h3>
+  </div>
+  <div class="notification-list">
+    <div *ngIf="notifications.length === 0" class="no-notifications">
+      <i class="pi pi-inbox"></i>
+      <p>No tienes notificaciones</p>
+    </div>
+    <a *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read"
+      (click)="handleNotificationClick(notification, $event)">
+      <div class="notification-icon" [ngClass]="getSeverityClass(notification.severity)"></div>
+      <div class="notification-content">
+        <p class="title">{{ notification.title }}</p>
+        <p class="message">{{ notification.message }}</p>
+        <p class="date">{{ notification.date.toDate() | date:'short' }}</p>
+      </div>
+    </a>
+  </div>
+</div>

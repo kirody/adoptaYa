@@ -1,9 +1,9 @@
 import { AuthService } from './../../../services/auth.service';
 import { FirebaseService } from './../../../services/firebase.service';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Animal } from '../../../models/animal';
-import { BehaviorSubject, Observable, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, switchMap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
 import { ButtonModule } from 'primeng/button';
@@ -40,7 +40,7 @@ import { UserData } from '../../../models/user-data';
   templateUrl: './animal-detail.component.html',
   styleUrls: ['./animal-detail.component.css']
 })
-export class AnimalDetailComponent implements OnInit {
+export class AnimalDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private animalService = inject(AnimalsService);
@@ -59,7 +59,8 @@ export class AnimalDetailComponent implements OnInit {
   showModalAdoption: boolean = false;
 
   requestForm!: FormGroup;
-  hasRequest = false;
+  requestStatus: 'pending' | 'approved' | 'rejected' | null = null;
+  private requestStatusSubscription: Subscription | undefined;
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
@@ -180,14 +181,20 @@ export class AnimalDetailComponent implements OnInit {
 
   checkHasRequest(animalID: string): void {
     const userID = this.user?.uid ?? '';
-    if (animalID) {
-      this.requestsService.checkIfRequestExists(animalID, userID)
-        .then((exists: boolean) => {
-          if (exists) {
-            this.hasRequest = true;
+    this.requestStatusSubscription?.unsubscribe();
 
-          }
+    if (animalID && userID) {
+      this.requestStatusSubscription = this.requestsService.getRequestStatusAsObservable(animalID, userID)
+        .subscribe(status => {
+          this.requestStatus = status;
         });
+    } else {
+      this.requestStatus = null;
     }
+  }
+
+  ngOnDestroy(): void {
+    // Nos aseguramos de cancelar la suscripción al destruir el componente
+    this.requestStatusSubscription?.unsubscribe();
   }
 }

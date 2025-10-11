@@ -28,16 +28,29 @@ h3 {
   }
 }
 
-.request-sent-message {
+.request-message {
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background-color: var(--p-green-50);
-  border-left: 5px solid var(--p-green-500);
   border-radius: 8px;
 }
 
-.dark .request-sent-message {
+.dark .request-message {
   background-color: #1a2e29;
+}
+
+.status-pending {
+  background-color: var(--p-green-50);
+  border-left: 5px solid var(--p-green-500);
+}
+
+.status-rejected {
+  background-color: var(--p-red-50);
+  border-left: 5px solid var(--p-red-500);
+}
+
+.status-approved {
+  background-color: var(--p-blue-50);
+  border-left: 5px solid var(--p-blue-500);
 }

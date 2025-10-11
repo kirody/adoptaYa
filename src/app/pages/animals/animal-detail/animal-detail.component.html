@@ -49,18 +49,32 @@
             {{ currentAnimal.description }}
           </p>
         </div>
-        <div class="mt-8 flex gap-2" *ngIf="!hasRequest; else request">
+        <div class="mt-8 flex gap-2" *ngIf="!requestStatus; else requestMessages">
           <button pButton label="Solicitar adopción" icon="pi pi-heart" class="w-full md:w-auto"
             (click)="adoptionRequest()"></button>
         </div>
 
-        <ng-template #request>
-          <div *ngIf="hasRequest" class="request-sent-message mt-4">
+        <ng-template #requestMessages>
+          <div *ngIf="requestStatus === 'pending'" class="request-message mt-4 status-pending">
             <i class="pi pi-check-circle text-2xl"></i>
             <div>
               <p class="font-semibold m-0">Ya has enviado una solicitud para adoptar a {{ currentAnimal.name }}.</p>
               <p class="text-sm text-surface-600 dark:text-surface-400 m-0">La protectora revisará tu perfil y se pondrá
                 en contacto contigo. ¡Gracias por tu interés!</p>
+            </div>
+          </div>
+          <div *ngIf="requestStatus === 'rejected'" class="request-message mt-4 status-rejected">
+            <i class="pi pi-times-circle text-2xl"></i>
+            <div>
+              <p class="font-semibold m-0">Tu solicitud para {{ currentAnimal.name }} fue rechazada.</p>
+              <p class="text-sm text-surface-600 dark:text-surface-400 m-0">Gracias por tu interés. Puedes seguir buscando otras mascotas.</p>
+            </div>
+          </div>
+          <div *ngIf="requestStatus === 'approved'" class="request-message mt-4 status-approved">
+            <i class="pi pi-verified text-2xl"></i>
+            <div>
+              <p class="font-semibold m-0">¡Tu solicitud para {{ currentAnimal.name }} ha sido aprobada!</p>
+              <p class="text-sm text-surface-600 dark:text-surface-400 m-0">La protectora se pondrá en contacto contigo para los siguientes pasos.</p>
             </div>
           </div>
         </ng-template>

@@ -1,7 +1,7 @@
 import { UserData } from './../../models/user-data';
 import { Component, HostListener, inject, ViewChild } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
-import { BadgeModule } from 'primeng/badge';
+import { BadgeModule, Badge } from 'primeng/badge';
 import { AvatarModule } from 'primeng/avatar';
 import { MenuItem } from 'primeng/api';
 import { CommonModule } from '@angular/common';
@@ -13,6 +13,9 @@ import { AuthService } from '../../services/auth.service';
 import { Observable } from 'rxjs';
 import { TagModule } from 'primeng/tag';
 import { Menu } from 'primeng/menu';
+import { NotificationsComponent } from "../notifications/notifications.component";
+import { PopoverModule } from 'primeng/popover';
+import { OverlayBadgeModule } from 'primeng/overlaybadge';
 
 @Component({
   selector: 'app-header',
@@ -26,7 +29,11 @@ import { Menu } from 'primeng/menu';
     MenuModule,
     ButtonModule,
     TagModule,
-  ],
+    PopoverModule,
+    NotificationsComponent,
+    BadgeModule,
+    OverlayBadgeModule
+],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })

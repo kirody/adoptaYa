@@ -1,11 +1,20 @@
 <div class="container-header" [ngClass]="{'header-admin': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">
-  <p-menubar [model]="items" class="custom-menubar" [ngClass]="{'header-admin': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">
+  <p-menubar [model]="items" class="custom-menubar"
+    [ngClass]="{'header-admin': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">
     <ng-template pTemplate="end">
       <!-- Usamos @if con el pipe async para manejar el observable -->
       @if ((currentUser$ | async); as user) {
       <!-- Bloque que se muestra si el usuario está logueado -->
       <div class="flex align-items-center gap-2">
-        <span class="font-light text-sm" [ngClass]="{'text-white': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">Hola, {{ user.username }}</span>
+        <p-overlaybadge severity="danger" (click)="op.toggle($event)">
+          <i class="pi pi-bell" style="font-size: 1rem; cursor: pointer;"></i>
+        </p-overlaybadge>
+        <p-popover #op>
+          <app-notifications></app-notifications>
+        </p-popover>
+        <span class="font-light text-sm"
+          [ngClass]="{'text-white': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">Hola, {{ user.username
+          }}</span>
         <div>
           @if (user.role === 'ROLE_ADMIN') {
           <p-tag icon="fa fa-user-cog" severity="danger" value="Admin" [rounded]="true" />

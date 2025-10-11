@@ -7,6 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { AnimalsService } from '../../services/animals.service';
+import { NotificationsService } from '../../services/notifications.service';
 
 @Component({
   selector: 'app-requests',
@@ -31,7 +32,8 @@ export class RequestsComponent implements OnInit {
   constructor(
     private requestsService: RequestsService,
     private animalService: AnimalsService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private notificationsService: NotificationsService
   ) { }
 
   ngOnInit(): void {
@@ -78,17 +80,35 @@ export class RequestsComponent implements OnInit {
    * Actualiza el estado de una solicitud a 'approved'.
    * @param requestId El ID de la solicitud a aprobar.
    */
-  async approveRequest(requestId: string): Promise<void> {
+  async approveRequest(approvedRequest: any): Promise<void> {
+    if (!approvedRequest || !approvedRequest.id || !approvedRequest.animalID || !approvedRequest.userID) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Datos de la solicitud incompletos.' });
+      return;
+    }
+
     try {
-      await this.requestsService.updateRequest(requestId, { status: 'approved' });
-      // Actualizamos la lista localmente para una respuesta visual inmediata
-      const request = this.requests.find(r => r.id === requestId);
-      if (request) {
-        request.status = 'approved';
-      }
+      // 1. Aprobar la solicitud actual
+      await this.requestsService.updateRequest(approvedRequest.id, { status: 'approved' });
+
+      // 2. Notificar al usuario que su solicitud fue aprobada
+      const notification = {
+        title: '¡Solicitud Aprobada!',
+        message: `¡Felicidades! Tu solicitud para adoptar a ${approvedRequest.animalData.name} ha sido aprobada. La protectora se pondrá en contacto contigo pronto.`,
+        severity: 'success',
+        link: `/detail-animal/${approvedRequest.animalID}`
+      };
+      await this.notificationsService.addNotification(approvedRequest.userID, notification);
+
+      this.messageService.add({
+        severity: 'success',
+        summary: '¡Aprobado!',
+        detail: 'La solicitud ha sido aprobada y el usuario notificado.'
+      });
+
+      await this.loadRequests();
     } catch (err) {
       console.error('Error al aprobar la solicitud:', err);
-      alert('No se pudo aprobar la solicitud.');
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo completar el proceso de aprobación.' });
     }
   }
 
@@ -96,17 +116,32 @@ export class RequestsComponent implements OnInit {
    * Actualiza el estado de una solicitud a 'rejected'.
    * @param requestId El ID de la solicitud a rechazar.
    */
-  async rejectRequest(requestId: string): Promise<void> {
+  async rejectRequest(requestToReject: any): Promise<void> {
     try {
-      await this.requestsService.updateRequest(requestId, { status: 'rejected' });
+      await this.requestsService.updateRequest(requestToReject.id, { status: 'rejected' });
       // Actualizamos la lista localmente
-      const request = this.requests.find(r => r.id === requestId);
+      const request = this.requests.find(r => r.id === requestToReject.id);
       if (request) {
         request.status = 'rejected';
       }
+
+      // Notificar al usuario que su solicitud fue rechazada
+      const notification = {
+        title: 'Solicitud Rechazada',
+        message: `Lo sentimos, tu solicitud para adoptar a ${requestToReject.animalData.name} ha sido rechazada en esta ocasión.`,
+        severity: 'warn',
+        link: `/detail-animal/${requestToReject.animalID}`
+      };
+      await this.notificationsService.addNotification(requestToReject.userID, notification);
+
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Rechazada',
+        detail: 'La solicitud ha sido rechazada y el usuario notificado.'
+      });
     } catch (err) {
       console.error('Error al rechazar la solicitud:', err);
-      alert('No se pudo rechazar la solicitud.');
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo rechazar la solicitud.' });
     }
   }
 

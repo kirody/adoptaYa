@@ -1,0 +1,76 @@
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { BadgeModule } from 'primeng/badge';
+import { ButtonModule } from 'primeng/button';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { NotificationsService } from '../../services/notifications.service';
+
+@Component({
+  selector: 'app-notifications',
+  standalone: true,
+  imports: [
+    CommonModule,
+    BadgeModule,
+    ButtonModule,
+    RouterModule,
+  ],
+  templateUrl: './notifications.component.html',
+  styleUrls: ['./notifications.component.css'],
+})
+export class NotificationsComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  private notificationsService = inject(NotificationsService);
+  private router = inject(Router);
+
+  notifications: any[] = [];
+  unreadCount = 0;
+  userId: string | null = null;
+
+  private userSubscription: Subscription | undefined;
+  private notificationsSubscription: Subscription | undefined;
+
+  ngOnInit(): void {
+    this.userSubscription = this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.userId = user.uid;
+        this.subscribeToNotifications(user.uid);
+      } else {
+        this.userId = null;
+        this.notifications = [];
+        this.unreadCount = 0;
+        this.notificationsSubscription?.unsubscribe();
+      }
+    });
+  }
+
+  subscribeToNotifications(userId: string): void {
+    this.notificationsSubscription?.unsubscribe();
+    this.notificationsSubscription = this.notificationsService.getUserNotifications(userId).subscribe(notifications => {
+      this.notifications = notifications;
+      this.unreadCount = notifications.filter(n => !n.read).length;
+    });
+  }
+
+  async handleNotificationClick(notification: any, event: Event) {
+    event.stopPropagation();
+    if (this.userId && !notification.read) {
+      await this.notificationsService.markAsRead(this.userId, notification.id);
+    }
+    if (notification.link) {
+      this.router.navigate([notification.link]);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
+    this.notificationsSubscription?.unsubscribe();
+  }
+
+  getSeverityClass(severity: string): string {
+    if (severity === 'success') return 'notification-success';
+    if (severity === 'warn') return 'notification-warn';
+    return 'notification-info';
+  }
+}

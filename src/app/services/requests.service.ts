@@ -9,11 +9,14 @@ import {
   getDocs,
   getFirestore,
   query,
+  onSnapshot,
   updateDoc,
   where,
   Timestamp,
   setDoc,
+  limit,
 } from 'firebase/firestore';
+import { Observable } from 'rxjs';
 import { firebaseConfig } from '../../environments/environment';
 
 const app = initializeApp(firebaseConfig);
@@ -110,5 +113,34 @@ export class RequestsService {
   async deleteRequest(id: string) {
     const requestDoc = doc(db, 'requests', id);
     await deleteDoc(requestDoc);
+  }
+
+  /**
+   * Obtiene el estado de una solicitud en tiempo real.
+   * @param animalId El ID del animal.
+   * @param userId El ID del usuario.
+   * @returns Un Observable que emite el estado de la solicitud o null si no existe.
+   */
+  getRequestStatusAsObservable(animalId: string, userId: string): Observable<'pending' | 'approved' | 'rejected' | null> {
+    return new Observable(subscriber => {
+      if (!animalId || !userId) {
+        subscriber.next(null);
+        subscriber.complete();
+        return;
+      }
+
+      const q = query(
+        collection(db, 'requests'),
+        where('animalID', '==', animalId),
+        where('userID', '==', userId),
+        limit(1)
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        subscriber.next(snapshot.empty ? null : snapshot.docs[0].data()['status']);
+      }, (error) => subscriber.error(error));
+
+      return () => unsubscribe();
+    });
   }
 }
