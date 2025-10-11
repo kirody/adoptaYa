@@ -343,7 +343,12 @@ export class ManagementPanelComponent implements OnInit {
       //TODO: Transformar datos de la columna Escalado para filtrar
 
       this.dataTable.set(processedAnimals);
-      this.countTabAnimals = this.dataTable().length;
+
+      if (this.user()?.role === 'ROLE_MOD') {
+        this.countTabAnimals = String(animalsData.filter(animal => animal.assignedToAdmin !== true).length);
+      } else {
+        this.countTabAnimals = String(this.dataTable().length);
+      }
       console.log(this.dataTable());
     } catch (error) {
       console.error('Error al cargar los animales:', error);
