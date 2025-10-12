@@ -1,0 +1,30 @@
+.protector-image {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.protector-list-item:not(:last-child) {
+  border-bottom: 1px solid var(--p-surface-200);
+}
+
+.protector-initials-placeholder {
+  background-color: var(--p-primary-100);
+  color: var(--p-primary-600);
+}
+
+.dark .protector-initials-placeholder {
+  background-color: var(--p-primary-900);
+  color: var(--p-primary-200);
+}
+
+.protector-list-item {
+  transition: background-color 0.2s;
+}
+
+.protector-list-item:hover {
+  background-color: var(--p-surface-50);
+}
+
+.dark .protector-list-item:hover {
+  background-color: var(--p-surface-800);
+}

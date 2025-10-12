@@ -12,7 +12,7 @@
       <p-card>
         <ng-template pTemplate="header">
           <div class="profile-header admin-header flex items-center p-4">
-            <p-avatar icon="pi pi-user" styleClass="mr-4" size="xlarge" shape="circle"></p-avatar>
+            <p-avatar [label]="user.username.charAt(0).toUpperCase()" styleClass="mr-4" size="xlarge" shape="circle" [style]="getUserAvatarColor(user.username)"></p-avatar>
             <div>
               <h2 class="text-2xl font-bold m-0">{{ user.username }}</h2>
               <p class="text-lg m-0 text-surface-500">{{ user.email }}</p>
@@ -39,7 +39,7 @@
       <p-card>
         <ng-template pTemplate="title">
           <div class="flex items-center gap-4">
-            <p-avatar icon="pi pi-user" size="xlarge" shape="circle"></p-avatar>
+            <p-avatar [label]="user.username.charAt(0).toUpperCase()" size="xlarge" shape="circle" [style]="getUserAvatarColor(user.username)"></p-avatar>
             <div>
               <h2 class="text-2xl font-bold m-0">{{ user.username }}</h2>
               <p class="text-lg m-0 text-surface-500">{{ user.email }}</p>

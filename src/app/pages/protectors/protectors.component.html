@@ -1,3 +1,42 @@
 <div class="protectors-container">
   <app-header-page [title]="'Protectoras de Animales'" [icon]="'fas fa-building-shield'"></app-header-page>
+
+  <div class="surface-section px-4 py-8 md:px-6 lg:px-8">
+    <div *ngIf="isLoading" class="flex justify-center">
+      <p-progressSpinner />
+    </div>
+
+    <div *ngIf="!isLoading && protectors.length > 0">
+      <!-- Lista simple de protectoras -->
+      <div class="protector-list">
+        <div *ngFor="let protector of protectors" class="protector-list-item col-12">
+          <div class="flex align-items-center p-3 gap-4">
+            <!-- Contenedor para la imagen o la inicial -->
+            <ng-container *ngIf="protector.urlImage && protector.urlImage.trim() !== ''; else initialPlaceholder">
+              <img class="w-6rem h-6rem shadow-2 block border-round protector-image" [src]="protector.urlImage" [alt]="protector.name" />
+            </ng-container>
+            <ng-template #initialPlaceholder>
+              <div class="w-6rem h-6rem shadow-2 block border-round protector-initials-placeholder flex align-items-center justify-content-center">
+                <span class="text-3xl font-bold">{{ protector.name.charAt(0).toUpperCase() }}</span>
+              </div>
+            </ng-template>
+
+            <div class="flex-1">
+              <div class="text-xl font-bold text-900">{{ protector.name }}</div>
+              <div class="flex align-items-center gap-2 text-sm text-surface-500">
+                <i class="pi pi-map-marker"></i>
+                <span>{{ protector.province }}</span>
+              </div>
+            </div>
+
+            <p class="flex-1 m-0 text-sm text-surface-600 hidden md:block">{{ protector.description | slice:0:100 }}...</p>
+
+            <div class="ml-auto">
+              <p-button label="Ver Animales" icon="pi pi-search" styleClass="p-button-outlined" [routerLink]="['/animales']" [queryParams]="{ protectora: protector.id }"></p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

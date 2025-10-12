@@ -23,7 +23,7 @@
           <p-tag icon="fa fa-user-pen" severity="warn" value="Mod" [rounded]="true" />
           }
         </div>
-        <p-avatar icon="pi pi-user" styleClass="cursor-pointer" shape="circle" (click)="menu.toggle($event)" />
+        <p-avatar [label]="user.username.charAt(0).toUpperCase()" styleClass="cursor-pointer" shape="circle" (click)="menu.toggle($event)" [style]="getUserAvatarColor(user.username)" />
       </div>
       } @else {
       <!-- Bloque que se muestra si NO hay usuario -->
