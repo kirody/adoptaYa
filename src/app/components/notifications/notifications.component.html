@@ -1,6 +1,8 @@
 <div class="notification-panel">
   <div class="panel-header">
     <h3>Notificaciones</h3>
+    <p-button *ngIf="notifications.length > 0" (click)="deleteAllNotifications()" label="Borrar todas"
+      icon="pi pi-trash" styleClass="p-button-danger p-button-text p-button-sm"></p-button>
   </div>
   <div class="notification-list">
     <div *ngIf="notifications.length === 0" class="no-notifications">
@@ -16,5 +18,6 @@
         <p class="date">{{ notification.date.toDate() | date:'short' }}</p>
       </div>
     </a>
+
   </div>
 </div>

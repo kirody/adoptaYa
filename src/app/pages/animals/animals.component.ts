@@ -50,8 +50,9 @@ export class AnimalsComponent implements OnInit {
 
   loadAnimals() {
     this.isLoading = true;
-    this.animalService.getAnimals().then((data) => {
-      this.animals.set(data);
+    this.animalService.getAnimals().then((response: any) => {
+      const publishedAnimals = response.filter((animal: Animal) => animal.published);
+      this.animals.set(publishedAnimals);
       this.isLoading = false;
     });
   }

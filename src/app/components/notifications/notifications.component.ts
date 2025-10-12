@@ -64,6 +64,12 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     }
   }
 
+  async deleteAllNotifications() {
+    if (this.userId) {
+      await this.notificationsService.deleteAllNotifications(this.userId);
+    }
+  }
+
   ngOnDestroy(): void {
     this.userSubscription?.unsubscribe();
     this.notificationsSubscription?.unsubscribe();
