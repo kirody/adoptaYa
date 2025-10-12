@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
 import { TableModule } from "primeng/table";
 import { SelectModule } from "primeng/select";
 import { ButtonModule } from "primeng/button";
@@ -30,6 +30,7 @@ export class UsersTableComponent {
 
   @Input() dataTable: any;
   @Input({ required: true }) user!: any;
+  @Output() dataChanged = new EventEmitter<void>();
 
   confirmSuspension(event: Event, user: any) {
     const action = user.isSuspended ? 'reactivar' : 'suspender';
@@ -68,6 +69,7 @@ export class UsersTableComponent {
           summary: 'Éxito',
           detail: `El usuario "${user.username}" ha sido ${actionText}.`
         });
+        this.dataChanged.emit();
       })
       .catch((error) => {
         console.error(`Error al ${newSuspensionState ? 'suspender' : 'reactivar'} al usuario:`, error);
@@ -97,6 +99,7 @@ export class UsersTableComponent {
           summary: 'Éxito',
           detail: `Rol de "${user.username}" actualizado con éxito.`,
         });
+        this.dataChanged.emit();
         this.isLoading = false;
       })
       .catch((error) => {
