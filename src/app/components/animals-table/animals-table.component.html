@@ -1,3 +1,7 @@
+<div class="card flex justify-center" *ngIf="isLoading">
+  <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
+    [style]="{ width: '50px', height: '50px' }" />
+</div>
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
   <p-table #dt2 [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }"

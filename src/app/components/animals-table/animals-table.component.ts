@@ -21,6 +21,7 @@ import { MessageModule } from "primeng/message";
 import { ConfirmDialog } from "primeng/confirmdialog";
 import { ToastModule } from "primeng/toast";
 import { TextareaModule } from 'primeng/textarea';
+import { ProgressSpinnerModule } from "primeng/progressspinner";
 
 @Component({
   selector: 'app-animals-table',
@@ -39,7 +40,8 @@ import { TextareaModule } from 'primeng/textarea';
     MessageModule,
     ConfirmDialog,
     ToastModule,
-    TextareaModule
+    TextareaModule,
+    ProgressSpinnerModule
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './animals-table.component.html',
@@ -60,7 +62,7 @@ export class AnimalsTableComponent {
   showInfoScaled: boolean = false;
   selectedScaledAnimal = signal<any>([]);
   showModalScaled: boolean = false;
-  isLoading = false;
+  @Input() isLoading = true;
   scaleComment = '';
 
   // Datos principales de la revisión
@@ -96,13 +98,6 @@ export class AnimalsTableComponent {
   showAdminActionPanel = computed(() => this.user?.role === 'ROLE_ADMIN' && !this.adminData());
   showModeratorCloseButton = computed(() => this.user?.role === 'ROLE_MOD');
   showAdminCloseButton = computed(() => this.user?.role === 'ROLE_ADMIN' && !!this.adminData());
-
-  constructor() { }
-
-  ngOnInit(): void {
-
-  }
-
 
   // Función auxiliar para obtener el valor del evento (para usar en el HTML)
   getEventValue(event: Event): string {

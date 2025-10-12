@@ -10,7 +10,6 @@ import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
-import { CardNodataComponent } from '../../components/card-nodata/card-nodata.component';
 import { Router } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
@@ -33,6 +32,7 @@ import { ProtectorsService } from '../../services/protectors.service';
 import { UsersService } from '../../services/users.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { AnimalsTableComponent } from "../../components/animals-table/animals-table.component";
+import { UsersTableComponent } from "../../components/users-table/users-table.component";
 
 @Component({
   selector: 'app-management-panel',
@@ -44,7 +44,6 @@ import { AnimalsTableComponent } from "../../components/animals-table/animals-ta
     TagModule,
     ButtonModule,
     ProgressSpinnerModule,
-    CardNodataComponent,
     ConfirmDialog,
     ToastModule,
     SelectModule,
@@ -58,7 +57,8 @@ import { AnimalsTableComponent } from "../../components/animals-table/animals-ta
     InputTextModule,
     StatisticsComponent,
     RequestsComponent,
-    AnimalsTableComponent
+    AnimalsTableComponent,
+    UsersTableComponent
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
@@ -70,10 +70,6 @@ export class ManagementPanelComponent implements OnInit {
   private userService = inject(UsersService);
   private requestsService = inject(RequestsService);
   private authService = inject(AuthService);
-  private notificationsService = inject(NotificationsService);
-  private confirmationService = inject(ConfirmationService);
-  private messageService = inject(MessageService);
-  private router = inject(Router);
 
   currentUser$: Observable<any | null>;
   /*  user!: UserData; */
@@ -84,13 +80,6 @@ export class ManagementPanelComponent implements OnInit {
   countTabAnimals = '';
   countTabPending = '';
   countTabRequests = '0';
-
-  newRole = '';
-  roles = [
-    { label: 'Admin', value: 'ROLE_ADMIN' },
-    { label: 'Default', value: 'ROLE_DEFAULT' },
-    { label: 'Mod', value: 'ROLE_MOD' },
-  ];
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
@@ -195,32 +184,4 @@ export class ManagementPanelComponent implements OnInit {
     this.valueTab = 1;
   }
 
-  updateRolUser(user: any) {
-    this.isLoading = true;
-    if (!user || !user.uid || !user.role) {
-      this.isLoading = false;
-      return;
-    }
-    const newRole = user.role;
-    this.userService
-      .updateUser(user.uid, { role: newRole })
-      .then(() => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Rol de "${user.username}" actualizado con éxito.`,
-        });
-        this.reloadData();
-        this.isLoading = false;
-      })
-      .catch((error) => {
-        console.error('Error al actualizar el rol del usuario:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo actualizar el rol.',
-        });
-        this.isLoading = false;
-      });
-  }
 }

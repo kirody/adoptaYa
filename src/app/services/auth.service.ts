@@ -9,7 +9,7 @@ import {
   signOut,
   UserCredential,
 } from '@angular/fire/auth';
-import { from, Observable, of, BehaviorSubject } from 'rxjs';
+import { from, Observable, of, BehaviorSubject, throwError } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { UsersService } from './users.service';
@@ -22,9 +22,9 @@ export class AuthService {
   private userService = inject(UsersService);
   private router: Router = inject(Router);
 
-  private _currentUser = new BehaviorSubject<User | null>(null);
-  public currentUser$: Observable<User | null> =
-    this._currentUser.asObservable();
+  // El tipo debe ser 'any' para poder incluir tus campos personalizados como 'isSuspended'
+  private _currentUser = new BehaviorSubject<any | null>(null);
+  public currentUser$: Observable<any | null> = this._currentUser.asObservable();
   constructor() {
     this.initAuthStateListener();
   }
@@ -36,15 +36,34 @@ export class AuthService {
           .getUserById(firebaseUser?.uid)
           .then((user: any) => {
             if (user) {
-              this._currentUser.next(user);
+              // Comprobación de seguridad adicional: si el usuario está suspendido, desloguear.
+              if (user.isSuspended) {
+                this.logout();
+              } else {
+                this._currentUser.next(user);
+              }
             }
           });
+      } else {
+        // Si no hay usuario de Firebase, nos aseguramos que el estado local sea nulo.
+        this._currentUser.next(null);
       }
     });
   }
 
-  login(email: string, password: string): Observable<UserCredential> {
-    return from(signInWithEmailAndPassword(this.afAuth, email, password));
+  login(email: string, password: string): Observable<any> {
+    return from(signInWithEmailAndPassword(this.afAuth, email, password)).pipe(
+      switchMap(async (userCredential) => {
+        const user = await this.userService.getUserById(userCredential.user.uid);
+        if (user && user['isSuspended']) {
+          // Si está suspendido, cerramos la sesión de Firebase y lanzamos un error.
+          await signOut(this.afAuth);
+          throw new Error('USER_SUSPENDED');
+        }
+        // Si no está suspendido, el authStateListener se encargará de actualizar el currentUser$.
+        return user;
+      })
+    );
   }
 
   logout(): Observable<void> {

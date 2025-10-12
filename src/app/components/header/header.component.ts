@@ -64,15 +64,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser$.subscribe((user: any) => {
-      this.user = user;
-      this.loadMenu();
-
-      if (user) {
-        this.subscribeToNotifications(user.uid);
+      // Si el usuario está suspendido, cerramos la sesión inmediatamente.
+      if (user?.isSuspended) {
+        this.authService.logout().subscribe();
+        this.user = undefined;
       } else {
-        this.unreadCount = 0;
-        this.notificationsSubscription?.unsubscribe();
+        this.user = user;
+        if (user) {
+          this.subscribeToNotifications(user.uid);
+        } else {
+          this.unreadCount = 0;
+          this.notificationsSubscription?.unsubscribe();
+        }
       }
+      this.loadMenu();
     });
   }
 

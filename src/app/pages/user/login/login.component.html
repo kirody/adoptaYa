@@ -1,4 +1,28 @@
 <div class="auth-container">
+  <p-dialog
+    [(visible)]="displayDialog"
+    [modal]="true"
+    [style]="{ width: '350px' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <ng-template pTemplate="header">
+      <div class="flex align-items-center">
+        <!-- <i class="pi pi-exclamation-triangle mr-2 text-red-500" style="font-size: 1.2rem;"></i> -->
+        <span class="font-bold">ATENCIÓN</span>
+      </div>
+    </ng-template>
+
+    <div class="flex align-items-center gap-3">
+      <i class="pi pi-times-circle text-red-500" style="font-size: 2.5rem"></i>
+      <span class="font-medium">{{ dialogMessage }}</span>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Cerrar" (click)="displayDialog=false" styleClass="p-button-text"></p-button>
+    </ng-template>
+  </p-dialog>
+
   <p-card styleClass="auth-card">
     <ng-template pTemplate="title">
       <div class="auth-title">
@@ -8,7 +32,11 @@
     </ng-template>
 
     <ng-template pTemplate="content">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div *ngIf="isLoading" class="flex justify-content-center align-items-center py-6">
+        <p-progressSpinner></p-progressSpinner>
+      </div>
+
+      <form *ngIf="!isLoading" [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="field">
           <label for="email" class="form-label">Correo Electrónico</label>
           <input id="email" type="email" pInputText formControlName="email" class="w-full" placeholder="tu@email.com" />
@@ -21,7 +49,7 @@
         </div>
 
         <div class="mt-4">
-          <p-button label="Acceder" styleClass="w-full" type="submit"></p-button>
+          <p-button label="Acceder" styleClass="w-full" type="submit" [disabled]="form.invalid"></p-button>
         </div>
       </form>
     </ng-template>
