@@ -9,7 +9,7 @@ import { LoginComponent } from './pages/user/login/login.component';
 import { RegisterComponent } from './pages/user/register/register.component';
 import { AnimalDetailComponent } from './pages/animals/animal-detail/animal-detail.component';
 import { AnimalFormComponent } from './pages/animals/animal-form/animal-form.component';
-import { ManagementPanelComponent } from './pages/user/management-panel/management-panel.component';
+import { ManagementPanelComponent } from './pages/management-panel/management-panel.component';
 import { roleGuard } from './guards/role.guard';
 import { ProtectorFormComponent } from './pages/protectors/protector-form/protector-form.component';
 

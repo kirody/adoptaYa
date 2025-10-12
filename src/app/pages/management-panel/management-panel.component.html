@@ -1,0 +1,90 @@
+<div class="management-panel-container">
+  <app-header-page [title]="'Panel de Gestión'" [icon]="'fas fa-cog'"></app-header-page>
+  <div class="card flex justify-center content-spinner" *ngIf="isLoading">
+    <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
+      [style]="{ width: '50px', height: '50px' }" />
+  </div>
+  <div class="card h-50" *ngIf="!isLoading && user">
+    <p-tabs value="{{ valueTab }}" scrollable>
+      <p-tablist>
+        <ng-template #previcon>
+          <i class="pi pi-minus"></i>
+        </ng-template>
+        <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()"
+          *ngIf="['ROLE_ADMIN', 'ROLE_MOD'].includes(user()?.role)">
+          <i [ngClass]="{'fa fa-paw': user()?.role === 'ROLE_ADMIN', 'fa fa-clock': user()?.role === 'ROLE_MOD'}"></i>
+          <span class="font-bold whitespace-nowrap">{{user()?.role === 'ROLE_MOD' ? 'Pendientes publicar' :
+            'Animales'}}</span>
+          <p-tag severity="warn" [value]="countTabAnimals" [rounded]="true" />
+        </p-tab>
+        <p-tab value="1" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+          <i class="fa fa-file"></i>
+          <span class="font-bold whitespace-nowrap">Solicitudes</span>
+          <p-tag severity="warn" [value]="countTabRequests" [rounded]="true" />
+        </p-tab>
+        <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()"
+          *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+          <i class="fa fa-users"></i>
+          <span class="font-bold whitespace-nowrap">Usuarios</span>
+        </p-tab>
+        <p-tab value="3" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+          <i class="fa fa-file"></i>
+          <span class="font-bold whitespace-nowrap">Estadísticas</span>
+        </p-tab>
+        <ng-template #nexticon>
+          <i class="pi pi-plus"></i>
+        </ng-template>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <app-animals-table [dataTable]="dataTable()" [user]="user()" (dataChanged)="reloadData()"></app-animals-table>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+          <app-requests></app-requests>
+        </p-tabpanel>
+        <p-tabpanel value="2">
+          @if (dataTable() && dataTable().length > 0) {
+          <p-table [value]="dataTable()" [tableStyle]="{ 'min-width': '60rem' }">
+            <ng-template #caption />
+            <ng-template #header>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-user>
+              <tr>
+                <td>{{ user.username }} </td>
+                <td>{{ user.email }} </td>
+                <td>
+                  <div class="field h-4rem">
+                    <p-select id="state" [(ngModel)]="user.role" [options]="roles" optionLabel="label"
+                      optionValue="value" placeholder="Selecciona un rol" styleClass="w-full"
+                      (onChange)="updateRolUser(user)" filter="true" appendTo="body">
+                    </p-select>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #footer>
+              <tr>
+                <td colspan="5" class="font-bold">Total {{ dataTable().length }} usuarios registrados.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          } @else {
+          <app-card-nodata message="No hay usuarios disponibles para gestionar."></app-card-nodata>
+          }
+        </p-tabpanel>
+        <p-tabpanel value="3">
+          <app-statistics></app-statistics>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-toast />
+<p-confirmdialog />
