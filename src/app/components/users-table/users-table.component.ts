@@ -1,25 +1,41 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
-import { TableModule } from "primeng/table";
-import { SelectModule } from "primeng/select";
-import { ButtonModule } from "primeng/button";
-import { CardNodataComponent } from "../card-nodata/card-nodata.component";
-import { TooltipModule } from 'primeng/tooltip';
+import { Component, inject, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { UsersService } from '../../services/users.service';
+import { TableModule } from 'primeng/table';
+import { SelectModule } from 'primeng/select';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { DialogModule } from 'primeng/dialog';
+import { TextareaModule } from 'primeng/textarea';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ProgressSpinnerModule } from "primeng/progressspinner";
+
+import { CardNodataComponent } from '../card-nodata/card-nodata.component';
+import { UsersService } from '../../services/users.service';
+import { NotificationsService } from '../../services/notifications.service';
 
 @Component({
   selector: 'app-users-table',
-  imports: [CommonModule, FormsModule, TableModule, SelectModule, ButtonModule, CardNodataComponent, TooltipModule, ProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    SelectModule,
+    ButtonModule,
+    CardNodataComponent,
+    TooltipModule,
+    ProgressSpinnerModule,
+    DialogModule,
+    TextareaModule,
+  ],
   templateUrl: './users-table.component.html',
-  styleUrl: './users-table.component.css'
+  styleUrl: './users-table.component.css',
 })
-export class UsersTableComponent {
+export class UsersTableComponent implements OnDestroy {
   private userService = inject(UsersService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private notificationsService = inject(NotificationsService);
 
   @Input() isLoading = true;
   roles = [
@@ -31,6 +47,14 @@ export class UsersTableComponent {
   @Input() dataTable: any;
   @Input({ required: true }) user!: any;
   @Output() dataChanged = new EventEmitter<void>();
+
+  // Propiedades para el diálogo de mensaje
+  displayMessageDialog: boolean = false;
+  messageContent: string = '';
+  selectedUser: any | null = null;
+  messageHistory: any[] = [];
+  isHistoryLoading: boolean = false;
+  private notificationSubscription: any;
 
   confirmSuspension(event: Event, user: any) {
     const action = user.isSuspended ? 'reactivar' : 'suspender';
@@ -111,5 +135,52 @@ export class UsersTableComponent {
         });
         this.isLoading = false;
       });
+  }
+
+  openMessageDialog(user: any) {
+    this.selectedUser = user;
+    this.messageContent = '';
+    this.displayMessageDialog = true;
+    this.loadMessageHistory(user.uid);
+  }
+
+  loadMessageHistory(userId: string) {
+    this.isHistoryLoading = true;
+    this.messageHistory = [];
+    this.notificationSubscription?.unsubscribe();
+    this.notificationSubscription = this.notificationsService
+      .getUserNotifications(userId)
+      .subscribe((data) => {
+        this.messageHistory = data.notifications.filter(n => n.title === 'Mensaje del administrador');
+        this.isHistoryLoading = false;
+      });
+  }
+
+  async sendMessage() {
+    if (!this.selectedUser || !this.messageContent.trim()) {
+      return;
+    }
+
+    const notification = {
+      title: 'Mensaje del administrador',
+      message: this.messageContent,
+      severity: 'info',
+    };
+
+    await this.notificationsService.addNotification(
+      this.selectedUser.uid,
+      notification
+    );
+    this.messageContent = ''; // Limpiar el input después de enviar
+    this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Mensaje enviado correctamente.' });
+  }
+
+  closeMessageDialog() {
+    this.displayMessageDialog = false;
+    this.notificationSubscription?.unsubscribe();
+  }
+
+  ngOnDestroy(): void {
+    this.notificationSubscription?.unsubscribe();
   }
 }

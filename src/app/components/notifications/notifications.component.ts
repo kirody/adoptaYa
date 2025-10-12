@@ -55,12 +55,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   async handleNotificationClick(notification: any, event: Event) {
     event.stopPropagation();
+
+    // Marcar como leída
     if (this.userId && !notification.read) {
       notification.read = true; // Actualización optimista para la UI
       await this.notificationsService.markAsRead(this.userId, notification.id);
-    }
-    if (notification.link) {
-      this.router.navigate([notification.link]);
     }
   }
 

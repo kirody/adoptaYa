@@ -1,0 +1,54 @@
+<div class="chat-container">
+  <!-- Panel de Usuarios -->
+  <div class="user-list-panel">
+    <div class="panel-header">
+      <h4>Usuarios</h4>
+      <div class="search-bar">
+        <i class="pi pi-search"></i>
+        <input type="text" pInputText placeholder="Buscar usuario..." [(ngModel)]="searchTerm" (ngModelChange)="filterUsers()">
+      </div>
+    </div>
+    <div class="user-list">
+      <p-progressSpinner *ngIf="isUsersLoading" [style]="{width: '40px', height: '40px'}" strokeWidth="6"></p-progressSpinner>
+      <div *ngFor="let user of filteredUsers" class="user-item" (click)="selectUser(user)" [class.selected]="user.uid === selectedUser?.uid">
+        <div class="avatar">{{ getInitials(user.username) }}</div>
+        <div class="user-details">
+          <span class="username">{{ user.username }}</span>
+          <span class="email">{{ user.email }}</span>
+          <span class="role">{{ user.role }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Chat -->
+  <div class="chat-window">
+    <div *ngIf="!selectedUser" class="no-user-selected">
+      <i class="pi pi-comments"></i>
+      <p>Selecciona un usuario para comenzar a chatear</p>
+    </div>
+
+    <ng-container *ngIf="selectedUser">
+      <div class="chat-header">
+        <div class="header-info">
+          <h5>Chat con {{ selectedUser.username }}</h5>
+          <span class="role">{{ selectedUser.role }}</span>
+        </div>
+      </div>
+      <div class="message-area">
+        <p-progressSpinner *ngIf="isHistoryLoading" [style]="{width: '30px', height: '30px'}" strokeWidth="6"></p-progressSpinner>
+        <div *ngFor="let msg of messageHistory"
+             class="message-bubble"
+             [ngClass]="{'sent-message': msg.senderId === currentUser.uid, 'received-message': msg.senderId !== currentUser.uid}">
+          <p class="message-text">{{ msg.text }}</p>
+          <!-- El timestamp puede ser nulo momentáneamente hasta que el servidor lo asigna -->
+          <span class="message-date">{{ msg.timestamp?.toDate() | date:'short' }}</span>
+        </div>
+      </div>
+      <div class="message-input">
+        <textarea pInputTextarea [(ngModel)]="messageContent" placeholder="Escribe un mensaje..." (keydown.enter)="handleKeydown($event)"></textarea>
+        <p-button icon="pi pi-send" (click)="sendMessage($event)" [disabled]="!messageContent.trim()"></p-button>
+      </div>
+    </ng-container>
+  </div>
+</div>

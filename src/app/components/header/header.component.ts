@@ -17,6 +17,8 @@ import { NotificationsComponent } from "../notifications/notifications.component
 import { PopoverModule } from 'primeng/popover';
 import { OverlayBadgeModule } from 'primeng/overlaybadge';
 import { NotificationsService } from '../../services/notifications.service';
+import { DrawerModule } from 'primeng/drawer';
+import { ChatComponent } from "../chat/chat.component";
 
 @Component({
   selector: 'app-header',
@@ -33,7 +35,9 @@ import { NotificationsService } from '../../services/notifications.service';
     PopoverModule,
     NotificationsComponent,
     BadgeModule,
-    OverlayBadgeModule
+    OverlayBadgeModule,
+    DrawerModule,
+    ChatComponent
 ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
@@ -50,6 +54,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @ViewChild('menu') menu: Menu | undefined;
   private userSubscription: Subscription | undefined;
   private notificationsSubscription: Subscription | undefined;
+  showSidebar = false;
 
   // Detector de eventos de scroll en la ventana
   @HostListener('window:scroll', ['$event'])
@@ -181,5 +186,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     for (let i = 0; i < username.length; i++) { hash = username.charCodeAt(i) + ((hash << 5) - hash); }
     const index = Math.abs(hash % colors.length);
     return { 'background-color': colors[index], 'color': '#463e40ff', 'font-weight': 'bold' };
+  }
+
+  toggleChat(): void {
+    this.showSidebar = true;
   }
 }

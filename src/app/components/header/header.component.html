@@ -6,8 +6,19 @@
       @if ((currentUser$ | async); as user) {
       <!-- Bloque que se muestra si el usuario está logueado -->
       <div class="flex align-items-center gap-2">
+        <div>
+          <i class="pi pi-comments p-overlay-badge cursor-pointer"
+            style="font-size: 1.2rem; color: white; cursor: pointer;" (click)="toggleChat()"
+            *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'">
+            <!-- <p-badge severity="danger"></p-badge> -->
+          </i>
+        </div>
+        <p-drawer [(visible)]="showSidebar" header="Iniciar conversación" position="full">
+          <app-chat></app-chat>
+        </p-drawer>
         <p-overlaybadge [value]="unreadCount > 0 ? unreadCount : 0" severity="danger" (click)="op.toggle($event)">
-          <i class="pi pi-bell p-overlay-badge" style="font-size: 1.2rem; cursor: pointer;" [ngClass]="{'text-white': user?.role !== 'ROLE_DEFAULT'}"></i>
+          <i class="pi pi-bell p-overlay-badge" style="font-size: 1.2rem; cursor: pointer;"
+            [ngClass]="{'text-white': user?.role !== 'ROLE_DEFAULT'}"></i>
         </p-overlaybadge>
         <p-popover #op>
           <app-notifications></app-notifications>
@@ -23,7 +34,8 @@
           <p-tag icon="fa fa-user-pen" severity="warn" value="Mod" [rounded]="true" />
           }
         </div>
-        <p-avatar [label]="user.username.charAt(0).toUpperCase()" styleClass="cursor-pointer" shape="circle" (click)="menu.toggle($event)" [style]="getUserAvatarColor(user.username)" />
+        <p-avatar [label]="user.username.charAt(0).toUpperCase()" styleClass="cursor-pointer" shape="circle"
+          (click)="menu.toggle($event)" [style]="getUserAvatarColor(user.username)" />
       </div>
       } @else {
       <!-- Bloque que se muestra si NO hay usuario -->

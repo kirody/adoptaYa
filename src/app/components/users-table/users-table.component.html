@@ -31,6 +31,9 @@
             [pTooltip]="user.isSuspended ? 'Reactivar usuario' : 'Suspender usuario'" tooltipPosition="top"
             [severity]="user.isSuspended ? 'success' : 'danger'" styleClass="p-button-rounded p-button-text"
             (click)="confirmSuspension($event, user)"></p-button>
+          <p-button icon="pi pi-comment" pTooltip="Enviar mensaje" tooltipPosition="top"
+            styleClass="p-button-rounded p-button-text"
+            (click)="openMessageDialog(user)"></p-button>
         </td>
       </tr>
     </ng-template>
@@ -45,3 +48,32 @@
   <app-card-nodata message="No hay usuarios disponibles para gestionar."></app-card-nodata>
   }
 </div>
+
+<p-dialog header="Enviar Mensaje a {{ selectedUser?.username }}" [(visible)]="displayMessageDialog" [modal]="true"
+  [style]="{ width: '450px' }">
+  <div class="message-history">
+    <p-progressSpinner *ngIf="isHistoryLoading" [style]="{width: '30px', height: '30px'}" strokeWidth="6"
+      animationDuration=".5s"></p-progressSpinner>
+
+    <div *ngIf="!isHistoryLoading && messageHistory.length === 0" class="no-history">
+      <i class="pi pi-history"></i>
+      <p>No hay mensajes anteriores.</p>
+    </div>
+
+    <div *ngFor="let msg of messageHistory" class="history-item">
+      <p class="history-message">{{ msg.message }}</p>
+      <span class="history-date">{{ msg.date.toDate() | date:'short' }}</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <textarea rows="5" cols="30" pInputTextarea [(ngModel)]="messageContent" placeholder="Escribe tu mensaje aquí..."
+      class="w-full"></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button icon="pi pi-times" (click)="closeMessageDialog()" label="Cerrar"
+      styleClass="p-button-text"></p-button>
+    <p-button icon="pi pi-send" (click)="sendMessage()" label="Enviar" styleClass="p-button-text"
+      [disabled]="!messageContent.trim()"></p-button>
+  </ng-template>
+</p-dialog>

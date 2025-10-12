@@ -1,0 +1,274 @@
+:host {
+  display: block;
+  height: calc(100vh - 120px);
+  /* Ajusta según la altura de tu header/navbar */
+  padding: 1rem;
+}
+
+.chat-container {
+  display: flex;
+  height: 100%;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+  margin-left: 300px;
+  margin-right: 300px;
+}
+
+/* Panel de Usuarios */
+.user-list-panel {
+  width: 300px;
+  border-right: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.search-bar {
+  position: relative;
+  margin-top: 1rem;
+}
+
+.search-bar .pi {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.search-bar input {
+  padding-left: 2.5rem;
+  width: 100%;
+}
+
+.panel-header h4 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.user-list {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f1f1;
+  transition: background-color 0.2s;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--p-blue-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.user-item:hover {
+  background-color: #f8f9fa;
+}
+
+.user-item.selected {
+  background-color: var(--p-primary-lighter);
+  font-weight: 600;
+}
+
+.user-details {
+  overflow: hidden;
+}
+
+.user-details .username {
+  display: block;
+}
+
+.user-details .email {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.user-details .role {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilo moderno para Administrador */
+.role-admin {
+  background: linear-gradient(45deg, var(--orange-400), var(--orange-600));
+  color: #fff;
+  border: 1px solid var(--orange-700);
+}
+
+/* Estilo moderno para Moderador */
+.role-mod {
+  background: linear-gradient(45deg, var(--cyan-400), var(--cyan-600));
+  color: #fff;
+  border: 1px solid var(--cyan-700);
+}
+
+/* Ventana de Chat */
+.chat-window {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.no-user-selected {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #6c757d;
+}
+
+.no-user-selected i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.chat-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.chat-header .header-info .role {
+  margin-top: 4px;
+}
+
+.chat-header h5 {
+  margin: 0;
+}
+
+.message-area {
+  flex-grow: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  /* Mensajes nuevos abajo */
+}
+
+.message-bubble {
+  padding: 0.75rem 1.25rem;
+  border-radius: 18px;
+  margin-bottom: 0.5rem;
+  max-width: 70%;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.message-date {
+  font-size: 0.75rem;
+  display: block;
+  text-align: right;
+  margin-top: 0.25rem;
+  opacity: 0.8;
+}
+
+.admin-message {
+  background-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+  align-self: flex-end;
+  /* Alinea los mensajes del admin a la derecha */
+}
+
+.message-input {
+  display: flex;
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.message-input textarea {
+  flex-grow: 1;
+  margin-right: 1rem;
+  resize: none;
+  border-radius: 18px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ced4da;
+  transition: border-color 0.2s;
+}
+
+.message-input textarea:focus {
+  border-color: var(--p-primary-color);
+  box-shadow: none;
+}
+
+/* Estilos para el área de mensajes y las burbujas de chat */
+.message-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Espacio entre burbujas de mensaje */
+  padding: 1rem;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 18px;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* Estilo para los mensajes ENVIADOS (derecha) */
+.sent-message {
+  align-self: flex-end;
+  background-color: var(--primary-color, #88b78a);
+  /* Usa el color primario de PrimeNG */
+  color: var(--primary-color-text, #ffffff);
+  border-bottom-right-radius: 4px;
+  /* Pequeño detalle para la forma de la burbuja */
+}
+
+/* Estilo para los mensajes RECIBIDOS (izquierda) */
+.received-message {
+  align-self: flex-start;
+  background-color: #f1f0f0;
+  /* Un gris claro estándar */
+  color: #333;
+  border-bottom-left-radius: 4px;
+  /* Pequeño detalle para la forma de la burbuja */
+}
+
+.message-text {
+  margin: 0;
+}
+
+.message-date {
+  display: block;
+  font-size: 0.75rem;
+  text-align: right;
+  margin-top: 5px;
+  opacity: 0.8;
+}
+
+/* La fecha en los mensajes enviados debe ser más clara para contrastar */
+.sent-message .message-date {
+  color: #e0e0e0;
+}
