@@ -4,4 +4,6 @@ export interface UserData {
   password?: string;
   role: string;
   username: string;
+  permissions?: string[];
+  isSuspended?: boolean;
 }

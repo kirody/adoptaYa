@@ -34,14 +34,20 @@
           <div *ngIf="user.permissions && user.permissions.length > 0; else noPermissions">
             <p>Como moderador, puedes acceder al panel de control para realizar las siguientes tareas:</p>
             <ul class="list-disc pl-6 mt-2">
-              <li *ngIf="user.permissions?.includes('MANAGE_ANIMALS')" class="mb-2">
+              <li *ngIf="user.permissions?.includes(Permissions.MANAGE_ANIMALS)" class="mb-2">
                 <strong>Gestionar animales:</strong><span class="text-surface-500"> Revisar, editar y publicar las fichas de los animales.</span>
               </li>
-              <li *ngIf="user.permissions?.includes('MANAGE_REQUESTS')" class="mb-2">
+              <li *ngIf="user.permissions?.includes(Permissions.MANAGE_REQUESTS)" class="mb-2">
                 <strong>Gestionar solicitudes:</strong><span class="text-surface-500"> Revisar y procesar las solicitudes de adopción.</span>
               </li>
-              <li *ngIf="user.permissions?.includes('MANAGE_USERS')" class="mb-2">
+              <li *ngIf="user.permissions?.includes(Permissions.MANAGE_USERS)" class="mb-2">
                 <strong>Gestionar usuarios:</strong><span class="text-surface-500"> Modificar roles y permisos de otros usuarios.</span>
+              </li>
+              <li *ngIf="user.permissions?.includes(Permissions.ADD_ANIMALS)" class="mb-2">
+                <strong>Añadir animales:</strong><span class="text-surface-500"> Crear nuevas fichas de animales en la plataforma.</span>
+              </li>
+              <li *ngIf="user.permissions?.includes(Permissions.ADD_PROTECTORS)" class="mb-2">
+                <strong>Añadir protectoras:</strong><span class="text-surface-500"> Registrar nuevas protectoras en el sistema.</span>
               </li>
             </ul>
           </div>

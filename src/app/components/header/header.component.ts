@@ -18,6 +18,7 @@ import { PopoverModule } from 'primeng/popover';
 import { OverlayBadgeModule } from 'primeng/overlaybadge';
 import { NotificationsService } from '../../services/notifications.service';
 import { DrawerModule } from 'primeng/drawer';
+import { Permissions } from '../../models/permissions.enum';
 import { ChatComponent } from "../chat/chat.component";
 
 @Component({
@@ -38,7 +39,7 @@ import { ChatComponent } from "../chat/chat.component";
     OverlayBadgeModule,
     DrawerModule,
     ChatComponent
-],
+  ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
@@ -130,26 +131,30 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
       ...(this.user && ['ROLE_ADMIN', 'ROLE_MOD'].includes(this.user.role)
         ? [
-            {
-              label: 'Panel de gestión',
-              icon: 'fas fa-cog',
-              routerLink: '/panel-gestion',
-            },
-          ]
+          {
+            label: 'Panel de gestión',
+            icon: 'fas fa-cog',
+            routerLink: '/panel-gestion',
+          },
+        ]
         : []),
-        ...(this.user && ['ROLE_ADMIN'].includes(this.user.role)
+      ...(this.user && (this.user.role === 'ROLE_ADMIN' || (this.user.role === 'ROLE_MOD' && this.user.permissions?.includes(Permissions.ADD_ANIMALS)))
         ? [
-            {
-              label: 'Añadir animal',
-              icon: 'fa-solid fa-circle-plus',
-              routerLink: '/form-animal',
-            },
-            {
-              label: 'Añadir protectora',
-              icon: 'fa-solid fa-circle-plus',
-              routerLink: '/form-protector',
-            },
-          ]
+          {
+            label: 'Añadir animal',
+            icon: 'fa-solid fa-circle-plus',
+            routerLink: '/form-animal',
+          },
+        ]
+        : []),
+      ...(this.user && (this.user.role === 'ROLE_ADMIN' || (this.user.role === 'ROLE_MOD' && this.user.permissions?.includes(Permissions.ADD_PROTECTORS)))
+        ? [
+          {
+            label: 'Añadir protectora',
+            icon: 'fa-solid fa-circle-plus',
+            routerLink: '/form-protector',
+          },
+        ]
         : []),
       {
         label: 'Cerrar sesión',

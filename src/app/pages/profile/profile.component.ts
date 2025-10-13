@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { RouterModule } from '@angular/router';
 import { DividerModule } from "primeng/divider";
+import { Permissions } from '../../models/permissions.enum';
 
 @Component({
   selector: 'app-profile',
@@ -31,6 +32,7 @@ import { DividerModule } from "primeng/divider";
 export class ProfileComponent {
   private authService = inject(AuthService);
   currentUser$: Observable<any | null>;
+  Permissions = Permissions; // Expone el enum a la plantilla
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;

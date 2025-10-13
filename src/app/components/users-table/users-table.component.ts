@@ -13,6 +13,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { CardNodataComponent } from '../card-nodata/card-nodata.component';
 import { UsersService } from '../../services/users.service';
 import { NotificationsService } from '../../services/notifications.service';
+import { Permissions } from '../../models/permissions.enum';
 
 @Component({
   selector: 'app-users-table',
@@ -62,10 +63,11 @@ export class UsersTableComponent implements OnDestroy {
   ngOnInit(): void {
     // Inicializa los permisos
     this.availablePermissions = [
-      { label: 'Gestionar Solicitudes', value: 'MANAGE_REQUESTS' },
-      { label: 'Gestionar Usuarios', value: 'MANAGE_USERS' },
-      { label: 'Gestionar Animales', value: 'MANAGE_ANIMALS' }
-      // ... otros permisos que necesites
+      { label: 'Gestionar Solicitudes', value: Permissions.MANAGE_REQUESTS },
+      { label: 'Gestionar Usuarios', value: Permissions.MANAGE_USERS },
+      { label: 'Gestionar Animales', value: Permissions.MANAGE_ANIMALS },
+      { label: 'Añadir Animales', value: Permissions.ADD_ANIMALS },
+      { label: 'Añadir Protectoras', value: Permissions.ADD_PROTECTORS },
     ];
   }
 
@@ -147,25 +149,6 @@ export class UsersTableComponent implements OnDestroy {
           detail: 'No se pudo actualizar el rol.',
         });
         this.isLoading = false;
-      });
-  }
-
-  openMessageDialog(user: any) {
-    this.selectedUser = user;
-    this.messageContent = '';
-    this.displayMessageDialog = true;
-    this.loadMessageHistory(user.uid);
-  }
-
-  loadMessageHistory(userId: string) {
-    this.isHistoryLoading = true;
-    this.messageHistory = [];
-    this.notificationSubscription?.unsubscribe();
-    this.notificationSubscription = this.notificationsService
-      .getUserNotifications(userId)
-      .subscribe((data) => {
-        this.messageHistory = data.notifications.filter(n => n.title === 'Mensaje del administrador');
-        this.isHistoryLoading = false;
       });
   }
 

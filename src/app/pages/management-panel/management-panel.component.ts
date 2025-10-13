@@ -33,6 +33,7 @@ import { UsersService } from '../../services/users.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { AnimalsTableComponent } from "../../components/animals-table/animals-table.component";
 import { UsersTableComponent } from "../../components/users-table/users-table.component";
+import { Permissions } from '../../models/permissions.enum';
 
 @Component({
   selector: 'app-management-panel',
@@ -99,17 +100,17 @@ export class ManagementPanelComponent implements OnInit {
 
   canManageAnimals(): boolean {
     const u = this.user();
-    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes('MANAGE_ANIMALS')));
+    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes(Permissions.MANAGE_ANIMALS)));
   }
 
   canManageRequests(): boolean {
     const u = this.user();
-    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes('MANAGE_REQUESTS')));
+    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes(Permissions.MANAGE_REQUESTS)));
   }
 
   canManageUsers(): boolean {
     const u = this.user();
-    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes('MANAGE_USERS')));
+    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes(Permissions.MANAGE_USERS)));
   }
 
   initTabs() {
@@ -197,7 +198,8 @@ export class ManagementPanelComponent implements OnInit {
     this.valueTab = 2;
     this.isLoading = true;
     this.userService.getUsers().then((data) => {
-      this.dataTable.set(data);
+      // Filtramos los usuarios para no mostrar a los administradores
+      this.dataTable.set(data.filter(user => user['role'] !== 'ROLE_ADMIN'));
       this.isLoading = false;
     });
   }
