@@ -9,7 +9,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { ConfirmationService, MessageService } from 'primeng/api';
-
+import { MultiSelectModule } from 'primeng/multiselect';
 import { CardNodataComponent } from '../card-nodata/card-nodata.component';
 import { UsersService } from '../../services/users.service';
 import { NotificationsService } from '../../services/notifications.service';
@@ -27,6 +27,7 @@ import { NotificationsService } from '../../services/notifications.service';
     ProgressSpinnerModule,
     DialogModule,
     TextareaModule,
+    MultiSelectModule
   ],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
@@ -55,6 +56,18 @@ export class UsersTableComponent implements OnDestroy {
   messageHistory: any[] = [];
   isHistoryLoading: boolean = false;
   private notificationSubscription: any;
+  // Define los permisos disponibles
+  availablePermissions: any[] = [];
+
+  ngOnInit(): void {
+    // Inicializa los permisos
+    this.availablePermissions = [
+      { label: 'Gestionar Solicitudes', value: 'MANAGE_REQUESTS' },
+      { label: 'Gestionar Usuarios', value: 'MANAGE_USERS' },
+      { label: 'Gestionar Animales', value: 'MANAGE_ANIMALS' }
+      // ... otros permisos que necesites
+    ];
+  }
 
   confirmSuspension(event: Event, user: any) {
     const action = user.isSuspended ? 'reactivar' : 'suspender';
@@ -182,5 +195,35 @@ export class UsersTableComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.notificationSubscription?.unsubscribe();
+  }
+
+  updatePermissions(user: any) {
+    if (user.role !== 'ROLE_MOD') {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Operación no permitida',
+        detail: 'Solo se pueden modificar los permisos de los moderadores.',
+      });
+      // Opcional: Revertir los permisos en la UI si el multiselect ya cambió el modelo.
+      // Esto requeriría tener el estado previo del usuario.
+      return;
+    }
+
+    this.isLoading = true;
+    this.userService.updateUser(user.uid, { permissions: user.permissions || [] })
+      .then(() => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Permisos de "${user.username}" actualizados con éxito.`,
+        });
+      })
+      .catch((error) => {
+        console.error('Error al actualizar los permisos del usuario:', error);
+        this.messageService.add({
+          severity: 'error', summary: 'Error', detail: 'No se pudieron actualizar los permisos.'
+        });
+      })
+      .finally(() => this.isLoading = false);
   }
 }

@@ -10,20 +10,18 @@
         <ng-template #previcon>
           <i class="pi pi-minus"></i>
         </ng-template>
-        <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()"
-          *ngIf="['ROLE_ADMIN', 'ROLE_MOD'].includes(user()?.role)">
+        <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()" *ngIf="canManageAnimals()">
           <i [ngClass]="{'fa fa-paw': user()?.role === 'ROLE_ADMIN', 'fa fa-clock': user()?.role === 'ROLE_MOD'}"></i>
           <span class="font-bold whitespace-nowrap">{{user()?.role === 'ROLE_MOD' ? 'Pendientes publicar' :
             'Animales'}}</span>
           <p-tag severity="warn" [value]="countTabAnimals" [rounded]="true" />
         </p-tab>
-        <p-tab value="1" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+        <p-tab value="1" class="flex items-center !gap-2" *ngIf="canManageRequests()">
           <i class="fa fa-file"></i>
           <span class="font-bold whitespace-nowrap">Solicitudes</span>
           <p-tag severity="warn" [value]="countTabRequests" [rounded]="true" />
         </p-tab>
-        <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()"
-          *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
+        <p-tab value="2" class="flex items-center !gap-2" (click)="tabUsers()" *ngIf="canManageUsers()">
           <i class="fa fa-users"></i>
           <span class="font-bold whitespace-nowrap">Usuarios</span>
         </p-tab>
@@ -37,16 +35,26 @@
       </p-tablist>
       <p-tabpanels>
         <p-tabpanel value="0">
-          <app-animals-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()" (dataChanged)="reloadData()"></app-animals-table>
+          <app-animals-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
+            (dataChanged)="reloadData()"></app-animals-table>
         </p-tabpanel>
         <p-tabpanel value="1">
           <app-requests></app-requests>
         </p-tabpanel>
         <p-tabpanel value="2">
-          <app-users-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()" (dataChanged)="reloadData()"></app-users-table>
+          <app-users-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
+            (dataChanged)="reloadData()"></app-users-table>
         </p-tabpanel>
         <p-tabpanel value="3">
           <app-statistics></app-statistics>
+        </p-tabpanel>
+        <p-tabpanel value="20">
+          <p-message severity="warn" styleClass="w-full">
+            <div class="flex align-items-center">
+              <i class="pi pi-lock mr-3" style="font-size: 1.5rem"></i>
+              <span>No tienes permisos para gestionar.</span>
+            </div>
+          </p-message>
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>

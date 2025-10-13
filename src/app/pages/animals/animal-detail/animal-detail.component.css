@@ -54,3 +54,8 @@ h3 {
   background-color: var(--p-blue-50);
   border-left: 5px solid var(--p-blue-500);
 }
+
+.status-needs-correction {
+  background-color: var(--p-yellow-50);
+  border-left: 5px solid var(--p-yellow-500);
+}

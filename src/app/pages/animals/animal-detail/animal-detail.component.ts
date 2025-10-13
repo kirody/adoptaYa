@@ -13,6 +13,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MessageModule } from 'primeng/message';
 import { AnimalsService } from '../../../services/animals.service';
 import { TextareaModule } from 'primeng/textarea';
 import { UsersService } from '../../../services/users.service';
@@ -34,7 +35,8 @@ import { UserData } from '../../../models/user-data';
     InputTextModule,
     ReactiveFormsModule,
     TextareaModule,
-    ToastModule
+    ToastModule,
+    MessageModule
   ],
   providers: [MessageService],
   templateUrl: './animal-detail.component.html',
@@ -59,7 +61,8 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
   showModalAdoption: boolean = false;
 
   requestForm!: FormGroup;
-  requestStatus: 'pending' | 'approved' | 'rejected' | null = null;
+  requestStatus: 'pending' | 'approved' | 'rejected' | 'needs_correction' | null = null;
+  userRequest: any | null = null; // Para guardar la solicitud existente
   private requestStatusSubscription: Subscription | undefined;
   private userSubscription: Subscription | undefined;
 
@@ -148,7 +151,28 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
     this.showModalAdoption = true;
   }
 
-  sendAdoptionRequest() {
+  /**
+ * Abre el modal de adopción y precarga los datos de la solicitud existente.
+ */
+  editRequest(): void {
+    if (!this.userRequest) return;
+
+    // Rellena el formulario con los datos de la solicitud que necesita corrección
+    this.requestForm.patchValue({
+      name: this.userRequest.name,
+      phone: this.userRequest.phone,
+      address: this.userRequest.address,
+      email: this.userRequest.email,
+      question1: this.userRequest.question1,
+      question2: this.userRequest.question2,
+      question3: this.userRequest.question3,
+    });
+
+    // Muestra el modal
+    this.showModalAdoption = true;
+  }
+
+  async sendAdoptionRequest() {
     if (this.requestForm.invalid || !this.animal()) {
       this.messageService.add({
         severity: 'warn',
@@ -157,27 +181,32 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    const requestData = {
-      ...this.requestForm.value,
-      animalID: this.animal()!.id,
-      userID: this.user?.uid,
-      status: 'pending',
-    };
-    this.requestsService.addRequest(requestData).then(() => {
-      this.messageService.add({
-        severity: 'success',
-        summary: '¡Solicitud enviada!',
-        detail: 'Tu solicitud de adopción ha sido enviada correctamente. ¡Gracias por tu interés!',
-      });
+
+    try {
+      // Si `userRequest` existe, significa que estamos editando
+      if (this.userRequest && this.userRequest.id) {
+        const updatedData = { ...this.requestForm.value, status: 'pending', updatedAt: new Date() };
+        await this.requestsService.updateRequest(this.userRequest.id, updatedData);
+        this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Tu solicitud ha sido actualizada y enviada para revisión.' });
+      } else {
+        // Lógica para crear una nueva solicitud
+        const newRequestData = {
+          ...this.requestForm.value,
+          animalID: this.animal()!.id,
+          userID: this.user?.uid,
+          status: 'pending',
+          createdAt: new Date(),
+        };
+        await this.requestsService.addRequest(newRequestData);
+        this.messageService.add({ severity: 'success', summary: '¡Solicitud enviada!', detail: 'Tu solicitud ha sido enviada correctamente.' });
+      }
+
       this.showModalAdoption = false;
-      this.checkHasRequest(this.animal()?.id??'');
-    }, () => {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error al enviar',
-        detail: 'No se pudo enviar la solicitud. Por favor, inténtalo de nuevo más tarde.',
-      });
-    });
+      this.checkHasRequest(this.animal()?.id ?? ''); // Vuelve a cargar el estado para actualizar la vista
+    } catch (error) {
+      console.error('Error al enviar la solicitud:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo procesar la solicitud.' });
+    }
   }
 
   checkHasRequest(animalID: string): void {
@@ -185,9 +214,11 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
     this.requestStatusSubscription?.unsubscribe();
 
     if (animalID && userID) {
-      this.requestStatusSubscription = this.requestsService.getRequestStatusAsObservable(animalID, userID)
-        .subscribe(status => {
-          this.requestStatus = status;
+      // Asumimos que el servicio ahora devuelve la solicitud completa o null
+      this.requestStatusSubscription = this.requestsService.getRequestAsObservable(animalID, userID)
+        .subscribe((request: any) => {
+          this.userRequest = request;
+          this.requestStatus = request?.status || null;
         });
     } else {
       this.requestStatus = null;

@@ -103,7 +103,7 @@ export class RequestsService {
    */
   async updateRequest(id: string, data: any) {
     const requestDoc = doc(db, 'requests', id);
-    await updateDoc(requestDoc, data);
+    await updateDoc(requestDoc, { ...data, id: id });
   }
 
   /**
@@ -116,12 +116,12 @@ export class RequestsService {
   }
 
   /**
-   * Obtiene el estado de una solicitud en tiempo real.
+   * Obtiene una solicitud completa en tiempo real para un animal y usuario específicos.
    * @param animalId El ID del animal.
    * @param userId El ID del usuario.
-   * @returns Un Observable que emite el estado de la solicitud o null si no existe.
+   * @returns Un Observable que emite el objeto de la solicitud o null si no existe.
    */
-  getRequestStatusAsObservable(animalId: string, userId: string): Observable<'pending' | 'approved' | 'rejected' | null> {
+  getRequestAsObservable(animalId: string, userId: string): Observable<any | null> {
     return new Observable(subscriber => {
       if (!animalId || !userId) {
         subscriber.next(null);
@@ -137,7 +137,12 @@ export class RequestsService {
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        subscriber.next(snapshot.empty ? null : snapshot.docs[0].data()['status']);
+        if (snapshot.empty) {
+          subscriber.next(null);
+        } else {
+          const requestDoc = snapshot.docs[0];
+          subscriber.next({ id: requestDoc.id, ...requestDoc.data() });
+        }
       }, (error) => subscriber.error(error));
 
       return () => unsubscribe();

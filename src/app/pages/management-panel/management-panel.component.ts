@@ -85,12 +85,31 @@ export class ManagementPanelComponent implements OnInit {
     this.currentUser$ = this.authService.currentUser$;
     this.currentUser$.subscribe((user: UserData) => {
       this.user.set(user);
+      this.valueTab = this.user()?.role === 'ROLE_ADMIN' ? 0 : this.canManageAnimals() ? 0 : this.canManageRequests() ? 1 : this.canManageUsers() ? 2 : 20;
       this.initTabs();
+      this.loadRequestsCount();
     });
   }
 
   ngOnInit() {
-    this.loadRequestsCount();
+
+  }
+
+  // --- Métodos de comprobación de permisos ---
+
+  canManageAnimals(): boolean {
+    const u = this.user();
+    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes('MANAGE_ANIMALS')));
+  }
+
+  canManageRequests(): boolean {
+    const u = this.user();
+    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes('MANAGE_REQUESTS')));
+  }
+
+  canManageUsers(): boolean {
+    const u = this.user();
+    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes('MANAGE_USERS')));
   }
 
   initTabs() {
@@ -109,9 +128,6 @@ export class ManagementPanelComponent implements OnInit {
   }
 
   async loadRequestsCount() {
-    if (this.user()?.role !== 'ROLE_ADMIN') {
-      return;
-    }
     try {
       const requests = await this.requestsService.getRequests();
       this.countTabRequests = String(requests.length);
@@ -130,6 +146,12 @@ export class ManagementPanelComponent implements OnInit {
   }
 
   async tabAnimals() {
+    if (!this.canManageAnimals()) {
+      this.isLoading = false;
+      this.dataTable.set([]);
+      return;
+    }
+
     this.isLoading = true;
     this.valueTab = 0;
     try {
@@ -183,5 +205,4 @@ export class ManagementPanelComponent implements OnInit {
   tabRequests() {
     this.valueTab = 1;
   }
-
 }

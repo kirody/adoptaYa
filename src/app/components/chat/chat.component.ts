@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
+import { TagModule } from "primeng/tag";
 
 @Component({
   selector: 'app-chat',
@@ -22,7 +23,8 @@ import { ChatService } from '../../services/chat.service';
     InputTextModule,
     TextareaModule,
     ProgressSpinnerModule,
-  ],
+    TagModule
+],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
 })

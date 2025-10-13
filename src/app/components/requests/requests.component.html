@@ -1,4 +1,5 @@
 <div class="requests-container">
+  <p-toast></p-toast>
   <!-- Indicador de Carga -->
   <div *ngIf="isLoading" class="loading-container">
     <div class="spinner"></div>
@@ -21,8 +22,7 @@
 
     <!-- Lista de Solicitudes en formato Tabla -->
     <div *ngIf="requests.length > 0" class="table-container">
-      <p-table [value]="requests" dataKey="id" styleClass="p-datatable-striped" [expandedRowKeys]="expandedRows"
-        (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)">
+      <p-table [value]="requests" dataKey="id" styleClass="p-datatable-striped" [expandedRowKeys]="expandedRows">
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 4rem"></th> <!-- Columna para el expansor -->
@@ -31,8 +31,8 @@
             <th style="width: 12rem">Email</th>
             <th style="width: 10rem">Teléfono</th>
             <th style="width: 10rem">Dirección</th>
-            <th style="width: 10rem">Estado</th>
-            <th style="width: 15rem">Acciones</th>
+            <th style="width: 15rem">Estado</th>
+            <th style="width: 10rem">Acciones</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-request let-expanded="expanded">
@@ -55,13 +55,12 @@
                 <!-- Botones para Administradores -->
                 <ng-container *ngIf="currentUserRole === 'ROLE_ADMIN'">
                   <button pButton pRipple icon="pi pi-check" class="p-button-rounded p-button-success"
-                    (click)="approveRequest(request)" pTooltip="Aprobar" tooltipPosition="top"></button>
+                    (click)="approveRequest(request)" pTooltip="Aprobar" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
+                  <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-warning"
+                    (click)="requestCorrection(request)" pTooltip="Solicitar corrección" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
                   <button pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-danger"
-                    (click)="rejectRequest(request)" pTooltip="Rechazar" tooltipPosition="top"></button>
+                    (click)="rejectRequest(request)" pTooltip="Rechazar" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
                 </ng-container>
-                <!-- Botón para Moderadores -->
-                <button *ngIf="currentUserRole === 'ROLE_MOD'" pButton pRipple icon="pi pi-shield" class="p-button-rounded p-button-help"
-                    (click)="escalateRequest(request)" pTooltip="Escalar a Admin" tooltipPosition="top"></button>
               </div>
             </td>
           </tr>

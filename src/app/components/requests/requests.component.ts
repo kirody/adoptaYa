@@ -11,6 +11,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { ToastModule } from "primeng/toast";
 
 @Component({
   selector: 'app-requests',
@@ -22,7 +23,8 @@ import { Subscription } from 'rxjs';
     ButtonModule,
     TagModule,
     TooltipModule,
-  ],
+    ToastModule
+],
   providers: [MessageService],
   standalone: true,
 })
@@ -160,39 +162,38 @@ export class RequestsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Notifica a todos los administradores sobre una solicitud que requiere su atención.
-   * @param request La solicitud a escalar.
+   * Cambia el estado de una solicitud a 'NEEDS_CORRECTION'.
+   * @param request La solicitud a modificar.
    */
-  async escalateRequest(request: any): Promise<void> {
-    if (!request?.animalData?.name || !request?.animalID) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se puede escalar, faltan datos del animal.' });
-      return;
-    }
-
+  async requestCorrection(request: any): Promise<void> {
     try {
-      const admins = await this.usersService.getUsersByRole('ROLE_ADMIN');
-      if (admins.length === 0) {
-        this.messageService.add({ severity: 'warn', summary: 'Sin Administradores', detail: 'No se encontraron administradores a quienes notificar.' });
-        return;
+      // 1. Actualizar el estado en la base de datos
+      await this.requestsService.updateRequest(request.id, { status: 'needs_correction' });
+
+      // 2. Actualizar la lista localmente para reflejar el cambio sin recargar
+      const index = this.requests.findIndex(r => r.id === request.id);
+      if (index !== -1) {
+        this.requests[index].status = 'needs_correction';
       }
 
-      const notificationPromises = admins.map((admin: any) => {
-        const notification = {
-          title: 'Solicitud Escalada para Revisión',
-          message: `La solicitud para adoptar a "${request.animalData.name}" ha sido escalada y requiere tu atención.`,
-          severity: 'warn',
-          link: `/detail-animal/${request.animalID}`
-        };
-        return this.notificationsService.addNotification(admin.uid, notification);
-      });
+      // 3. Enviar una notificación al usuario
+      const notification = {
+        title: 'Corrección necesaria en tu solicitud',
+        message: `Tu solicitud para adoptar a ${request.animalData?.name} necesita ser corregida. Por favor, revisa y reenvía el formulario.`,
+        severity: 'warn',
+        link: `/adopt-form/${request.animalID}` // Ajusta este enlace a tu ruta de edición
+      };
+      await this.notificationsService.addNotification(request.userID, notification);
 
-      await Promise.all(notificationPromises);
-      this.messageService.add({ severity: 'success', summary: 'Escalado', detail: 'Se ha notificado a los administradores.' });
-    } catch (err) {
-      console.error('Error al escalar la solicitud:', err);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo notificar a los administradores.' });
+      // 4. Mostrar mensaje de éxito al administrador
+      this.messageService.add({ severity: 'info', summary: 'Solicitud Actualizada', detail: 'Se ha solicitado una corrección al usuario.' });
+
+    } catch (error) {
+      console.error('Error al solicitar corrección:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar la solicitud.' });
     }
   }
+
 
   /**
    * Devuelve una clase CSS basada en el estado de la solicitud.
@@ -203,6 +204,8 @@ export class RequestsComponent implements OnInit, OnDestroy {
     switch (status) {
       case 'approved':
         return 'status-approved';
+      case 'needs_correction':
+        return 'status-needs-correction';
       case 'rejected':
         return 'status-rejected';
       default:
@@ -221,6 +224,8 @@ export class RequestsComponent implements OnInit, OnDestroy {
         return 'success';
       case 'rejected':
         return 'danger';
+      case 'needs_correction':
+        return 'warning';
       default:
         return 'warning';
     }
@@ -237,6 +242,8 @@ export class RequestsComponent implements OnInit, OnDestroy {
         return 'pi pi-check-circle';
       case 'rejected':
         return 'pi pi-times-circle';
+      case 'needs_correction':
+        return 'pi pi-pencil';
       default:
         return 'pi pi-clock';
     }
@@ -255,16 +262,10 @@ export class RequestsComponent implements OnInit, OnDestroy {
         return 'Rechazada';
       case 'pending':
         return 'Pendiente';
+      case 'needs_correction':
+        return 'Necesita Corrección';
       default:
         return 'Desconocido';
     }
-  }
-
-  onRowExpand(event: TableRowExpandEvent) {
-    this.messageService.add({ severity: 'info', summary: 'Product Expanded', detail: event.data.name, life: 3000 });
-  }
-
-  onRowCollapse(event: TableRowCollapseEvent) {
-    this.messageService.add({ severity: 'success', summary: 'Product Collapsed', detail: event.data.name, life: 3000 });
   }
 }

@@ -24,8 +24,33 @@
           <p-tag *ngIf="user.role === 'ROLE_ADMIN'" icon="fa fa-user-cog" severity="danger" value="Administrador" [rounded]="true" />
           <p-tag *ngIf="user.role === 'ROLE_MOD'" icon="fa fa-user-pen" severity="warn" value="Moderador" [rounded]="true" />
         </div>
-        <p class="mt-3" *ngIf="user.role === 'ROLE_MOD'">Tienes acceso a funciones de gestión. Puedes acceder al panel de control para gestionar animales pendientes de publicar.</p>
-        <p class="mt-3" *ngIf="user.role === 'ROLE_ADMIN'">Tienes acceso a funciones avanzadas de gestión. Puedes acceder al panel de control para administrar animales, solicitudes y usuarios.</p>
+
+        <!-- Mensaje para Administradores -->
+        <p class="mt-3" *ngIf="user.role === 'ROLE_ADMIN'">Tienes acceso total al panel de control para administrar animales, solicitudes y usuarios.</p>
+
+        <!-- Mensaje dinámico para Moderadores -->
+        <div *ngIf="user.role === 'ROLE_MOD'" class="mt-3">
+          <!-- Si tiene permisos, muestra la lista -->
+          <div *ngIf="user.permissions && user.permissions.length > 0; else noPermissions">
+            <p>Como moderador, puedes acceder al panel de control para realizar las siguientes tareas:</p>
+            <ul class="list-disc pl-6 mt-2">
+              <li *ngIf="user.permissions?.includes('MANAGE_ANIMALS')" class="mb-2">
+                <strong>Gestionar animales:</strong><span class="text-surface-500"> Revisar, editar y publicar las fichas de los animales.</span>
+              </li>
+              <li *ngIf="user.permissions?.includes('MANAGE_REQUESTS')" class="mb-2">
+                <strong>Gestionar solicitudes:</strong><span class="text-surface-500"> Revisar y procesar las solicitudes de adopción.</span>
+              </li>
+              <li *ngIf="user.permissions?.includes('MANAGE_USERS')" class="mb-2">
+                <strong>Gestionar usuarios:</strong><span class="text-surface-500"> Modificar roles y permisos de otros usuarios.</span>
+              </li>
+            </ul>
+          </div>
+          <!-- Si no tiene permisos, muestra este mensaje -->
+          <ng-template #noPermissions>
+            <p class="text-surface-500">Actualmente no tienes permisos de gestión asignados. Por favor, contacta a un administrador para solicitarlos.</p>
+          </ng-template>
+        </div>
+
         <ng-template pTemplate="footer">
           <div class="flex justify-end">
             <p-button label="Ir al Panel de Gestión" icon="pi pi-cog" routerLink="/panel-gestion"></p-button>
