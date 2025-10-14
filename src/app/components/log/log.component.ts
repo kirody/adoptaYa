@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
+import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { UsersService } from '../../services/users.service';
@@ -22,6 +23,7 @@ import { CardNodataComponent } from "../card-nodata/card-nodata.component";
     InputTextModule,
     IconFieldModule,
     InputIconModule,
+    TooltipModule,
     CardNodataComponent
 ],
   templateUrl: './log.component.html',

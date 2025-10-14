@@ -49,7 +49,11 @@
         <td>
           <p-tag [value]="log.action" [severity]="getSeverity(log.action)"></p-tag>
         </td>
-        <td>{{ log.details }}</td>
+        <td>
+          <div class="truncate" [pTooltip]="log.details" tooltipPosition="top">
+            {{ log.details }}
+          </div>
+        </td>
       </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
