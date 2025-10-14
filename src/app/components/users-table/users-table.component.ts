@@ -15,6 +15,7 @@ import { UsersService } from '../../services/users.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { Permissions } from '../../models/permissions.enum';
 import { Roles } from '../../models/roles.enum';
+import { LogService } from '../../services/log.service';
 
 @Component({
   selector: 'app-users-table',
@@ -39,6 +40,7 @@ export class UsersTableComponent implements OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private notificationsService = inject(NotificationsService);
+  private logService = inject(LogService);
 
   @Input() isLoading = true;
   roles = [
@@ -93,7 +95,7 @@ export class UsersTableComponent implements OnDestroy {
     });
   }
 
-  toggleSuspension(user: any) {
+  async toggleSuspension(user: any) {
     if (!user || !user.uid) {
       return;
     }
@@ -101,56 +103,60 @@ export class UsersTableComponent implements OnDestroy {
     this.isLoading = true;
     const newSuspensionState = !user.isSuspended;
     const actionText = newSuspensionState ? 'suspendido' : 'reactivado';
+    const logAction = newSuspensionState ? 'Usuario suspendido' : 'Usuario reactivado';
 
-    this.userService.updateUser(user.uid, { isSuspended: newSuspensionState })
-      .then(() => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `El usuario "${user.username}" ha sido ${actionText}.`
-        });
-        this.dataChanged.emit();
-      })
-      .catch((error) => {
-        console.error(`Error al ${newSuspensionState ? 'suspender' : 'reactivar'} al usuario:`, error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: `No se pudo ${newSuspensionState ? 'suspender' : 'reactivar'} al usuario.`
-        });
-      })
-      .finally(() => {
-        this.isLoading = false;
+    try {
+      await this.userService.updateUser(user.uid, { isSuspended: newSuspensionState });
+
+      // Registrar la acción en el log
+      const details = `El usuario '${user.username}' ha sido ${actionText}.`;
+      await this.logService.addLog(logAction, details, this.user, 'Usuarios');
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `El usuario "${user.username}" ha sido ${actionText}.`,
       });
+      this.dataChanged.emit();
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se pudo ${actionText} al usuario.` });
+    } finally {
+      this.isLoading = false;
+    }
   }
 
-  updateRolUser(user: any) {
+  async updateRolUser(user: any) {
     this.isLoading = true;
     if (!user || !user.uid || !user.role) {
       this.isLoading = false;
       return;
     }
     const newRole = user.role;
-    this.userService
-      .updateUser(user.uid, { role: newRole })
-      .then(() => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Rol de "${user.username}" actualizado con éxito.`,
-        });
-        this.dataChanged.emit();
-        this.isLoading = false;
-      })
-      .catch((error) => {
-        console.error('Error al actualizar el rol del usuario:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo actualizar el rol.',
-        });
-        this.isLoading = false;
+    try {
+      // Obtenemos el usuario original para saber el rol anterior
+      const originalUser = await this.userService.getUserById(user.uid);
+      const oldRole = originalUser['role'];
+
+      await this.userService.updateUser(user.uid, { role: newRole });
+
+      const oldRoleLabel = this.roles.find(r => r.value === oldRole)?.label || oldRole;
+      const newRoleLabel = this.roles.find(r => r.value === newRole)?.label || newRole;
+      // Registrar la acción en el log
+      const details = `Se actualizó el rol del usuario '${user.username}' de '${oldRoleLabel}' a '${newRoleLabel}'.`;
+      await this.logService.addLog('Rol de usuario actualizado', details, this.user, 'Usuarios');
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `Rol de "${user.username}" actualizado con éxito.`,
       });
+      this.dataChanged.emit();
+    } catch (error) {
+      console.error('Error al actualizar el rol del usuario:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el rol.' });
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   async sendMessage() {
@@ -181,33 +187,41 @@ export class UsersTableComponent implements OnDestroy {
     this.notificationSubscription?.unsubscribe();
   }
 
-  updatePermissions(user: any) {
+  async updatePermissions(user: any) {
     if (user.role !== Roles.MOD) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Operación no permitida',
         detail: 'Solo se pueden modificar los permisos de los moderadores.',
       });
-      // Opcional: Revertir los permisos en la UI si el multiselect ya cambió el modelo.
-      // Esto requeriría tener el estado previo del usuario.
       return;
     }
 
     this.isLoading = true;
-    this.userService.updateUser(user.uid, { permissions: user.permissions || [] })
-      .then(() => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Permisos de "${user.username}" actualizados con éxito.`,
-        });
-      })
-      .catch((error) => {
-        console.error('Error al actualizar los permisos del usuario:', error);
-        this.messageService.add({
-          severity: 'error', summary: 'Error', detail: 'No se pudieron actualizar los permisos.'
-        });
-      })
-      .finally(() => this.isLoading = false);
+    try {
+      const originalUser = await this.userService.getUserById(user.uid);
+      const oldPermissions = originalUser['permissions'] || [];
+      const newPermissions = user.permissions || [];
+
+      await this.userService.updateUser(user.uid, { permissions: newPermissions });
+
+      // Registrar la acción en el log
+      const getLabel = (p: string) => this.availablePermissions.find(ap => ap.value === p)?.label || p;
+      const oldLabels = oldPermissions.map(getLabel).join(', ') || 'ninguno';
+      const newLabels = newPermissions.map(getLabel).join(', ') || 'ninguno';
+      const details = `Permisos del moderador '${user.username}' actualizados de [${oldLabels}] a [${newLabels}].`;
+      await this.logService.addLog('Permisos de moderador actualizados', details, this.user, 'Usuarios');
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `Permisos de "${user.username}" actualizados con éxito.`,
+      });
+    } catch (error) {
+      console.error('Error al actualizar los permisos del usuario:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron actualizar los permisos.' });
+    } finally {
+      this.isLoading = false;
+    }
   }
 }

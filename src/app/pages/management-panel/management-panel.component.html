@@ -29,6 +29,10 @@
           <i class="fa fa-file"></i>
           <span class="font-bold whitespace-nowrap">Estadísticas</span>
         </p-tab>
+        <p-tab value="4" class="flex items-center !gap-2" (click)="tabLogs()" *ngIf="canManageLogs()">
+          <i class="fa fa-history"></i>
+          <span class="font-bold whitespace-nowrap">Logs</span>
+        </p-tab>
         <ng-template #nexticon>
           <i class="pi pi-plus"></i>
         </ng-template>
@@ -48,6 +52,10 @@
         <p-tabpanel value="3">
           <app-statistics></app-statistics>
         </p-tabpanel>
+        <p-tabpanel value="4">
+          <app-log></app-log>
+        </p-tabpanel>
+
         <p-tabpanel value="20">
           <p-message severity="warn" styleClass="w-full">
             <div class="flex align-items-center">

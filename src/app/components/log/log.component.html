@@ -1,0 +1,61 @@
+<div class="card">
+  <p-table
+    #dt
+    [value]="(logs$ | async) || []"
+    [loading]="loading"
+    dataKey="id"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [paginator]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+    [globalFilterFields]="['username', 'action', 'details', 'context']"
+    styleClass="p-datatable-striped"
+  >
+    <ng-template pTemplate="caption">
+      <div class="flex justify-between items-center">
+        <h3 class="m-0">Registro de Actividad</h3>
+        <p-iconField iconPosition="left">
+          <p-inputIcon>
+            <i class="pi pi-search"></i>
+          </p-inputIcon>
+          <input
+            pInputText
+            type="text"
+            (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            placeholder="Buscar en logs"
+          />
+        </p-iconField>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="timestamp" style="width:20%">Fecha <p-sortIcon field="timestamp"></p-sortIcon></th>
+        <th pSortableColumn="username" style="width:15%">Usuario <p-sortIcon field="username"></p-sortIcon></th>
+        <th pSortableColumn="context" style="width:15%">Contexto <p-sortIcon field="context"></p-sortIcon></th>
+        <th pSortableColumn="action" style="width:15%">Acción <p-sortIcon field="action"></p-sortIcon></th>
+        <th>Detalles</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-log>
+      <tr>
+        <td>{{ log.timestamp.toDate() | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+        <td class="flex items-center gap-2">
+          <span>{{ log.username }}</span> <p-tag [value]="getRoleLabel(log.userRole)" [severity]="getRoleSeverity(log.userRole)" [rounded]="true"></p-tag>
+        </td>
+        <td>
+          <p-tag [value]="log.context" [severity]="getContextSeverity(log.context)"></p-tag>
+        </td>
+        <td>
+          <p-tag [value]="log.action" [severity]="getSeverity(log.action)"></p-tag>
+        </td>
+        <td>{{ log.details }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="text-center">No se encontraron registros.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

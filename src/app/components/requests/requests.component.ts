@@ -11,6 +11,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { LogService } from '../../services/log.service';
 import { ToastModule } from "primeng/toast";
 
 @Component({
@@ -33,6 +34,7 @@ export class RequestsComponent implements OnInit, OnDestroy {
   isLoading = true;
   error: string | null = null;
   expandedRows = {};
+  currentUser: any;
   currentUserRole: string | null = null;
   private userSubscription: Subscription | undefined;
 
@@ -41,12 +43,13 @@ export class RequestsComponent implements OnInit, OnDestroy {
     private animalService: AnimalsService,
     private messageService: MessageService,
     private notificationsService: NotificationsService,
-    private usersService: UsersService,
-    private authService: AuthService
+    private authService: AuthService,
+    private logService: LogService
   ) { }
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser$.subscribe((user: any) => {
+      this.currentUser = user;
       this.currentUserRole = user?.role || null;
     });
     this.loadRequests();
@@ -115,6 +118,10 @@ export class RequestsComponent implements OnInit, OnDestroy {
       };
       await this.notificationsService.addNotification(approvedRequest.userID, notification);
 
+      // 3. Registrar la acción en el log
+      const details = `La solicitud para el animal '${approvedRequest.animalData.name}' del usuario '${approvedRequest.name}' fue aprobada.`;
+      await this.logService.addLog('Solicitud aprobada', details, this.currentUser, 'Solicitudes');
+
       this.messageService.add({
         severity: 'success',
         summary: '¡Aprobado!',
@@ -149,6 +156,10 @@ export class RequestsComponent implements OnInit, OnDestroy {
         link: `/detail-animal/${requestToReject.animalID}`
       };
       await this.notificationsService.addNotification(requestToReject.userID, notification);
+
+      // Registrar la acción en el log
+      const details = `La solicitud para el animal '${requestToReject.animalData.name}' del usuario '${requestToReject.name}' fue rechazada.`;
+      await this.logService.addLog('Solicitud rechazada', details, this.currentUser, 'Solicitudes');
 
       this.messageService.add({
         severity: 'info',
@@ -185,6 +196,10 @@ export class RequestsComponent implements OnInit, OnDestroy {
       };
       await this.notificationsService.addNotification(request.userID, notification);
 
+      // Registrar la acción en el log
+      const details = `Se solicitó una corrección para la solicitud del animal '${request.animalData?.name}' del usuario '${request.name}'.`;
+      await this.logService.addLog('Corrección de solicitud', details, this.currentUser, 'Solicitudes');
+
       // 4. Mostrar mensaje de éxito al administrador
       this.messageService.add({ severity: 'info', summary: 'Solicitud Actualizada', detail: 'Se ha solicitado una corrección al usuario.' });
 
@@ -218,16 +233,16 @@ export class RequestsComponent implements OnInit, OnDestroy {
    * @param status El estado actual ('pending', 'approved', 'rejected').
    * @returns La severidad para el componente p-tag.
    */
-  getStatusSeverity(status: string): string {
+  getStatusSeverity(status: string): 'warn' | 'success' | 'danger' {
     switch (status) {
       case 'approved':
         return 'success';
       case 'rejected':
         return 'danger';
       case 'needs_correction':
-        return 'warning';
+        return 'warn';
       default:
-        return 'warning';
+        return 'warn';
     }
   }
 

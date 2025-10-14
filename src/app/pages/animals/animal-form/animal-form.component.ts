@@ -35,9 +35,12 @@ import {
   STATES,
 } from '../../../constants/form-data.constants';
 import { Subscription } from 'rxjs';
-import { GeminiService } from '../../../services/gemini.service';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
 import { AnimalsService } from '../../../services/animals.service';
+import { LogService } from '../../../services/log.service';
+import { AuthService } from '../../../services/auth.service';
+import { UserData } from '../../../models/user-data';
+import { GeminiService } from '../../../services/gemini.service';
 
 @Component({
   selector: 'app-animal-form',
@@ -84,15 +87,19 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   states = STATES;
 
   private speciesChangesSubscription!: Subscription;
+  private userSubscription!: Subscription;
   isAnimalScaled = false;
   protectors: any[] = [];
   dataProtector: any;
+  private user: UserData | null = null;
 
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
     private animalService: AnimalsService,
     private protectorsService: ProtectorsService,
+    private logService: LogService,
+    private authService: AuthService,
     private geminiService: GeminiService,
     private route: ActivatedRoute,
     private router: Router
@@ -150,12 +157,19 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       .valueChanges.subscribe((specie) => {
         this.animalForm.get('race')?.reset(''); // Resetea la raza al cambiar de especie
         this.races = RACES_BY_SPECIES[specie] || [];
+      });
+
+    this.userSubscription = this.authService.currentUser$.subscribe(user => {
+      this.user = user;
     });
   }
 
   ngOnDestroy(): void {
     if (this.speciesChangesSubscription) {
       this.speciesChangesSubscription.unsubscribe();
+    }
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
     }
   }
 
@@ -196,10 +210,15 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
     try {
       if (this.isEditMode && this.animalId) {
+        const animalData = this.animalForm.value;
         await this.animalService.updateAnimal(
           this.animalId,
-          this.animalForm.value
+          animalData
         );
+        if (this.user) {
+          const details = `Se actualizó el animal '${animalData.name}'.`;
+          await this.logService.addLog('Animal actualizado', details, this.user, 'Añadir animales');
+        }
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -207,7 +226,12 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         });
         this.router.navigate(['/panel-gestion']);
       } else {
-        await this.animalService.addAnimal(this.animalForm.value);
+        const animalData = this.animalForm.value;
+        await this.animalService.addAnimal(animalData);
+        if (this.user) {
+          const details = `Se añadió un nuevo animal: '${animalData.name}'.`;
+          await this.logService.addLog('Animal añadido', details, this.user, 'Añadir animales');
+        }
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',

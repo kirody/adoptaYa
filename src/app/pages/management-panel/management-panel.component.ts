@@ -34,6 +34,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { AnimalsTableComponent } from "../../components/animals-table/animals-table.component";
 import { UsersTableComponent } from "../../components/users-table/users-table.component";
 import { Permissions } from '../../models/permissions.enum';
+import { LogComponent } from '../../components/log/log.component';
 import { Roles } from '../../models/roles.enum';
 
 @Component({
@@ -60,7 +61,8 @@ import { Roles } from '../../models/roles.enum';
     StatisticsComponent,
     RequestsComponent,
     AnimalsTableComponent,
-    UsersTableComponent
+    UsersTableComponent,
+    LogComponent
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
@@ -86,7 +88,8 @@ export class ManagementPanelComponent implements OnInit {
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
     this.currentUser$.subscribe((user: UserData) => {
-      this.user.set(user);      this.valueTab = this.user()?.role === Roles.ADMIN ? 0 : this.canManageAnimals() ? 0 : this.canManageRequests() ? 1 : this.canManageUsers() ? 2 : 20;
+      this.user.set(user);
+      this.valueTab = this.user()?.role === Roles.ADMIN ? 0 : this.canManageAnimals() ? 0 : this.canManageRequests() ? 1 : this.canManageUsers() ? 2 : 20;
       this.initTabs();
       this.loadRequestsCount();
     });
@@ -113,6 +116,11 @@ export class ManagementPanelComponent implements OnInit {
     return u && (u.role === Roles.ADMIN || (u.role === Roles.MOD && u.permissions?.includes(Permissions.MANAGE_USERS)));
   }
 
+  canManageLogs(): boolean {
+    const u = this.user();
+    return u && u.role === Roles.ADMIN;
+  }
+
   initTabs() {
     if (this.user()?.role === Roles.ADMIN) {
       this.loadRequestsCount();
@@ -124,6 +132,8 @@ export class ManagementPanelComponent implements OnInit {
       this.tabRequests();
     } else if (this.valueTab === 2) {
       this.tabUsers();
+    } else if (this.valueTab === 4) {
+      this.tabLogs();
     } else {
     }
   }
@@ -206,5 +216,9 @@ export class ManagementPanelComponent implements OnInit {
 
   tabRequests() {
     this.valueTab = 1;
+  }
+
+  tabLogs() {
+    this.valueTab = 4;
   }
 }

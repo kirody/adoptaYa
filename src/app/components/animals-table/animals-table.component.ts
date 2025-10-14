@@ -22,6 +22,7 @@ import { ConfirmDialog } from "primeng/confirmdialog";
 import { ToastModule } from "primeng/toast";
 import { TextareaModule } from 'primeng/textarea';
 import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { LogService } from '../../services/log.service';
 
 @Component({
   selector: 'app-animals-table',
@@ -55,6 +56,7 @@ export class AnimalsTableComponent {
   private protectorService = inject(ProtectorsService);
   private userService = inject(UsersService);
   private notificationsService = inject(NotificationsService);
+  private logService = inject(LogService);
 
   @Input() dataTable: any;
   @Input({ required: true }) user!: any;
@@ -261,7 +263,7 @@ export class AnimalsTableComponent {
         if (type === 'publish') {
           this.publishAnimal(animal);
         } else {
-          this.deleteAnimal(animal.id);
+          this.deleteAnimal(animal);
         }
       },
       reject: () => { },
@@ -301,7 +303,7 @@ export class AnimalsTableComponent {
     this.selectedScaledAnimal.set(animal);
   }
 
-  publishAnimal(animal: any) {
+  async publishAnimal(animal: any) {
     this.isLoading = true;
     if (!animal || !animal.id) {
       this.isLoading = false;
@@ -310,6 +312,8 @@ export class AnimalsTableComponent {
 
     const newPublishedState = !animal.published;
 
+    const actionText = newPublishedState ? 'publicado' : 'despublicado';
+    const logAction = newPublishedState ? 'Animal publicado' : 'Animal despublicado';
     const updateData: any = { published: newPublishedState };
 
     // Si se está publicando, se resetea el estado de escalado.
@@ -328,8 +332,10 @@ export class AnimalsTableComponent {
       promises.push(this.animalService.deleteScaledSubcollection(animal.id));
     }
 
-    Promise.all(promises)
-      .then(() => {
+    try {
+      await Promise.all(promises);
+      const details = `El animal '${animal.name}' ha sido ${actionText}.`;
+      await this.logService.addLog(logAction, details, this.user, 'Animales').then(() => {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -337,28 +343,32 @@ export class AnimalsTableComponent {
         });
         this.dataChanged.emit();
       })
-      .catch((error) => {
-        console.error('Error al actualizar la publicación del animal:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo actualizar el estado de publicación.',
-        });
-      })
-      .finally(() => {
-        this.isLoading = false;
+    } catch (error) {
+      console.error('Error al actualizar la publicación del animal:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo actualizar el estado de publicación.',
       });
+    } finally {
+      this.isLoading = false;
+    }
   }
 
-  deleteAnimal(animalID: string) {
-    this.animalService.deleteAnimal(animalID).then(() => {
+  async deleteAnimal(animal: any) {
+    try {
+      await this.animalService.deleteAnimal(animal.id);
+      const details = `El animal '${animal.name}' ha sido eliminado.`;
+      await this.logService.addLog('Animal eliminado', details, this.user, 'Animales');
       this.dataChanged.emit();
       this.messageService.add({
         severity: 'info',
         summary: 'Confirmado',
         detail: 'Animal eliminado con éxito',
       });
-    });
+    } catch (error) {
+      console.error('Error al eliminar el animal:', error);
+    }
   }
 
   sendScaledAnimal() {
@@ -377,6 +387,8 @@ export class AnimalsTableComponent {
         throw new Error('No se pudo obtener la información del user.');
       }
       let scaleData = {};
+      let logAction = '';
+      let details = '';
       if (this.user?.role === 'ROLE_MOD') {
         scaleData = {
           moderator: {
@@ -394,6 +406,9 @@ export class AnimalsTableComponent {
             },
           },
         };
+
+        logAction = 'Animal escalado a admin';
+        details = `El moderador '${this.user.username}' ha escalado el animal '${this.selectedScaledAnimal().name}' para revisión con el comentario: "${this.scaleComment}".`;
 
         // Notificar a los administradores
         const admins = await this.userService.getUsersByRole('ROLE_ADMIN');
@@ -425,12 +440,18 @@ export class AnimalsTableComponent {
             },
           },
         };
+
+        logAction = 'Respuesta a escalado de animal';
+        details = `El administrador '${this.user.username}' ha respondido al escalado del animal '${this.selectedScaledAnimal().name}' con el comentario: "${this.scaleComment}".`;
       }
 
       await this.animalService.scaleAnimal(
         this.selectedScaledAnimal().id,
         scaleData
       );
+
+      // Registrar la acción en el log
+      await this.logService.addLog(logAction, details, this.user, 'Animales');
 
       this.dataChanged.emit();
       this.messageService.add({
@@ -468,6 +489,10 @@ export class AnimalsTableComponent {
       await this.scaleAnimal();
       this.showInfoScaled = false;
     } else {
+      const details = `El administrador '${this.user.username}' ha asignado para sí mismo la revisión del animal '${this.selectedScaledAnimal().name}'.`;
+      await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
+
+
       await this.animalService.assignAnimalToAdmin(
         this.selectedScaledAnimal(),
         this.user,
