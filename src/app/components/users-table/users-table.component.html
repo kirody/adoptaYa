@@ -51,6 +51,9 @@
             [pTooltip]="user.isSuspended ? 'Reactivar usuario' : 'Suspender usuario'" tooltipPosition="top"
             [severity]="user.isSuspended ? 'success' : 'danger'" styleClass="p-button-rounded p-button-text"
             (click)="confirmSuspension($event, user)"></p-button>
+          <p-button icon="fa-solid fa-key" pTooltip="Restablecer contraseña" tooltipPosition="top"
+            styleClass="p-button-rounded p-button-text p-button-info"
+            (click)="confirmPasswordReset($event, user)"></p-button>
         </td>
       </tr>
     </ng-template>

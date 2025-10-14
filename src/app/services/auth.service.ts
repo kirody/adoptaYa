@@ -5,6 +5,7 @@ import {
   authState,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
   User,
   signOut,
   UserCredential,
@@ -92,6 +93,14 @@ export class AuthService {
         }
       )
     );
+  }
+
+  /**
+   * Envía un correo para restablecer la contraseña.
+   * @param email El correo electrónico del usuario.
+   */
+  sendPasswordResetEmail(email: string): Promise<void> {
+    return sendPasswordResetEmail(this.afAuth, email);
   }
 
   /**

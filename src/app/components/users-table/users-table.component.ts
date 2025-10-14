@@ -19,6 +19,7 @@ import { LogService } from '../../services/log.service';
 import { IconFieldModule } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { InputTextModule } from 'primeng/inputtext';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-users-table',
@@ -47,6 +48,7 @@ export class UsersTableComponent implements OnDestroy {
   private messageService = inject(MessageService);
   private notificationsService = inject(NotificationsService);
   private logService = inject(LogService);
+  private authService = inject(AuthService);
 
   @Input() isLoading = true;
   roles = [
@@ -128,6 +130,38 @@ export class UsersTableComponent implements OnDestroy {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se pudo ${actionText} al usuario.` });
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  confirmPasswordReset(event: Event, user: any) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: `Se enviará un correo a <strong>${user.email}</strong> para restablecer su contraseña. ¿Deseas continuar?`,
+      header: 'Confirmar restablecimiento',
+      icon: 'pi pi-key',
+      acceptLabel: 'Enviar correo',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-info',
+      accept: () => {
+        this.resetPassword(user);
+      },
+    });
+  }
+
+  async resetPassword(user: any) {
+    try {
+      await this.authService.sendPasswordResetEmail(user.email);
+
+      const details = `Se envió un correo de restablecimiento de contraseña al usuario '${user.username}' (${user.email}).`;
+      await this.logService.addLog('Contraseña restablecida', details, this.user, 'Usuarios');
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Correo enviado',
+        detail: `Se ha enviado un enlace para restablecer la contraseña a ${user.email}.`,
+      });
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo enviar el correo de restablecimiento.' });
     }
   }
 
