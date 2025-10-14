@@ -9,6 +9,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
+import { MessageModule } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { CardNodataComponent } from '../card-nodata/card-nodata.component';
@@ -21,6 +22,7 @@ import { IconFieldModule } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../../services/auth.service';
+import { GeminiService } from '../../services/gemini.service';
 import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
 
 @Component({
@@ -37,6 +39,7 @@ import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
     ProgressSpinnerModule,
     DialogModule,
     TextareaModule,
+    MessageModule,
     MultiSelectModule,
     IconFieldModule,
     InputIconModule,
@@ -53,6 +56,7 @@ export class UsersTableComponent implements OnDestroy {
   private notificationsService = inject(NotificationsService);
   private logService = inject(LogService);
   private authService = inject(AuthService);
+  private geminiService = inject(GeminiService);
 
   @Input() isLoading = true;
   roles = [
@@ -73,6 +77,8 @@ export class UsersTableComponent implements OnDestroy {
   notesContent: string = '';
   selectedUserForNotes: any | null = null;
   isAddingNote: boolean = false;
+  isSummarizing: boolean = false;
+  readonly MAX_NOTE_LENGTH = 80;
 
   ngOnInit(): void {
     // Inicializa los permisos
@@ -193,6 +199,25 @@ export class UsersTableComponent implements OnDestroy {
     this.notesContent = note;
   }
 
+  async summarizeNote() {
+    if (!this.notesContent.trim()) return;
+
+    this.isSummarizing = true;
+    try {
+      const summary = await this.geminiService.getSummary(this.notesContent);
+      this.notesContent = summary;
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Resumen generado',
+        detail: 'La nota ha sido resumida por la IA.'
+      });
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error de IA', detail: 'No se pudo generar el resumen.' });
+    } finally {
+      this.isSummarizing = false;
+    }
+  }
+
   async addNote() {
     if (!this.notesContent.trim() || !this.selectedUserForNotes) {
       return;
@@ -214,6 +239,7 @@ export class UsersTableComponent implements OnDestroy {
       this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Nota añadida correctamente.' });
       this.notesContent = '';
       // Recargar datos para ver la nueva nota
+      this.displayNotesDialog = false;
       this.dataChanged.emit();
     } catch (error) {
       console.error("Error al añadir la nota:", error);

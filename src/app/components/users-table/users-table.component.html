@@ -99,7 +99,18 @@
     <div class="new-note-section mt-4 pt-4 border-t">
       <textarea pInputTextarea [(ngModel)]="notesContent" rows="3" class="w-full"
         placeholder="Escribe una nueva nota..."></textarea>
-      <small class="p-text-secondary block mt-1">Intenta que la nota sea lo más clara y directa posible.</small>
+      <div class="flex justify-between items-center mt-1">
+        <small class="p-text-secondary">Máximo 80 carácteres.</small>
+        <small [ngClass]="{'text-red-500 font-bold': notesContent.length > MAX_NOTE_LENGTH, 'p-text-secondary': notesContent.length <= MAX_NOTE_LENGTH}">
+          {{notesContent.length}} / {{MAX_NOTE_LENGTH}}
+        </small>
+      </div>
+      @if (notesContent.length > MAX_NOTE_LENGTH) {
+        <div class="p-2 mt-2 bg-yellow-100 border-round-md text-yellow-800 flex align-items-center">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            <span>La nota es demasiado larga. Usa <strong>'Resumir con IA'</strong> para acortarla.</span>
+        </div>
+      }
     </div>
 
     <div class="quick-messages mt-3">
@@ -118,9 +129,10 @@
       </div>
     </div>
 
-    <ng-template pTemplate="footer">
-      <p-button label="Cerrar" icon="pi pi-times" (click)="displayNotesDialog=false" styleClass="p-button-text" />
-      <p-button label="Guardar Nota" icon="pi pi-check" (click)="addNote()" [disabled]="!notesContent.trim()" [loading]="isAddingNote" />
+    <ng-template pTemplate="footer" class="flex items-center justify-between">
+      <p-button label="Cerrar" size="small" icon="pi pi-times" (click)="displayNotesDialog=false" styleClass="p-button-text" />
+      <p-button label="Resumir con IA" size="small" icon="pi pi-sparkles" (click)="summarizeNote()" [disabled]="!notesContent.trim()" [loading]="isSummarizing" styleClass="p-button-help p-button-sm" />
+      <p-button label="Guardar Nota" size="small" icon="pi pi-check" (click)="addNote()" [disabled]="!notesContent.trim() || notesContent.length > MAX_NOTE_LENGTH" [loading]="isAddingNote"/>
     </ng-template>
   </p-dialog>
 </div>

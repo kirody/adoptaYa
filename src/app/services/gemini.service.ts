@@ -9,6 +9,7 @@ import { PROVINCES_SPAIN, SPECIES, DOG_BREEDS, CAT_BREEDS, GENDERS, SIZES } from
 })
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
+  model: any;
 
   constructor() {
     // ¡ADVERTENCIA DE SEGURIDAD!
@@ -18,6 +19,7 @@ export class GeminiService {
       throw new Error('La clave de API de Gemini no está configurada en environment.ts');
     }
     this.genAI = new GoogleGenerativeAI(environment.geminiApiKey);
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
 
   /**
@@ -26,7 +28,7 @@ export class GeminiService {
  * @returns Una descripción optimizada para la adopción.
  */
   async generateAdoptionText(animalData: any): Promise<string> {
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = this.model.getGenerativeModel({ model: 'gemini-2.0-flash' });
     const prompt = `Crea una descripción conmovedora y persuasiva para la adopción de un animal con las siguientes características:
     - Nombre: ${animalData.name}
     - Especie: ${animalData.specie}
@@ -40,7 +42,6 @@ export class GeminiService {
   }
 
   async generateAnimal(): Promise<any> {
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     const prompt = `
     Genera un objeto JSON para un animal de compañía en adopción en España.
     El objeto debe tener las claves: name, specie, age, race, province, description, urlImage, protectressName, protectressPhone, protectressEmail.
@@ -61,9 +62,26 @@ export class GeminiService {
   `;
 
     // ...lógica para llamar a la API de Gemini con el prompt y parsear la respuesta.
-    const result = await model.generateContent(prompt);
+    const result = await this.model.generateContent(prompt);
     const responseText = result.response.text().replace(/```json|```/g, '').trim(); // Limpia el string de respuesta
 
     return JSON.parse(responseText) as Animal;
+  }
+
+  /**
+   * Genera un resumen de un texto utilizando Gemini.
+   * @param textToSummarize El texto que se va a resumir.
+   * @returns Una promesa que se resuelve con el texto resumido.
+   */
+  async getSummary(textToSummarize: string): Promise<string> {
+    const prompt = `Resume la siguiente nota interna para un registro de actividad de un usuario. Sé claro, directo y muy conciso, manteniendo los datos clave y todo en menos de 80 carácteres. La nota es: "${textToSummarize}"`;
+    const result = await this.model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    if (text) {
+      return text.replace(/[\*"]/g, ''); // Limpia caracteres extra como asteriscos o comillas
+    }
+    throw new Error('No se pudo generar un resumen.');
   }
 }
