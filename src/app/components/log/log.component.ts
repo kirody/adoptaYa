@@ -9,8 +9,8 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
-import { UserData } from '../../models/user-data';
 import { Roles } from '../../models/roles.enum';
+import { CardNodataComponent } from "../card-nodata/card-nodata.component";
 
 @Component({
   selector: 'app-log',
@@ -22,7 +22,8 @@ import { Roles } from '../../models/roles.enum';
     InputTextModule,
     IconFieldModule,
     InputIconModule,
-  ],
+    CardNodataComponent
+],
   templateUrl: './log.component.html',
   styleUrl: './log.component.css',
 })

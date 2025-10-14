@@ -14,7 +14,7 @@
   >
     <ng-template pTemplate="caption">
       <div class="flex justify-between items-center">
-        <h3 class="m-0">Registro de Actividad</h3>
+        <h3 class="m-0"><!-- Registro de Actividad --></h3>
         <p-iconField iconPosition="left">
           <p-inputIcon>
             <i class="pi pi-search"></i>
@@ -54,7 +54,7 @@
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="5" class="text-center">No se encontraron registros.</td>
+        <td colspan="5" class="text-center"><app-card-nodata [message]="'No se encontraron registros.'"></app-card-nodata></td>
       </tr>
     </ng-template>
   </p-table>

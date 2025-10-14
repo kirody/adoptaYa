@@ -16,6 +16,9 @@ import { NotificationsService } from '../../services/notifications.service';
 import { Permissions } from '../../models/permissions.enum';
 import { Roles } from '../../models/roles.enum';
 import { LogService } from '../../services/log.service';
+import { IconFieldModule } from "primeng/iconfield";
+import { InputIconModule } from "primeng/inputicon";
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-users-table',
@@ -30,8 +33,11 @@ import { LogService } from '../../services/log.service';
     ProgressSpinnerModule,
     DialogModule,
     TextareaModule,
-    MultiSelectModule
-  ],
+    MultiSelectModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule
+],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
 })
@@ -143,7 +149,7 @@ export class UsersTableComponent implements OnDestroy {
       const newRoleLabel = this.roles.find(r => r.value === newRole)?.label || newRole;
       // Registrar la acción en el log
       const details = `Se actualizó el rol del usuario '${user.username}' de '${oldRoleLabel}' a '${newRoleLabel}'.`;
-      await this.logService.addLog('Rol de usuario actualizado', details, this.user, 'Usuarios');
+      await this.logService.addLog('Rol actualizado', details, this.user, 'Usuarios');
 
       this.messageService.add({
         severity: 'success',
@@ -210,7 +216,7 @@ export class UsersTableComponent implements OnDestroy {
       const oldLabels = oldPermissions.map(getLabel).join(', ') || 'ninguno';
       const newLabels = newPermissions.map(getLabel).join(', ') || 'ninguno';
       const details = `Permisos del moderador '${user.username}' actualizados de [${oldLabels}] a [${newLabels}].`;
-      await this.logService.addLog('Permisos de moderador actualizados', details, this.user, 'Usuarios');
+      await this.logService.addLog('Permisos actualizados', details, this.user, 'Usuarios');
 
       this.messageService.add({
         severity: 'success',

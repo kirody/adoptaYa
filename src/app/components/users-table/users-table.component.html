@@ -4,9 +4,19 @@
 </div>
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
-  <p-table [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }">
-    <ng-template #caption />
-    <ng-template #header>
+  <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }" [globalFilterFields]="['username', 'email']">
+    <ng-template pTemplate="caption">
+      <div class="flex justify-between items-center">
+        <h3 class="m-0"></h3>
+        <p-iconField iconPosition="left">
+          <p-inputIcon>
+            <i class="pi pi-search"></i>
+          </p-inputIcon>
+          <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar usuarios" />
+        </p-iconField>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
       <tr>
         <th>Nombre</th>
         <th>Email</th>

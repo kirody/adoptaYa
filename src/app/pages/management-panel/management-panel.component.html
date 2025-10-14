@@ -25,13 +25,13 @@
           <i class="fa fa-users"></i>
           <span class="font-bold whitespace-nowrap">Usuarios</span>
         </p-tab>
+        <p-tab value="4" class="flex items-center !gap-2" (click)="tabLogs()" *ngIf="canManageLogs()">
+          <i class="fa fa-history"></i>
+          <span class="font-bold whitespace-nowrap">Registro</span>
+        </p-tab>
         <p-tab value="3" class="flex items-center !gap-2" *ngIf="['ROLE_ADMIN'].includes(user()?.role)">
           <i class="fa fa-file"></i>
           <span class="font-bold whitespace-nowrap">Estadísticas</span>
-        </p-tab>
-        <p-tab value="4" class="flex items-center !gap-2" (click)="tabLogs()" *ngIf="canManageLogs()">
-          <i class="fa fa-history"></i>
-          <span class="font-bold whitespace-nowrap">Logs</span>
         </p-tab>
         <ng-template #nexticon>
           <i class="pi pi-plus"></i>

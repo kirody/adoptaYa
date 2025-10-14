@@ -23,6 +23,7 @@ import { ToastModule } from "primeng/toast";
 import { TextareaModule } from 'primeng/textarea';
 import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { LogService } from '../../services/log.service';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-animals-table',
@@ -42,7 +43,8 @@ import { LogService } from '../../services/log.service';
     ConfirmDialog,
     ToastModule,
     TextareaModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+    InputTextModule
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './animals-table.component.html',
