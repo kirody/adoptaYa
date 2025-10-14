@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { AvatarModule } from 'primeng/avatar';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { SelectModule } from 'primeng/select';
@@ -20,11 +21,13 @@ import { IconFieldModule } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../../services/auth.service';
+import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
 
 @Component({
   selector: 'app-users-table',
   imports: [
     CommonModule,
+    AvatarModule,
     FormsModule,
     TableModule,
     SelectModule,
@@ -37,7 +40,8 @@ import { AuthService } from '../../services/auth.service';
     MultiSelectModule,
     IconFieldModule,
     InputIconModule,
-    InputTextModule
+    InputTextModule,
+    OrderByDatePipe
 ],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
@@ -61,15 +65,14 @@ export class UsersTableComponent implements OnDestroy {
   @Input({ required: true }) user!: any;
   @Output() dataChanged = new EventEmitter<void>();
 
-  // Propiedades para el diálogo de mensaje
-  displayMessageDialog: boolean = false;
-  messageContent: string = '';
-  selectedUser: any | null = null;
-  messageHistory: any[] = [];
-  isHistoryLoading: boolean = false;
-  private notificationSubscription: any;
   // Define los permisos disponibles
   availablePermissions: any[] = [];
+
+  // Propiedades para el diálogo de notas
+  displayNotesDialog: boolean = false;
+  notesContent: string = '';
+  selectedUserForNotes: any | null = null;
+  isAddingNote: boolean = false;
 
   ngOnInit(): void {
     // Inicializa los permisos
@@ -80,6 +83,21 @@ export class UsersTableComponent implements OnDestroy {
       { label: 'Añadir Animales', value: Permissions.ADD_ANIMALS },
       { label: 'Añadir Protectoras', value: Permissions.ADD_PROTECTORS },
     ];
+  }
+
+  /**
+ * Genera un color de fondo para el avatar basado en el hash del nombre de usuario.
+ * @param username El nombre de usuario para generar el color.
+ * @returns Un objeto de estilo con el color de fondo.
+ */
+  getUserAvatarColor(username: string): { [key: string]: string } {
+    if (!username) return {};
+    const colors = ['#FFC107', '#FF5722', '#4CAF50', '#2196F3', '#9C27B0', '#E91E63', '#00BCD4'];
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return { 'background-color': colors[Math.abs(hash) % colors.length] };
   }
 
   confirmSuspension(event: Event, user: any) {
@@ -165,6 +183,46 @@ export class UsersTableComponent implements OnDestroy {
     }
   }
 
+  openNotesDialog(user: any) {
+    this.selectedUserForNotes = user;
+    this.notesContent = '';
+    this.displayNotesDialog = true;
+  }
+
+  addQuickNote(note: string) {
+    this.notesContent = note;
+  }
+
+  async addNote() {
+    if (!this.notesContent.trim() || !this.selectedUserForNotes) {
+      return;
+    }
+
+    const note = {
+      content: this.notesContent,
+      authorId: this.user.uid,
+      authorName: this.user.username,
+    };
+
+    this.isAddingNote = true;
+    try {
+      await this.userService.addUserNote(this.selectedUserForNotes.uid, note);
+
+      const details = `Se añadió una nota interna al usuario '${this.selectedUserForNotes.username}'.`;
+      await this.logService.addLog('Nota interna añadida', details, this.user, 'Usuarios');
+
+      this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Nota añadida correctamente.' });
+      this.notesContent = '';
+      // Recargar datos para ver la nueva nota
+      this.dataChanged.emit();
+    } catch (error) {
+      console.error("Error al añadir la nota:", error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo añadir la nota.' });
+    } finally {
+      this.isAddingNote = false;
+    }
+  }
+
   async updateRolUser(user: any) {
     this.isLoading = true;
     if (!user || !user.uid || !user.role) {
@@ -197,34 +255,6 @@ export class UsersTableComponent implements OnDestroy {
     } finally {
       this.isLoading = false;
     }
-  }
-
-  async sendMessage() {
-    if (!this.selectedUser || !this.messageContent.trim()) {
-      return;
-    }
-
-    const notification = {
-      title: 'Mensaje del administrador',
-      message: this.messageContent,
-      severity: 'info',
-    };
-
-    await this.notificationsService.addNotification(
-      this.selectedUser.uid,
-      notification
-    );
-    this.messageContent = ''; // Limpiar el input después de enviar
-    this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Mensaje enviado correctamente.' });
-  }
-
-  closeMessageDialog() {
-    this.displayMessageDialog = false;
-    this.notificationSubscription?.unsubscribe();
-  }
-
-  ngOnDestroy(): void {
-    this.notificationSubscription?.unsubscribe();
   }
 
   async updatePermissions(user: any) {
@@ -264,4 +294,6 @@ export class UsersTableComponent implements OnDestroy {
       this.isLoading = false;
     }
   }
+
+  ngOnDestroy(): void { }
 }

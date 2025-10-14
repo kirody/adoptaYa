@@ -11,6 +11,8 @@ import {
   updateDoc,
   query,
   where,
+  arrayUnion,
+  Timestamp,
 } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 import { UserData } from '../models/user-data';
@@ -68,5 +70,24 @@ export class UsersService {
       users.push({ uid: doc.id, ...doc.data() } as UserData);
     });
     return users;
+  }
+
+  /**
+   * Añade una nota interna a un usuario.
+   * @param userId El ID del usuario.
+   * @param note El objeto de la nota a añadir.
+   */
+  async addUserNote(
+    userId: string,
+    note: { content: string; authorId: string; authorName: string }
+  ): Promise<void> {
+    const userDocRef = doc(db, `users/${userId}`);
+    const noteWithTimestamp = {
+      ...note,
+      createdAt: new Date(),
+    };
+    return updateDoc(userDocRef, {
+      notes: arrayUnion(noteWithTimestamp),
+    });
   }
 }

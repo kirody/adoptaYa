@@ -8,7 +8,7 @@
   <div *ngIf="currentUser$ | async as user" class="mt-4">
 
     <!-- Vista para Administradores y Moderadores -->
-    <div *ngIf="user.role === Roles.ADMIN || user.role === Roles.MOD" class="max-w-2xl mx-5rem mx-auto">
+    <div *ngIf="user.role === Roles.ADMIN || user.role === Roles.MOD" class="max-w-4xl mx-auto">
       <p-card>
         <ng-template pTemplate="header">
           <div class="profile-header admin-header flex items-center p-4">
@@ -55,6 +55,32 @@
           <ng-template #noPermissions>
             <p class="text-surface-500">Actualmente no tienes permisos de gestión asignados. Por favor, contacta a un administrador para solicitarlos.</p>
           </ng-template>
+        </div>
+
+        <!-- Nueva sección de Notas para MOD y ADMIN -->
+        <p-divider></p-divider>
+        <div class="mt-4">
+          <h3 class="font-semibold text-xl mb-3">Mis Notas Internas</h3>
+          @if (user.notes && user.notes.length > 0) {
+          <ul class="list-none p-0 m-0 space-y-4">
+            @for (note of user.notes | orderByDate:'desc'; track note) {
+            <li class="note-record border rounded-lg overflow-hidden shadow-sm">
+              <div class="note-header bg-surface-50 p-3 flex justify-between items-center border-b ">
+                <div class="font-semibold text-surface-700 flex items-center gap-2">
+                  <p-avatar [label]="note.authorName.charAt(0).toUpperCase()" shape="circle" size="normal" [style]="getUserAvatarColor(note.authorName)"></p-avatar>
+                  <span>{{note.authorName}}</span>
+                </div>
+                <span class="text-sm text-surface-500">{{note.createdAt.toDate() | date:'dd/MM/yyyy HH:mm'}}</span>
+              </div>
+              <div class="note-body p-3">
+                <p class="m-0 text-surface-800">{{note.content}}</p>
+              </div>
+            </li>
+            }
+          </ul>
+          } @else {
+          <p class="text-surface-500">No tienes ninguna nota interna.</p>
+          }
         </div>
 
         <ng-template pTemplate="footer">
@@ -105,6 +131,5 @@
         </ng-template>
       </p-card>
     </div>
-
   </div>
 </div>

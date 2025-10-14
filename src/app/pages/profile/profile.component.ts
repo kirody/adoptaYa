@@ -12,6 +12,7 @@ import { RouterModule } from '@angular/router';
 import { DividerModule } from "primeng/divider";
 import { Permissions } from '../../models/permissions.enum';
 import { Roles } from '../../models/roles.enum';
+import { OrderByDatePipe } from "../../pipes/order-by-date.pipe";
 
 @Component({
   selector: 'app-profile',
@@ -25,7 +26,8 @@ import { Roles } from '../../models/roles.enum';
     TagModule,
     ButtonModule,
     RouterModule,
-    DividerModule
+    DividerModule,
+    OrderByDatePipe
 ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
