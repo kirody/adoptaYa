@@ -8,7 +8,7 @@
   <div *ngIf="currentUser$ | async as user" class="mt-4">
 
     <!-- Vista para Administradores y Moderadores -->
-    <div *ngIf="user.role === 'ROLE_ADMIN' || user.role === 'ROLE_MOD'" class="max-w-2xl mx-5rem mx-auto">
+    <div *ngIf="user.role === Roles.ADMIN || user.role === Roles.MOD" class="max-w-2xl mx-5rem mx-auto">
       <p-card>
         <ng-template pTemplate="header">
           <div class="profile-header admin-header flex items-center p-4">
@@ -21,15 +21,15 @@
         </ng-template>
         <div class="flex items-center">
           <p class="font-semibold mr-3">Rol en la plataforma:</p>
-          <p-tag *ngIf="user.role === 'ROLE_ADMIN'" icon="fa fa-user-cog" severity="danger" value="Administrador" [rounded]="true" />
-          <p-tag *ngIf="user.role === 'ROLE_MOD'" icon="fa fa-user-pen" severity="warn" value="Moderador" [rounded]="true" />
+          <p-tag *ngIf="user.role === Roles.ADMIN" icon="fa fa-user-cog" severity="danger" value="Administrador" [rounded]="true" />
+          <p-tag *ngIf="user.role === Roles.MOD" icon="fa fa-user-pen" severity="warn" value="Moderador" [rounded]="true" />
         </div>
 
         <!-- Mensaje para Administradores -->
-        <p class="mt-3" *ngIf="user.role === 'ROLE_ADMIN'">Tienes acceso total al panel de control para administrar animales, solicitudes y usuarios.</p>
+        <p class="mt-3" *ngIf="user.role === Roles.ADMIN">Tienes acceso total al panel de control para administrar animales, solicitudes y usuarios.</p>
 
         <!-- Mensaje dinámico para Moderadores -->
-        <div *ngIf="user.role === 'ROLE_MOD'" class="mt-3">
+        <div *ngIf="user.role === Roles.MOD" class="mt-3">
           <!-- Si tiene permisos, muestra la lista -->
           <div *ngIf="user.permissions && user.permissions.length > 0; else noPermissions">
             <p>Como moderador, puedes acceder al panel de control para realizar las siguientes tareas:</p>
@@ -66,7 +66,7 @@
     </div>
 
     <!-- Vista para Usuarios por defecto -->
-    <div *ngIf="user.role === 'ROLE_DEFAULT'" class="max-w-4xl mx-auto">
+    <div *ngIf="user.role === Roles.DEFAULT" class="max-w-4xl mx-auto">
       <p-card>
         <ng-template pTemplate="title">
           <div class="flex items-center gap-4">

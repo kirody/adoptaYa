@@ -20,6 +20,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { DrawerModule } from 'primeng/drawer';
 import { Permissions } from '../../models/permissions.enum';
 import { ChatComponent } from "../chat/chat.component";
+import { Roles } from '../../models/roles.enum';
 
 @Component({
   selector: 'app-header',
@@ -95,7 +96,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   loadMenu(): void {
-    this.items = this.user?.role === 'ROLE_DEFAULT' ? [
+    this.items = this.user?.role === Roles.DEFAULT ? [
       {
         label: 'AdoptaYa',
         icon: '',
@@ -129,7 +130,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         icon: 'fas fa-user',
         routerLink: '/mi-perfil',
       },
-      ...(this.user && ['ROLE_ADMIN', 'ROLE_MOD'].includes(this.user.role)
+      ...(this.user && (this.user.role === Roles.ADMIN || (this.user.role === Roles.MOD))
         ? [
           {
             label: 'Panel de gestión',
@@ -138,7 +139,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           },
         ]
         : []),
-      ...(this.user && (this.user.role === 'ROLE_ADMIN' || (this.user.role === 'ROLE_MOD' && this.user.permissions?.includes(Permissions.ADD_ANIMALS)))
+      ...(this.user && (this.user.role === Roles.ADMIN || (this.user.role === Roles.MOD && this.user.permissions?.includes(Permissions.ADD_ANIMALS)))
         ? [
           {
             label: 'Añadir animal',
@@ -147,7 +148,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           },
         ]
         : []),
-      ...(this.user && (this.user.role === 'ROLE_ADMIN' || (this.user.role === 'ROLE_MOD' && this.user.permissions?.includes(Permissions.ADD_PROTECTORS)))
+      ...(this.user && (this.user.role === Roles.ADMIN || (this.user.role === Roles.MOD && this.user.permissions?.includes(Permissions.ADD_PROTECTORS)))
         ? [
           {
             label: 'Añadir protectora',

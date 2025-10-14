@@ -22,8 +22,8 @@
         <td>
           <div class="field">
             <p-multiSelect [options]="availablePermissions" [(ngModel)]="user.permissions"
-              (onChange)="updatePermissions(user)" optionValue="value" defaultLabel="Asignar permisos"
-              optionLabel="label" display="chip" appendTo="body" styleClass="w-full"
+              (onChange)="updatePermissions(user)" optionValue="value" defaultLabel="Asignar permisos" optionLabel="label"
+              display="chip" appendTo="body" styleClass="w-full" selectedItemsLabel="{0} permisos"
               [disabled]="user.isSuspended || user.role !== 'ROLE_MOD'">
             </p-multiSelect>
           </div>

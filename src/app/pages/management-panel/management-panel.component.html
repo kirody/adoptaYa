@@ -11,7 +11,7 @@
           <i class="pi pi-minus"></i>
         </ng-template>
         <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()" *ngIf="canManageAnimals()">
-          <i [ngClass]="{'fa fa-paw': user()?.role === 'ROLE_ADMIN', 'fa fa-clock': user()?.role === 'ROLE_MOD'}"></i>
+          <i [ngClass]="{'fa fa-paw': user()?.role === 'ROLE_ADMIN', 'fa fa-clock': user()?.role === 'ROLE_MOD'}"></i> <!-- Mantener string aquí por la clase CSS -->
           <span class="font-bold whitespace-nowrap">{{user()?.role === 'ROLE_MOD' ? 'Pendientes publicar' :
             'Animales'}}</span>
           <p-tag severity="warn" [value]="countTabAnimals" [rounded]="true" />

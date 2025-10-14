@@ -14,6 +14,7 @@ import { CardNodataComponent } from '../card-nodata/card-nodata.component';
 import { UsersService } from '../../services/users.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { Permissions } from '../../models/permissions.enum';
+import { Roles } from '../../models/roles.enum';
 
 @Component({
   selector: 'app-users-table',
@@ -41,9 +42,9 @@ export class UsersTableComponent implements OnDestroy {
 
   @Input() isLoading = true;
   roles = [
-    { label: 'Admin', value: 'ROLE_ADMIN' },
-    { label: 'Default', value: 'ROLE_DEFAULT' },
-    { label: 'Mod', value: 'ROLE_MOD' },
+    { label: 'Admin', value: Roles.ADMIN },
+    { label: 'Default', value: Roles.DEFAULT },
+    { label: 'Mod', value: Roles.MOD },
   ];
 
   @Input() dataTable: any;
@@ -181,7 +182,7 @@ export class UsersTableComponent implements OnDestroy {
   }
 
   updatePermissions(user: any) {
-    if (user.role !== 'ROLE_MOD') {
+    if (user.role !== Roles.MOD) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Operación no permitida',

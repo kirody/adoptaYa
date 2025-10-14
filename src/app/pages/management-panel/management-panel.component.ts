@@ -34,6 +34,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { AnimalsTableComponent } from "../../components/animals-table/animals-table.component";
 import { UsersTableComponent } from "../../components/users-table/users-table.component";
 import { Permissions } from '../../models/permissions.enum';
+import { Roles } from '../../models/roles.enum';
 
 @Component({
   selector: 'app-management-panel',
@@ -85,8 +86,7 @@ export class ManagementPanelComponent implements OnInit {
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
     this.currentUser$.subscribe((user: UserData) => {
-      this.user.set(user);
-      this.valueTab = this.user()?.role === 'ROLE_ADMIN' ? 0 : this.canManageAnimals() ? 0 : this.canManageRequests() ? 1 : this.canManageUsers() ? 2 : 20;
+      this.user.set(user);      this.valueTab = this.user()?.role === Roles.ADMIN ? 0 : this.canManageAnimals() ? 0 : this.canManageRequests() ? 1 : this.canManageUsers() ? 2 : 20;
       this.initTabs();
       this.loadRequestsCount();
     });
@@ -100,21 +100,21 @@ export class ManagementPanelComponent implements OnInit {
 
   canManageAnimals(): boolean {
     const u = this.user();
-    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes(Permissions.MANAGE_ANIMALS)));
+    return u && (u.role === Roles.ADMIN || (u.role === Roles.MOD && u.permissions?.includes(Permissions.MANAGE_ANIMALS)));
   }
 
   canManageRequests(): boolean {
     const u = this.user();
-    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes(Permissions.MANAGE_REQUESTS)));
+    return u && (u.role === Roles.ADMIN || (u.role === Roles.MOD && u.permissions?.includes(Permissions.MANAGE_REQUESTS)));
   }
 
   canManageUsers(): boolean {
     const u = this.user();
-    return u && (u.role === 'ROLE_ADMIN' || (u.role === 'ROLE_MOD' && u.permissions?.includes(Permissions.MANAGE_USERS)));
+    return u && (u.role === Roles.ADMIN || (u.role === Roles.MOD && u.permissions?.includes(Permissions.MANAGE_USERS)));
   }
 
   initTabs() {
-    if (this.user()?.role === 'ROLE_ADMIN') {
+    if (this.user()?.role === Roles.ADMIN) {
       this.loadRequestsCount();
     }
 
@@ -158,7 +158,7 @@ export class ManagementPanelComponent implements OnInit {
     try {
       const [protectors, animalsDataResult] = await Promise.all([
         this.protectorService.getProtectors(),
-        this.user()?.role === 'ROLE_MOD'
+        this.user()?.role === Roles.MOD
           ? this.animalService.getAnimalsByPublishState()
           : this.animalService.getAnimals(),
       ]);
@@ -181,7 +181,7 @@ export class ManagementPanelComponent implements OnInit {
 
       this.dataTable.set(processedAnimals);
 
-      if (this.user()?.role === 'ROLE_MOD') {
+      if (this.user()?.role === Roles.MOD) {
         this.countTabAnimals = String(animalsData.filter(animal => animal.assignedToAdmin !== true).length);
       } else {
         this.countTabAnimals = String(this.dataTable().length);
@@ -199,7 +199,7 @@ export class ManagementPanelComponent implements OnInit {
     this.isLoading = true;
     this.userService.getUsers().then((data) => {
       // Filtramos los usuarios para no mostrar a los administradores
-      this.dataTable.set(data.filter(user => user['role'] !== 'ROLE_ADMIN'));
+      this.dataTable.set(data.filter(user => user['role'] !== Roles.ADMIN));
       this.isLoading = false;
     });
   }
