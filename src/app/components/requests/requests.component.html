@@ -22,7 +22,19 @@
 
     <!-- Lista de Solicitudes en formato Tabla -->
     <div *ngIf="requests.length > 0" class="table-container">
-      <p-table [value]="requests" dataKey="id" styleClass="p-datatable-striped" [expandedRowKeys]="expandedRows">
+      <p-table #dt [value]="requests" dataKey="id" styleClass="p-datatable-striped" [expandedRowKeys]="expandedRows"
+        [globalFilterFields]="['animalData.name', 'name', 'email', 'phone', 'address', 'status']">
+        <ng-template pTemplate="caption">
+          <div class="flex justify-end items-center">
+            <p-iconField iconPosition="left">
+              <p-inputIcon>
+                <i class="pi pi-search"></i>
+              </p-inputIcon>
+              <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+                placeholder="Buscar solicitud" />
+            </p-iconField>
+          </div>
+        </ng-template>
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 4rem"></th> <!-- Columna para el expansor -->
@@ -52,13 +64,12 @@
             </td>
             <td>
               <div class="action-buttons">
-                <!-- Botones para Administradores -->
-                <ng-container *ngIf="currentUserRole === 'ROLE_ADMIN'">
-                  <button pButton pRipple icon="pi pi-check" class="p-button-rounded p-button-success"
+                <ng-container>
+                  <button pButton pRipple icon="pi pi-check" class="p-button-rounded p-button-text p-button-success"
                     (click)="approveRequest(request)" pTooltip="Aprobar" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
-                  <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-warning"
+                  <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
                     (click)="requestCorrection(request)" pTooltip="Solicitar corrección" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
-                  <button pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-danger"
+                  <button pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-text p-button-danger"
                     (click)="rejectRequest(request)" pTooltip="Rechazar" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
                 </ng-container>
               </div>

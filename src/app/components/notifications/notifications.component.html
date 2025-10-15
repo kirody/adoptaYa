@@ -11,7 +11,9 @@
     </div>
     <a *ngFor="let notification of notifications" class="notification-item" [class.unread]="!notification.read"
       (click)="handleNotificationClick(notification, $event)">
-      <div class="notification-icon" [ngClass]="getSeverityClass(notification.severity)"></div>
+      <div class="notification-icon" [ngClass]="getSeverityClass(notification.severity)">
+        <i [ngClass]="getNotificationIcon(notification.type)"></i>
+      </div>
       <div class="notification-content">
         <p class="title">{{ notification.title }}</p>
         <p class="message">{{ notification.message }}</p>

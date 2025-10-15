@@ -78,6 +78,8 @@ export class ManagementPanelComponent implements OnInit {
   currentUser$: Observable<any | null>;
   /*  user!: UserData; */
   isLoading = false;
+  isLoadingAnimalsCount = signal(false);
+  isLoadingRequestsCount = signal(false);
   dataTable = signal<any>([]);
   user = signal<any>([]);
   valueTab = 0;
@@ -100,7 +102,6 @@ export class ManagementPanelComponent implements OnInit {
   }
 
   // --- Métodos de comprobación de permisos ---
-
   canManageAnimals(): boolean {
     const u = this.user();
     return u && (u.role === Roles.ADMIN || (u.role === Roles.MOD && u.permissions?.includes(Permissions.MANAGE_ANIMALS)));
@@ -139,11 +140,14 @@ export class ManagementPanelComponent implements OnInit {
   }
 
   async loadRequestsCount() {
+    this.isLoadingRequestsCount.set(true);
     try {
       const requests = await this.requestsService.getRequests();
       this.countTabRequests = String(requests.length);
     } catch (error) {
       console.error('Error al cargar el contador de solicitudes:', error);
+    } finally {
+      this.isLoadingRequestsCount.set(false);
     }
   }
 
@@ -164,6 +168,7 @@ export class ManagementPanelComponent implements OnInit {
     }
 
     this.isLoading = true;
+    this.isLoadingAnimalsCount.set(true);
     this.valueTab = 0;
     try {
       const [protectors, animalsDataResult] = await Promise.all([
@@ -201,6 +206,7 @@ export class ManagementPanelComponent implements OnInit {
       // Manejo de errores
     } finally {
       this.isLoading = false;
+      this.isLoadingAnimalsCount.set(false);
     }
   }
 

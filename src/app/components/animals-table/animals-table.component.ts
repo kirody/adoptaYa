@@ -419,6 +419,7 @@ export class AnimalsTableComponent {
             title: 'Animal Escalado para Revisión',
             message: `El moderador ${this.user.username} ha escalado el animal "${this.selectedScaledAnimal().name}" para su revisión.`,
             severity: 'warn',
+            type: 'animal-scaled',
             link: `/panel-gestion` // O un enlace directo si es posible
           };
           return this.notificationsService.addNotification(admin.uid, notification);

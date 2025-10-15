@@ -45,7 +45,7 @@ import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
     InputIconModule,
     InputTextModule,
     OrderByDatePipe
-],
+  ],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
 })
@@ -240,6 +240,16 @@ export class UsersTableComponent implements OnDestroy {
       this.notesContent = '';
       // Recargar datos para ver la nueva nota
       this.displayNotesDialog = false;
+
+      // Notificar al moderador
+      const notification = {
+        title: 'Nueva nota interna',
+        message: `Has recibido una nueva nota interna de ${this.user.username}.`,
+        severity: 'info',
+        type: 'internal-note',
+        link: '/panel-gestion'
+      };
+      await this.notificationsService.addNotification(this.selectedUserForNotes.uid, notification);
       this.dataChanged.emit();
     } catch (error) {
       console.error("Error al añadir la nota:", error);

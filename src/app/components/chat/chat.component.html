@@ -40,7 +40,7 @@
           <p-tag [value]="selectedUser.role === 'ROLE_ADMIN' ? 'Administrador' : 'Moderador'" severity="warn" [rounded]="true"></p-tag>
         </div>
       </div>
-      <div class="message-area">
+      <div class="message-area" #messageArea>
         <p-progressSpinner *ngIf="isHistoryLoading" [style]="{width: '30px', height: '30px'}"
           strokeWidth="6"></p-progressSpinner>
         <div *ngFor="let msg of messageHistory" class="message-bubble"

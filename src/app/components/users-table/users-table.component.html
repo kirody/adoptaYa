@@ -56,7 +56,7 @@
             (click)="confirmPasswordReset($event, user)"></p-button>
           <p-button icon="fa-solid fa-clipboard-list" pTooltip="Ver/Añadir notas internas" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-secondary"
-            (click)="openNotesDialog(user)"></p-button>
+            (click)="openNotesDialog(user)" [disabled]="user.role !== 'ROLE_MOD'"></p-button>
         </td>
       </tr>
     </ng-template>
@@ -74,7 +74,7 @@
   <!-- Dialog for Internal Notes -->
   <p-dialog header="Notas Internas sobre {{selectedUserForNotes?.username}}" [(visible)]="displayNotesDialog"
     [modal]="true" [style]="{width: '50vw'}" [draggable]="false" [resizable]="false">
-    <div class="notes-container">
+    <div class="notes-container pr-4" style="max-height: 125px; overflow-y: auto;">
       @if (selectedUserForNotes?.notes && selectedUserForNotes?.notes.length > 0) {
       <ul class="list-none p-0 m-0 space-y-4">
         @for (note of selectedUserForNotes.notes | orderByDate:'desc'; track note) {

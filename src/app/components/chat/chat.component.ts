@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -47,7 +47,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   isHistoryLoading: boolean = false;
 
   private userSubscription: Subscription | undefined;
-  private chatSubscription: Subscription | undefined;
+  private messageHistorySubscription: Subscription | undefined;
+
+  @ViewChild('messageArea') private messageArea: ElementRef | undefined;
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
@@ -82,13 +84,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.messageHistory = [];
     this.isHistoryLoading = true;
 
-    this.chatSubscription?.unsubscribe();
+    this.messageHistorySubscription?.unsubscribe();
 
     if (this.currentUser && this.selectedUser) {
       const chatId = this.chatService.getChatId(this.currentUser.uid, this.selectedUser.uid);
-      this.chatSubscription = this.chatService.getChatMessages(chatId).subscribe(messages => {
+      this.messageHistorySubscription = this.chatService.getChatMessages(chatId).subscribe(messages => {
         this.messageHistory = messages;
         this.isHistoryLoading = false;
+        this.scrollToBottom();
       });
     }
   }
@@ -116,6 +119,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         messageText
       );
       this.messageContent = ''; // Limpiar el input
+      this.scrollToBottom();
     } catch (error) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo enviar el mensaje.' });
       console.error("Error sending message:", error);
@@ -134,6 +138,16 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.userSubscription?.unsubscribe();
-    this.chatSubscription?.unsubscribe();
+    this.messageHistorySubscription?.unsubscribe();
+  }
+
+  private scrollToBottom(): void {
+    // Usamos un setTimeout para asegurarnos de que el DOM se ha actualizado
+    setTimeout(() => {
+      try {
+        if (this.messageArea)
+          this.messageArea.nativeElement.scrollTop = this.messageArea.nativeElement.scrollHeight;
+      } catch (err) { }
+    }, 0);
   }
 }

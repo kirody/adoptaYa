@@ -79,4 +79,23 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     if (severity === 'warn') return 'notification-warn';
     return 'notification-info';
   }
+
+  getNotificationIcon(type: string): string {
+    switch (type) {
+      case 'internal-note':
+        return 'pi pi-clipboard';
+      case 'new-message':
+        return 'pi pi-envelope';
+      case 'request-approved':
+        return 'pi pi-check-circle';
+      case 'request-rejected':
+        return 'pi pi-times-circle';
+      case 'request-correction':
+        return 'pi pi-pencil';
+      case 'animal-scaled':
+        return 'pi pi-exclamation-triangle';
+      default:
+        return 'pi pi-bell';
+    }
+  }
 }

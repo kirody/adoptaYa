@@ -65,6 +65,7 @@ export class ChatService {
         title: `Nuevo mensaje de ${senderName}`,
         message: messageText,
         severity: 'info',
+        type: 'new-message',
         link: `/chat/${senderId}`, // Enlace opcional para redirigir al chat
         read: false,
         createdAt: new Date(),

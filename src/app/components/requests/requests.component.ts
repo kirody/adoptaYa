@@ -13,6 +13,9 @@ import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { LogService } from '../../services/log.service';
 import { ToastModule } from "primeng/toast";
+import { IconFieldModule } from "primeng/iconfield";
+import { InputIconModule } from "primeng/inputicon";
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-requests',
@@ -24,7 +27,10 @@ import { ToastModule } from "primeng/toast";
     ButtonModule,
     TagModule,
     TooltipModule,
-    ToastModule
+    ToastModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule
 ],
   providers: [MessageService],
   standalone: true,
@@ -114,6 +120,7 @@ export class RequestsComponent implements OnInit, OnDestroy {
         title: '¡Solicitud Aprobada!',
         message: `¡Felicidades! Tu solicitud para adoptar a ${approvedRequest.animalData.name} ha sido aprobada. La protectora se pondrá en contacto contigo pronto.`,
         severity: 'success',
+        type: 'request-approved',
         link: `/detail-animal/${approvedRequest.animalID}`
       };
       await this.notificationsService.addNotification(approvedRequest.userID, notification);
@@ -153,6 +160,7 @@ export class RequestsComponent implements OnInit, OnDestroy {
         title: 'Solicitud Rechazada',
         message: `Lo sentimos, tu solicitud para adoptar a ${requestToReject.animalData.name} ha sido rechazada en esta ocasión.`,
         severity: 'warn',
+        type: 'request-rejected',
         link: `/detail-animal/${requestToReject.animalID}`
       };
       await this.notificationsService.addNotification(requestToReject.userID, notification);
@@ -192,6 +200,7 @@ export class RequestsComponent implements OnInit, OnDestroy {
         title: 'Corrección necesaria en tu solicitud',
         message: `Tu solicitud para adoptar a ${request.animalData?.name} necesita ser corregida. Por favor, revisa y reenvía el formulario.`,
         severity: 'warn',
+        type: 'request-correction',
         link: `/adopt-form/${request.animalID}` // Ajusta este enlace a tu ruta de edición
       };
       await this.notificationsService.addNotification(request.userID, notification);

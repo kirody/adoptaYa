@@ -8,8 +8,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { UsersService } from '../../services/users.service';
-import { AuthService } from '../../services/auth.service';
 import { Roles } from '../../models/roles.enum';
 import { CardNodataComponent } from "../card-nodata/card-nodata.component";
 
@@ -31,8 +29,6 @@ import { CardNodataComponent } from "../card-nodata/card-nodata.component";
 })
 export class LogComponent implements OnInit {
   private logService = inject(LogService);
-  private userService = inject(UsersService);
-  private authService = inject(AuthService);
 
   logs$!: Observable<any[]>;
   loading = true;
@@ -45,10 +41,6 @@ export class LogComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    /* this.currentUser$ = this.authService.currentUser$;
-    this.currentUser$.subscribe((user: UserData) => {
-      this.user.set(user);
-    }); */
     this.logs$ = this.logService.getLogs();
     this.logs$.subscribe(() => (this.loading = false));
   }
