@@ -38,8 +38,8 @@ export class AuthService {
           .then((user: any) => {
             if (user) {
               // Comprobación de seguridad adicional: si el usuario está suspendido, desloguear.
-              if (user.isSuspended) {
-                this.logout();
+              if (user.status !== 'active') {
+                this.logout(); // Esto cubre 'suspended' y 'pending_activation'
               } else {
                 this._currentUser.next(user);
               }
@@ -56,10 +56,13 @@ export class AuthService {
     return from(signInWithEmailAndPassword(this.afAuth, email, password)).pipe(
       switchMap(async (userCredential) => {
         const user = await this.userService.getUserById(userCredential.user.uid);
-        if (user && user['isSuspended']) {
+        // La lógica de suspensión/activación se maneja en el componente de login
+        // y en el listener de estado de autenticación (initAuthStateListener).
+        // Aquí simplemente devolvemos el usuario para que el componente decida.
+        if (user && user['status'] !== 'active') {
           // Si está suspendido, cerramos la sesión de Firebase y lanzamos un error.
           await signOut(this.afAuth);
-          throw new Error('USER_SUSPENDED');
+          throw new Error(user['status'] === 'suspended' ? 'USER_SUSPENDED' : 'USER_NOT_ACTIVATED');
         }
         // Si no está suspendido, el authStateListener se encargará de actualizar el currentUser$.
         return user;
@@ -67,11 +70,11 @@ export class AuthService {
     );
   }
 
-  logout(): Observable<void> {
+  logout(redirectPath: string = '/'): Observable<void> {
     return from(signOut(this.afAuth)).pipe(
       tap(() => {
         this._currentUser.next(null);
-        this.router.navigate(['/']);
+        this.router.navigate([redirectPath]);
       }) // Redirige al home después de cerrar sesión
     );
   }

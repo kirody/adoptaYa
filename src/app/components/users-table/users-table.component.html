@@ -21,6 +21,7 @@
         <th>Nombre</th>
         <th>Email</th>
         <th>Permisos</th>
+        <th>Estado</th>
         <th>Rol</th>
         <th>Acciones</th>
       </tr>
@@ -33,24 +34,34 @@
           <div class="field">
             <p-multiSelect [options]="availablePermissions" [(ngModel)]="user.permissions"
               (onChange)="updatePermissions(user)" optionValue="value" defaultLabel="Asignar permisos" optionLabel="label"
-              display="chip" appendTo="body" styleClass="w-full" selectedItemsLabel="{0} permisos"
-              [disabled]="user.isSuspended || user.role !== 'ROLE_MOD'">
+              display="chip" appendTo="body" styleClass="w-full" selectedItemsLabel="{0} permisos" [disabled]="user.status !== 'active' || user.role !== 'ROLE_MOD'">
             </p-multiSelect>
           </div>
+        </td>
+        <td>
+          <p-tag [value]="getTranslatedStatus(user.status || 'active')" [severity]="getStatusSeverity(user.status || 'active')"></p-tag>
         </td>
         <td>
           <div class="field">
             <p-select id="state" [(ngModel)]="user.role" [options]="roles" optionLabel="label" optionValue="value"
               placeholder="Selecciona un rol" styleClass="w-full" (onChange)="updateRolUser(user)" filter="true"
-              appendTo="body" [disabled]="user.isSuspended">
+              appendTo="body" [disabled]="user.status === 'suspended'">
             </p-select>
           </div>
         </td>
         <td>
-          <p-button [icon]="user.isSuspended ? 'fa-solid fa-user-check' : 'fa-solid fa-user-slash'"
-            [pTooltip]="user.isSuspended ? 'Reactivar usuario' : 'Suspender usuario'" tooltipPosition="top"
-            [severity]="user.isSuspended ? 'success' : 'danger'" styleClass="p-button-rounded p-button-text"
+          <!-- Botón para Activar nuevos moderadores -->
+          <p-button *ngIf="user.status === 'pending_activation'" icon="fa-solid fa-user-plus"
+            pTooltip="Activar nuevo moderador" tooltipPosition="top" severity="success"
+            styleClass="p-button-rounded p-button-text" (click)="confirmActivation($event, user)"></p-button>
+
+          <!-- Botón para Suspender/Reactivar -->
+          <p-button *ngIf="user.status === 'active' || user.status === 'suspended'"
+            [icon]="user.status === 'active' ? 'fa-solid fa-user-slash' : 'fa-solid fa-user-check'"
+            [pTooltip]="user.status === 'active' ? 'Suspender usuario' : 'Reactivar usuario'" tooltipPosition="top"
+            [severity]="user.status === 'active' ? 'danger' : 'success'" styleClass="p-button-rounded p-button-text"
             (click)="confirmSuspension($event, user)"></p-button>
+
           <p-button icon="fa-solid fa-key" pTooltip="Restablecer contraseña" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-info"
             (click)="confirmPasswordReset($event, user)"></p-button>

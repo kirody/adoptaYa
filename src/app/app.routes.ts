@@ -12,6 +12,7 @@ import { AnimalFormComponent } from './pages/animals/animal-form/animal-form.com
 import { ManagementPanelComponent } from './pages/management-panel/management-panel.component';
 import { roleGuard } from './guards/role.guard';
 import { ProtectorFormComponent } from './pages/protectors/protector-form/protector-form.component';
+import { LogoutConfirmationComponent } from './pages/logout-confirmation/logout-confirmation.component';
 
 export const routes: Routes = [
   {
@@ -81,6 +82,10 @@ export const routes: Routes = [
   {
     path: 'register',
     component: RegisterComponent,
+  },
+  {
+    path: 'sesion-cerrada',
+    component: LogoutConfirmationComponent
   },
   {
     path: '**',

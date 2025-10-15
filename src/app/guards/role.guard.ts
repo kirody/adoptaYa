@@ -38,6 +38,12 @@ export const roleGuard: CanActivateFn = (route, state) => {
         return false;
       }
 
+      // Añadimos comprobación de estado. Solo los usuarios activos pueden pasar.
+      if (user.status !== 'active') {
+        router.navigate(['/']); // Redirigir si está suspendido o pendiente de activación
+        return false;
+      }
+
       const userRole = (user.role || '').toUpperCase();
       const formattedAllowedRoles = allowedRoles.map(role => role.toUpperCase());
 

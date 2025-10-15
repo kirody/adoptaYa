@@ -24,6 +24,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../../services/auth.service';
 import { GeminiService } from '../../services/gemini.service';
 import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
+import { TagModule } from "primeng/tag";
 
 @Component({
   selector: 'app-users-table',
@@ -44,8 +45,9 @@ import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
     IconFieldModule,
     InputIconModule,
     InputTextModule,
-    OrderByDatePipe
-  ],
+    OrderByDatePipe,
+    TagModule
+],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
 })
@@ -107,11 +109,11 @@ export class UsersTableComponent implements OnDestroy {
   }
 
   confirmSuspension(event: Event, user: any) {
-    const action = user.isSuspended ? 'reactivar' : 'suspender';
-    const severity = user.isSuspended ? 'success' : 'danger';
+    const action = user.status === 'active' ? 'suspender' : 'reactivar';
+    const severity = user.status === 'active' ? 'danger' : 'success';
 
     this.confirmationService.confirm({
-      target: event.target as EventTarget,
+      target: event.target as EventTarget, // El target es necesario para que el pop-up aparezca junto al botón
       message: `¿Estás seguro de que quieres <strong>${action}</strong> a ${user.username}?`,
       header: 'Confirmación de suspensión',
       icon: 'pi pi-exclamation-triangle',
@@ -133,12 +135,12 @@ export class UsersTableComponent implements OnDestroy {
     }
 
     this.isLoading = true;
-    const newSuspensionState = !user.isSuspended;
-    const actionText = newSuspensionState ? 'suspendido' : 'reactivado';
-    const logAction = newSuspensionState ? 'Usuario suspendido' : 'Usuario reactivado';
+    const newStatus = user.status === 'active' ? 'suspended' : 'active';
+    const actionText = newStatus === 'suspended' ? 'suspendido' : 'reactivado';
+    const logAction = newStatus === 'suspended' ? 'Usuario suspendido' : 'Usuario reactivado';
 
     try {
-      await this.userService.updateUser(user.uid, { isSuspended: newSuspensionState });
+      await this.userService.updateUser(user.uid, { status: newStatus });
 
       // Registrar la acción en el log
       const details = `El usuario '${user.username}' ha sido ${actionText}.`;
@@ -152,6 +154,51 @@ export class UsersTableComponent implements OnDestroy {
       this.dataChanged.emit();
     } catch (error) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se pudo ${actionText} al usuario.` });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  confirmActivation(event: Event, user: any) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: `¿Estás seguro de que quieres <strong>activar</strong> al moderador ${user.username}?`,
+      header: 'Confirmar Activación',
+      icon: 'pi pi-user-plus',
+      acceptLabel: 'Activar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      accept: () => {
+        this.activateNewModerator(user);
+      },
+    });
+  }
+
+  async activateNewModerator(user: any) {
+    if (!user || !user.uid) {
+      return;
+    }
+
+    this.isLoading = true;
+    try {
+      await this.userService.updateUser(user.uid, { status: 'active' });
+
+      // Registrar la acción en el log
+      const details = `El nuevo moderador '${user.username}' ha sido activado.`;
+      await this.logService.addLog('Moderador activado', details, this.user, 'Usuarios');
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `El moderador "${user.username}" ha sido activado.`,
+      });
+      this.dataChanged.emit();
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo activar al moderador.',
+      });
     } finally {
       this.isLoading = false;
     }
@@ -271,10 +318,17 @@ export class UsersTableComponent implements OnDestroy {
       const originalUser = await this.userService.getUserById(user.uid);
       const oldRole = originalUser['role'];
 
-      await this.userService.updateUser(user.uid, { role: newRole });
+      const updateData: { role: string, status?: string } = { role: newRole };
+
+      // Si el rol cambia a MOD y antes no lo era, se pone como pendiente de activación
+      if (newRole === Roles.MOD && oldRole !== Roles.MOD) {
+        updateData.status = 'pending_activation';
+      }
+
+      await this.userService.updateUser(user.uid, updateData);
 
       const oldRoleLabel = this.roles.find(r => r.value === oldRole)?.label || oldRole;
-      const newRoleLabel = this.roles.find(r => r.value === newRole)?.label || newRole;
+      const newRoleLabel = this.roles.find(r => r.value === newRole)?.label || newRole; // Usamos el nuevo rol
       // Registrar la acción en el log
       const details = `Se actualizó el rol del usuario '${user.username}' de '${oldRoleLabel}' a '${newRoleLabel}'.`;
       await this.logService.addLog('Rol actualizado', details, this.user, 'Usuarios');
@@ -282,7 +336,7 @@ export class UsersTableComponent implements OnDestroy {
       this.messageService.add({
         severity: 'success',
         summary: 'Éxito',
-        detail: `Rol de "${user.username}" actualizado con éxito.`,
+        detail: `Rol de "${user.username}" actualizado. ${updateData.status ? 'Requiere activación.' : ''}`,
       });
       this.dataChanged.emit();
     } catch (error) {
@@ -290,6 +344,28 @@ export class UsersTableComponent implements OnDestroy {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el rol.' });
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  getStatusSeverity(status: string): 'success' | 'warn' | 'danger' {
+    switch (status) {
+      case 'active':
+        return 'success';
+      case 'pending_activation':
+        return 'warn';
+      case 'suspended':
+        return 'danger';
+      default:
+        return 'warn';
+    }
+  }
+
+  getTranslatedStatus(status: string): string {
+    switch (status) {
+      case 'active': return 'Activo';
+      case 'pending_activation': return 'No Activado';
+      case 'suspended': return 'Suspendido';
+      default: return 'Desconocido';
     }
   }
 

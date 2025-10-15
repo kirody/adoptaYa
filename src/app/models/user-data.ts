@@ -5,5 +5,5 @@ export interface UserData {
   role: string;
   username: string;
   permissions?: string[];
-  isSuspended?: boolean;
+  status?: 'active' | 'suspended' | 'pending_activation';
 }

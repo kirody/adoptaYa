@@ -71,8 +71,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser$.subscribe((user: any) => {
-      // Si el usuario está suspendido, cerramos la sesión inmediatamente.
-      if (user?.isSuspended) {
+      // Si el estado del usuario no es 'activo', cerramos la sesión inmediatamente.
+      if (user && user.status !== 'active') {
         this.authService.logout().subscribe();
         this.user = undefined;
       } else {
@@ -160,9 +160,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
       {
         label: 'Cerrar sesión',
         icon: 'fas fa-sign-out-alt',
-        routerLink: '/',
         command: () => {
-          this.authService.logout().subscribe();
+          const userRole = this.user?.role;
+          if (userRole === Roles.ADMIN || userRole === Roles.MOD) {
+            // Redirige a /login si es admin o mod
+            this.authService.logout('/sesion-cerrada').subscribe();
+          } else {
+            // Comportamiento por defecto para otros usuarios
+            this.authService.logout().subscribe();
+          }
         },
       },
     ];
