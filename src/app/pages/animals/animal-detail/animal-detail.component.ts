@@ -3,7 +3,7 @@ import { FirebaseService } from './../../../services/firebase.service';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Animal } from '../../../models/animal';
-import { BehaviorSubject, Observable, Subscription, switchMap } from 'rxjs';
+import { Observable, Subscription, switchMap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HeaderPageComponent } from '../../../components/header-page/header-page.component';
 import { ButtonModule } from 'primeng/button';
@@ -16,10 +16,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MessageModule } from 'primeng/message';
 import { AnimalsService } from '../../../services/animals.service';
 import { TextareaModule } from 'primeng/textarea';
-import { UsersService } from '../../../services/users.service';
+import { ProtectorsService } from '../../../services/protectors.service';
 import { MessageService } from 'primeng/api';
 import { RequestsService } from '../../../services/requests.service';
 import { UserData } from '../../../models/user-data';
+import { Roles } from '../../../models/roles.enum';
 
 @Component({
   selector: 'app-animal-detail',
@@ -49,6 +50,7 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
   private firebaseService = inject(FirebaseService);
   private authService = inject(AuthService);
   private requestsService = inject(RequestsService);
+  private protectorService = inject(ProtectorsService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
   currentUser$: Observable<any | null>;
@@ -57,7 +59,9 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
   isLoading = signal<boolean>(true);
   icon = '';
   gender = '';
+  protectora = signal<any | null>(null);
 
+  Roles = Roles; // Hacemos el enum accesible desde la plantilla
   showModalAdoption: boolean = false;
 
   requestForm!: FormGroup;
@@ -95,6 +99,9 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
         this.icon = animal.specie === 'Perro' ? 'fa-dog' : 'fa-cat';
         this.gender = animal.gender === 'Macho' ? 'fa-mars' : 'fa-venus';
         this.checkHasRequest(animal.id);
+        if (animal.protectressID) {
+          this.loadProtectoraInfo(animal.protectressID);
+        }
         this.isLoading.set(false);
       },
       error: () => {
@@ -229,5 +236,22 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
     // Nos aseguramos de cancelar la suscripción al destruir el componente
     this.requestStatusSubscription?.unsubscribe();
     this.userSubscription?.unsubscribe();
+  }
+
+  goToManagementPanel(): void {
+    if (this.animal()) {
+      this.router.navigate(['/panel-gestion'], { queryParams: { animalId: this.animal()!.id } });
+    }
+  }
+
+  async loadProtectoraInfo(id: string) {
+    try {
+      const protectora = await this.protectorService.getProtectorById(id);
+      if (protectora) {
+        this.protectora.set(protectora);
+      }
+    } catch (error) {
+      this.protectora.set(null);
+    }
   }
 }

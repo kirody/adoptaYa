@@ -44,7 +44,7 @@
       <p-tabpanels>
         <p-tabpanel value="0">
           <app-animals-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
-            (dataChanged)="reloadData()"></app-animals-table>
+            (dataChanged)="reloadData()" [initialFilter]="initialAnimalFilter"></app-animals-table>
         </p-tabpanel>
         <p-tabpanel value="1">
           <app-requests></app-requests>

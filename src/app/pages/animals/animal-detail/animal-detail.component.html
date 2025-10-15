@@ -7,58 +7,97 @@
       [style]="{ width: '50px', height: '50px' }" />
   </div>
 
-  <div *ngIf="!isLoading() && animal() as currentAnimal" class="animal-detail-container flex mt-4">
-    <div class="col-12 md:col-6 flex justify-center items-start p-4">
-      <div class="image-container relative rounded-lg overflow-hidden shadow-md">
-        <img class="animal-image" [src]="currentAnimal.urlImage" [alt]="currentAnimal.name" />
+  <div *ngIf="!isLoading() && animal() as currentAnimal" class="animal-detail-container flex grid-nogutter mt-4">
+    <!-- Columna Izquierda: Imagen y Descripciones -->
+    <div class="col-12 md:col-7 p-4">
+      <div class="image-container relative rounded-lg overflow-hidden shadow-lg">
+        <img class="animal-image w-full" [src]="currentAnimal.urlImage" [alt]="currentAnimal.name" />
         <p-tag [value]="formattedStates(currentAnimal)" [severity]="getStatus(currentAnimal)"
           class="status-tag absolute" />
       </div>
-    </div>
-    <div class="col-12 md:col-6">
-      <div class="p-4">
-        <div class="mt-2">
-          <h3 class="font-semibold text-xl mb-2">
-            Detalles
-            <i [class]="`fa-solid ${icon} mr-2`"></i>
-            <i [class]="`fa-solid ${gender} mr-2`"></i>
-          </h3>
-          <ul class="list-none p-0 m-0">
-            <li class="flex items-center py-2 border-b border-surface-200 dark:border-surface-700">
-              <span class="font-semibold w-1/3">Edad:</span>
-              <span>{{ currentAnimal.age }} años</span>
-            </li>
-            <li class="flex items-center py-2 border-b border-surface-200 dark:border-surface-700">
-              <span class="font-semibold w-1/3">Raza:</span>
-              <span>{{ currentAnimal.race }}</span>
-            </li>
-            <li class="flex items-center py-2 border-b border-surface-200 dark:border-surface-700">
-              <span class="font-semibold w-1/3">Provincia:</span>
-              <span>{{ currentAnimal.province }}</span>
-            </li>
-            <li class="flex items-center py-2 border-b border-surface-200 dark:border-surface-700">
-              <span class="font-semibold w-1/3">Tamaño:</span>
-              <span>{{ currentAnimal.size }}</span>
-            </li>
-          </ul>
-        </div>
 
+      <div class="mt-6">
         <div class="mt-6">
           <h3 class="font-semibold text-xl mb-2">Sobre {{currentAnimal.name}}</h3>
           <p class="text-surface-700 dark:text-surface-300 leading-relaxed">
             {{ currentAnimal.description }}
           </p>
         </div>
-        <div class="mt-8 flex gap-2" *ngIf="!requestStatus; else requestMessages">
-          <button pButton label="Solicitar adopción" icon="pi pi-heart" class="w-full md:w-auto"
-            (click)="adoptionRequest()"></button>
+        <div class="mt-6">
+          <!-- Información de la Protectora -->
+          <h3 class="font-semibold text-xl mb-2">Información de la Protectora</h3>
+          <div *ngIf="protectora() as currentProtectora"
+            class="p-4 border rounded-lg bg-surface-50 dark:bg-surface-800">
+            <p class="font-bold text-lg">{{ currentProtectora.name }}</p>
+            <ul class="list-none p-0 m-0 mt-2 space-y-1 text-sm">
+              <li><i class="pi pi-map-marker mr-2"></i>{{ currentProtectora.address }}, {{ currentProtectora.province }}
+              </li>
+              <li><i class="pi pi-phone mr-2"></i>{{ currentProtectora.phone }}</li>
+              <li><i class="pi pi-envelope mr-2"></i>{{ currentProtectora.email }}</li>
+            </ul>
+          </div>
         </div>
+      </div>
+    </div>
 
+    <!-- Columna Derecha: Detalles y Acciones (Sticky) -->
+    <div class="col-12 md:col-5 p-4">
+      <div class="sticky top-28">
+        <div class="p-4 border rounded-lg shadow-md bg-white dark:bg-surface-800">
+          <h2 class="font-bold text-3xl mb-2">{{currentAnimal.name}}</h2>
+          <div class="flex items-center gap-4 text-surface-500 dark:text-surface-400 mb-4">
+            <span class="flex items-center gap-2"><i [class]="`fa-solid ${icon}`"></i> {{ currentAnimal.specie }}</span>
+            <span class="flex items-center gap-2"><i [class]="`fa-solid ${gender}`"></i> {{ currentAnimal.gender
+              }}</span>
+          </div>
+
+          <!-- Lista de Detalles -->
+          <ul class="list-none p-0 m-0 text-sm space-y-2">
+            <li class="flex justify-between py-2 border-t border-surface-200 dark:border-surface-700">
+              <span class="font-semibold text-surface-600 dark:text-surface-300">Edad:</span>
+              <span>{{ currentAnimal.age }} años</span>
+            </li>
+            <li class="flex justify-between py-2 border-t border-surface-200 dark:border-surface-700">
+              <span class="font-semibold text-surface-600 dark:text-surface-300">Raza:</span>
+              <span>{{ currentAnimal.race }}</span>
+            </li>
+            <li class="flex justify-between py-2 border-t border-surface-200 dark:border-surface-700">
+              <span class="font-semibold text-surface-600 dark:text-surface-300">Tamaño:</span>
+              <span>{{ currentAnimal.size }}</span>
+            </li>
+            <li class="flex justify-between py-2 border-t border-b border-surface-200 dark:border-surface-700">
+              <span class="font-semibold text-surface-600 dark:text-surface-300">Ubicación:</span>
+              <span>{{ currentAnimal.province }}</span>
+            </li>
+          </ul>
+
+          <!-- Sección de Acciones -->
+          <div class="mt-6">
+            <!-- Botón para Admin/Mod -->
+            <button *ngIf="user?.role === Roles.ADMIN || user?.role === Roles.MOD" pButton label="Gestionar Animal"
+              icon="pi pi-cog" class="p-button-secondary w-full" (click)="goToManagementPanel()"></button>
+
+            <!-- Botones para usuarios default -->
+            <ng-container *ngIf="user?.role === Roles.DEFAULT">
+              <div *ngIf="!requestStatus; else requestMessages">
+                <button pButton label="Solicitar adopción" icon="pi pi-heart" class="w-full"
+                  (click)="adoptionRequest()"></button>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Template para mensajes de estado de la solicitud -->
+    <ng-template #requestMessages>
+      <div class="col-12">
         <ng-template #requestMessages>
           <div class="mt-4">
             <p-message *ngIf="requestStatus === 'pending'" severity="info" styleClass="w-full" icon="pi pi-clock">
               <p class="font-semibold m-0">Ya has enviado una solicitud para adoptar a {{ currentAnimal.name }}.</p>
-              <p class="text-sm m-0">La protectora revisará tu perfil y se pondrá en contacto contigo. ¡Gracias por tu interés!</p>
+              <p class="text-sm m-0">La protectora revisará tu perfil y se pondrá en contacto contigo. ¡Gracias por tu
+                interés!</p>
             </p-message>
 
             <p-message *ngIf="requestStatus === 'rejected'" severity="error" styleClass="w-full" icon="pi pi-times">
@@ -71,19 +110,22 @@
               <p class="text-sm m-0">La protectora se pondrá en contacto contigo para los siguientes pasos.</p>
             </p-message>
 
-            <p-message *ngIf="requestStatus === 'needs_correction'" severity="warn" styleClass="w-full" icon="pi pi-exclamation-triangle">
+            <p-message *ngIf="requestStatus === 'needs_correction'" severity="warn" styleClass="w-full"
+              icon="pi pi-exclamation-triangle">
               <p class="font-semibold m-0">Tu solicitud necesita correcciones.</p>
-              <p class="text-sm m-0">La protectora ha revisado tu solicitud y necesita que modifiques algunos datos. Por favor, haz clic en editar para corregirla.</p>
+              <p class="text-sm m-0">La protectora ha revisado tu solicitud y necesita que modifiques algunos datos. Por
+                favor, haz clic en editar para corregirla.</p>
             </p-message>
-            <button pButton *ngIf="requestStatus === 'needs_correction'" label="Editar Solicitud" icon="pi pi-pencil" class="p-button-warning mt-3" (click)="editRequest()"></button>
+            <button pButton *ngIf="requestStatus === 'needs_correction'" label="Editar Solicitud" icon="pi pi-pencil"
+              class="p-button-warning mt-3" (click)="editRequest()"></button>
           </div>
         </ng-template>
       </div>
-    </div>
-  </div>
 
-  <div *ngIf="!isLoading() && !animal()" class="text-center p-6">
-    <p class="text-xl text-surface-500">No se pudo encontrar el animal.</p>
+      <div *ngIf="!isLoading() && !animal()" class="text-center p-6">
+        <p class="text-xl text-surface-500">No se pudo encontrar el animal.</p>
+      </div>
+    </ng-template>
   </div>
 </div>
 
@@ -123,7 +165,8 @@
           <textarea id="question2" rows="2" cols="10" pTextarea formControlName="question2" class="w-full"></textarea>
         </div>
         <div class="field">
-          <label for="question3" class="form-label">¿Hay zonas de la casa a las que el animal no podrá acceder?</label>
+          <label for="question3" class="form-label">¿Hay zonas de la casa a las que el animal no podrá
+            acceder?</label>
           <textarea id="question3" rows="2" cols="10" pTextarea formControlName="question3" class="w-full"></textarea>
         </div>
       </div>

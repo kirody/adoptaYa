@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, inject, Input, Output, signal } from '@angular/core';
+import { Component, computed, EventEmitter, inject, Input, Output, signal, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { TableModule } from "primeng/table";
 import { IconFieldModule } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
@@ -24,6 +24,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { LogService } from '../../services/log.service';
 import { InputTextModule } from 'primeng/inputtext';
+import { Table } from 'primeng/table';
 
 @Component({
   selector: 'app-animals-table',
@@ -50,7 +51,7 @@ import { InputTextModule } from 'primeng/inputtext';
   templateUrl: './animals-table.component.html',
   styleUrl: './animals-table.component.css'
 })
-export class AnimalsTableComponent {
+export class AnimalsTableComponent implements OnChanges {
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -63,11 +64,34 @@ export class AnimalsTableComponent {
   @Input() dataTable: any;
   @Input({ required: true }) user!: any;
   @Output() dataChanged = new EventEmitter<void>();
+  @Input() initialFilter: string | null = null;
   showInfoScaled: boolean = false;
   selectedScaledAnimal = signal<any>([]);
   showModalScaled: boolean = false;
   @Input() isLoading = true;
   scaleComment = '';
+  @ViewChild('dt2') table: Table | undefined;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Si el filtro inicial existe y los datos de la tabla han cambiado (se han cargado)
+    if (this.initialFilter && changes['dataTable'] && changes['dataTable'].currentValue) {
+      // Aplicamos el filtro. El setTimeout asegura que la tabla ya se ha renderizado con los nuevos datos.
+      setTimeout(() => this.table?.filterGlobal(this.initialFilter!, 'contains'), 0);
+    }
+  }
+
+  clearInitialFilter(): void {
+    // Limpia el filtro global de la tabla
+    if (this.table) {
+      this.table.filterGlobal('', 'contains');
+    }
+
+    // Navega a la misma ruta pero eliminando el queryParam 'animalId'
+    this.router.navigate([], {
+      queryParams: { animalId: null },
+      queryParamsHandling: 'merge'
+    });
+  }
 
   // Datos principales de la revisión
   moderatorData = computed(() => this.selectedScaledAnimal()?.scaled[0]?.moderator);

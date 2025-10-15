@@ -19,10 +19,10 @@ import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { TextareaModule } from 'primeng/textarea';
 import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
+import { InputIconModule, } from 'primeng/inputicon';
 import { AuthService } from '../../services/auth.service';
 import { UserData } from '../../models/user-data';
-import { Observable } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { StatisticsComponent } from "../../components/statistics/statistics.component";
 import { RequestsComponent } from '../../components/requests/requests.component';
@@ -35,6 +35,7 @@ import { AnimalsTableComponent } from "../../components/animals-table/animals-ta
 import { UsersTableComponent } from "../../components/users-table/users-table.component";
 import { Permissions } from '../../models/permissions.enum';
 import { LogComponent } from '../../components/log/log.component';
+import { ActivatedRoute } from '@angular/router';
 import { Roles } from '../../models/roles.enum';
 
 @Component({
@@ -74,6 +75,7 @@ export class ManagementPanelComponent implements OnInit {
   private userService = inject(UsersService);
   private requestsService = inject(RequestsService);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
 
   currentUser$: Observable<any | null>;
   /*  user!: UserData; */
@@ -87,18 +89,28 @@ export class ManagementPanelComponent implements OnInit {
   countTabPending = '';
   countTabRequests = '0';
 
+  initialAnimalFilter: string | null = null;
+
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
+
     this.currentUser$.subscribe((user: UserData) => {
       this.user.set(user);
-      this.valueTab = this.user()?.role === Roles.ADMIN ? 0 : this.canManageAnimals() ? 0 : this.canManageRequests() ? 1 : this.canManageUsers() ? 2 : 20;
+      // Leemos los queryParams aquí para asegurarnos de que se procesan después de que el usuario está disponible.
+      this.route.queryParams.pipe(take(1)).subscribe(params => {
+        this.initialAnimalFilter = params['animalId'] || null;
+        if (this.initialAnimalFilter) {
+          this.valueTab = 0; // Forzar la pestaña de animales si venimos de un detalle
+        } else {
+          this.valueTab = this.user()?.role === Roles.ADMIN ? 0 : this.canManageAnimals() ? 0 : this.canManageRequests() ? 1 : this.canManageUsers() ? 2 : 20;
+        }
+      });
       this.initTabs();
       this.loadRequestsCount();
     });
   }
 
   ngOnInit() {
-
   }
 
   // --- Métodos de comprobación de permisos ---
@@ -186,6 +198,7 @@ export class ManagementPanelComponent implements OnInit {
       // Transformamos los datos para añadir campos para el filtro y visualización
       const processedAnimals = animalsData.map((animal) => ({
         ...animal,
+        id: animal.id, // Aseguramos que el ID esté presente para el filtro global
         publishedText: animal.published ? 'Publicado' : 'Sin publicar',
         protectressName: animal.protectressID
           ? protectorsMap.get(animal.protectressID) || 'N/A'

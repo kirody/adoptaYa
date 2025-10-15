@@ -2,6 +2,8 @@
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 2px 3px 12px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  padding-left: 8rem;
+  padding-right: 8rem;
 }
 
 .image-container {
