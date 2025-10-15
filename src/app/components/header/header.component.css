@@ -1,10 +1,30 @@
+.role-banner {
+  position: fixed;
+  top: 48px;
+  left: 0;
+  width: 100%;
+  padding: 0.25rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 1001; /* Más alto que el header */
+  text-align: center;
+}
+
+.admin-banner { background-color: #ef4444; /* red-500 */ }
+.mod-banner { background-color: #f97316; /* orange-500 */ }
+
 .container-header {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 1000; /* Justo debajo de la barra de rol */
   background-color: white;
   padding-left: 6rem;
   padding-right: 6rem;
@@ -13,6 +33,10 @@
 :host ::ng-deep p-tag .p-tag-label {
   margin-left: 5px !important;
   font-size: 12px;
+}
+
+.header-admin {
+  top: 0; /* Desplaza el header hacia abajo cuando la barra de rol está visible */
 }
 
 :host ::ng-deep p-menu, .p-menu-list .custom-menu {
@@ -24,10 +48,6 @@
 :host ::ng-deep p-menubar, .p-menubar .custom-menubar {
   border: 0;
   padding: 0.5rem 0;
-}
-
-.header-admin {
-  background-color: #767676; /* Color de fondo amarillo */
 }
 
 :host ::ng-deep p-badge, .p-badge-circle {

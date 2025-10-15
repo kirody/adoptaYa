@@ -1,54 +1,59 @@
+<div *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'" class="role-banner"
+  [ngClass]="{'admin-banner': user?.role === 'ROLE_ADMIN', 'mod-banner': user?.role === 'ROLE_MOD'}">
+  <i [class]="user?.role === 'ROLE_ADMIN' ? 'pi pi-shield' : 'pi pi-user-edit'"></i>
+  <span>Modo: {{ user?.role === 'ROLE_ADMIN' ? 'Administrador' : 'Moderador' }}</span>
+</div>
+
 <div class="container-header" [ngClass]="{'header-admin': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">
-  <p-menubar [model]="items" class="custom-menubar"
-    [ngClass]="{'header-admin': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">
-    <ng-template pTemplate="end">
-      <!-- Usamos @if con el pipe async para manejar el observable -->
-      @if ((currentUser$ | async); as user) {
-      <!-- Bloque que se muestra si el usuario está logueado -->
-      <div class="flex align-items-center gap-2">
-        <div>
-          <i class="pi pi-comments p-overlay-badge cursor-pointer"
-            style="font-size: 1.2rem; color: white; cursor: pointer;" (click)="toggleChat()"
-            *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'">
-            <!-- <p-badge severity="danger"></p-badge> -->
-          </i>
-        </div>
-        <p-drawer [(visible)]="showSidebar" header="Iniciar conversación" position="full">
-          <app-chat></app-chat>
-        </p-drawer>
-        <p-overlaybadge [value]="unreadCount > 0 ? unreadCount : 0" severity="danger" (click)="op.toggle($event)">
-          <i class="pi pi-bell p-overlay-badge" style="font-size: 1.2rem; cursor: pointer;"
-            [ngClass]="{'text-white': user?.role !== 'ROLE_DEFAULT'}"></i>
-        </p-overlaybadge>
-        <p-popover #op>
-          <app-notifications></app-notifications>
-        </p-popover>
-        <span class="font-light text-sm"
-          [ngClass]="{'text-white': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">Hola, {{ user.username
-          }}</span>
-        <div>
+  <div>
+    <p-menubar [model]="items" class="custom-menubar"
+      [ngClass]="{'header-admin': user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'}">
+      <ng-template pTemplate="start">
+        <!-- El chip de rol se ha movido a la barra superior -->
+      </ng-template>
+      <ng-template pTemplate="end">
+        <!-- Usamos @if con el pipe async para manejar el observable -->
+        @if ((currentUser$ | async); as user) {
+        <!-- Bloque que se muestra si el usuario está logueado -->
+        <div class="flex align-items-center gap-2">
+          <div>
+            <i class="pi pi-comments p-overlay-badge cursor-pointer" style="font-size: 1.2rem; cursor: pointer;"
+              (click)="toggleChat()" *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_MOD'">
+              <!-- <p-badge severity="danger"></p-badge> -->
+            </i>
+          </div>
+          <p-drawer [(visible)]="showSidebar" header="Iniciar conversación" position="full">
+            <app-chat></app-chat>
+          </p-drawer>
+          <p-overlaybadge [value]="unreadCount > 0 ? unreadCount : 0" severity="danger" (click)="op.toggle($event)">
+            <i class="pi pi-bell p-overlay-badge" style="font-size: 1.2rem; cursor: pointer;"></i>
+          </p-overlaybadge>
+          <p-popover #op>
+            <app-notifications></app-notifications>
+          </p-popover>
+          <span class="font-light text-sm">Hola, {{ user.username }}</span>
+          <!-- <div>
           @if (user.role === 'ROLE_ADMIN') {
           <p-tag icon="fa fa-user-cog" severity="danger" value="Admin" [rounded]="true" />
           }
           @if (user.role === 'ROLE_MOD') {
           <p-tag icon="fa fa-user-pen" severity="warn" value="Mod" [rounded]="true" />
           }
+        </div> -->
+          <p-avatar [label]="user.username.charAt(0).toUpperCase()" styleClass="cursor-pointer" shape="circle"
+            (click)="menu.toggle($event)" [style]="getUserAvatarColor(user.username)" />
         </div>
-        <p-avatar [label]="user.username.charAt(0).toUpperCase()" styleClass="cursor-pointer" shape="circle"
-          (click)="menu.toggle($event)" [style]="getUserAvatarColor(user.username)" />
-      </div>
-      } @else {
-      <!-- Bloque que se muestra si NO hay usuario -->
-      <div class="flex align-items-center gap-2">
-        <p-button label="Iniciar sesión" icon="pi pi-sign-in" styleClass="p-button-sm p-button-text"
-          routerLink="/login" />
-        <p-button label="Registro" icon="pi pi-user-plus" styleClass="p-button-sm" routerLink="/register" />
-      </div>
-      }
-    </ng-template>
-  </p-menubar>
-
+        } @else {
+        <!-- Bloque que se muestra si NO hay usuario -->
+        <div class="flex align-items-center gap-2">
+          <p-button label="Iniciar sesión" icon="pi pi-sign-in" styleClass="p-button-sm p-button-text"
+            routerLink="/login" />
+          <p-button label="Registro" icon="pi pi-user-plus" styleClass="p-button-sm" routerLink="/register" />
+        </div>
+        }
+      </ng-template>
+    </p-menubar>
+  </div>
 </div>
-
 
 <p-menu #menu [model]="profileItems" [popup]="true" />
