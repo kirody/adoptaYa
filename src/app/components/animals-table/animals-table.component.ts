@@ -70,7 +70,7 @@ export class AnimalsTableComponent implements OnChanges {
   showModalScaled: boolean = false;
   @Input() isLoading = true;
   scaleComment = '';
-  @ViewChild('dt2') table: Table | undefined;
+  @ViewChild('dt') table: Table | undefined;
 
   ngOnChanges(changes: SimpleChanges): void {
     // Si el filtro inicial existe y los datos de la tabla han cambiado (se han cargado)
@@ -91,6 +91,10 @@ export class AnimalsTableComponent implements OnChanges {
       queryParams: { animalId: null },
       queryParamsHandling: 'merge'
     });
+  }
+
+  refreshData(): void {
+    this.dataChanged.emit();
   }
 
   // Datos principales de la revisión

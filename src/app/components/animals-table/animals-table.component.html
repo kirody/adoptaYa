@@ -4,20 +4,23 @@
 </div>
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
-  <p-table #dt2 [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }"
+  <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }"
     [globalFilterFields]="['id', 'name', 'gender', 'specie', 'protectressName', 'publishedText']" [paginator]="true"
     [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped">
     <ng-template pTemplate="caption">
       <div class="flex justify-content-end items-center gap-2">
-        <p-button *ngIf="initialFilter" label="Quitar filtro" icon="pi pi-filter-slash" severity="secondary"
-          [outlined]="true" (click)="clearInitialFilter()"></p-button>
+        <div class="flex gap-2">
+          <p-button icon="pi pi-refresh" (click)="refreshData()" pTooltip="Recargar datos" tooltipPosition="top"
+            styleClass="p-button-secondary p-button-outlined"></p-button>
+          <p-button *ngIf="initialFilter" label="Quitar filtro" icon="pi pi-filter-slash" severity="secondary"
+            [outlined]="true" (click)="clearInitialFilter()"></p-button>
+        </div>
 
-        <h3 class="m-0" *ngIf="!initialFilter"></h3>
         <p-iconField iconPosition="left">
           <p-inputIcon>
             <i class="pi pi-search"></i>
           </p-inputIcon>
-          <input pInputText type="text" (input)="dt2.filterGlobal($any($event.target).value, 'contains')"
+          <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
             placeholder="Buscar animales" />
         </p-iconField>
       </div>

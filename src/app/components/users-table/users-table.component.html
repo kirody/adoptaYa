@@ -4,15 +4,20 @@
 </div>
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
-  <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }" [globalFilterFields]="['username', 'email']">
+  <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }" [globalFilterFields]="['username', 'email', 'status']" styleClass="p-datatable-striped">
     <ng-template pTemplate="caption">
-      <div class="flex justify-between items-center">
-        <h3 class="m-0"></h3>
+      <div class="flex justify-content-end items-center gap-2">
+        <div class="flex gap-2">
+          <p-button icon="pi pi-refresh" (click)="refreshData()" pTooltip="Recargar datos" tooltipPosition="top"
+            styleClass="p-button-secondary p-button-outlined"></p-button>
+        </div>
+
         <p-iconField iconPosition="left">
           <p-inputIcon>
             <i class="pi pi-search"></i>
           </p-inputIcon>
-          <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar usuarios" />
+          <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            placeholder="Buscar animales" />
         </p-iconField>
       </div>
     </ng-template>
@@ -33,13 +38,15 @@
         <td>
           <div class="field">
             <p-multiSelect [options]="availablePermissions" [(ngModel)]="user.permissions"
-              (onChange)="updatePermissions(user)" optionValue="value" defaultLabel="Asignar permisos" optionLabel="label"
-              display="chip" appendTo="body" styleClass="w-full" selectedItemsLabel="{0} permisos" [disabled]="user.status !== 'active' || user.role !== 'ROLE_MOD'">
+              (onChange)="updatePermissions(user)" optionValue="value" defaultLabel="Asignar permisos"
+              optionLabel="label" display="chip" appendTo="body" styleClass="w-full" selectedItemsLabel="{0} permisos"
+              [disabled]="user.status !== 'active' || user.role !== 'ROLE_MOD'">
             </p-multiSelect>
           </div>
         </td>
         <td>
-          <p-tag [value]="getTranslatedStatus(user.status || 'active')" [severity]="getStatusSeverity(user.status || 'active')"></p-tag>
+          <p-tag [value]="getTranslatedStatus(user.status || 'active')"
+            [severity]="getStatusSeverity(user.status || 'active')"></p-tag>
         </td>
         <td>
           <div class="field">
@@ -66,8 +73,8 @@
             styleClass="p-button-rounded p-button-text p-button-info"
             (click)="confirmPasswordReset($event, user)"></p-button>
           <p-button icon="fa-solid fa-clipboard-list" pTooltip="Ver/Añadir notas internas" tooltipPosition="top"
-            styleClass="p-button-rounded p-button-text p-button-secondary"
-            (click)="openNotesDialog(user)" [disabled]="user.role !== 'ROLE_MOD'"></p-button>
+            styleClass="p-button-rounded p-button-text p-button-secondary" (click)="openNotesDialog(user)"
+            [disabled]="user.role !== 'ROLE_MOD'"></p-button>
         </td>
       </tr>
     </ng-template>
@@ -92,7 +99,8 @@
         <li class="note-record border rounded-lg overflow-hidden shadow-sm">
           <div class="note-header bg-surface-50 p-3 flex justify-between items-center border-b ">
             <div class="font-semibold text-surface-700 flex items-center gap-2">
-              <p-avatar [label]="note.authorName.charAt(0).toUpperCase()" shape="circle" size="normal" [style]="getUserAvatarColor(note.authorName)"></p-avatar>
+              <p-avatar [label]="note.authorName.charAt(0).toUpperCase()" shape="circle" size="normal"
+                [style]="getUserAvatarColor(note.authorName)"></p-avatar>
               <span>{{note.authorName}}</span>
             </div>
             <span class="text-sm text-surface-500">{{note.createdAt.toDate() | date:'dd/MM/yyyy HH:mm'}}</span>
@@ -112,38 +120,45 @@
         placeholder="Escribe una nueva nota..."></textarea>
       <div class="flex justify-between items-center mt-1">
         <small class="p-text-secondary">Máximo 80 carácteres.</small>
-        <small [ngClass]="{'text-red-500 font-bold': notesContent.length > MAX_NOTE_LENGTH, 'p-text-secondary': notesContent.length <= MAX_NOTE_LENGTH}">
+        <small
+          [ngClass]="{'text-red-500 font-bold': notesContent.length > MAX_NOTE_LENGTH, 'p-text-secondary': notesContent.length <= MAX_NOTE_LENGTH}">
           {{notesContent.length}} / {{MAX_NOTE_LENGTH}}
         </small>
       </div>
       @if (notesContent.length > MAX_NOTE_LENGTH) {
-        <div class="p-2 mt-2 bg-yellow-100 border-round-md text-yellow-800 flex align-items-center">
-            <i class="pi pi-exclamation-triangle mr-2"></i>
-            <span>La nota es demasiado larga. Usa <strong>'Resumir con IA'</strong> para acortarla.</span>
-        </div>
+      <div class="p-2 mt-2 bg-yellow-100 border-round-md text-yellow-800 flex align-items-center">
+        <i class="pi pi-exclamation-triangle mr-2"></i>
+        <span>La nota es demasiado larga. Usa <strong>'Resumir con IA'</strong> para acortarla.</span>
+      </div>
       }
     </div>
 
     <div class="quick-messages mt-3">
       <h4 class="font-semibold mb-2 text-sm">Notas rápidas</h4>
       <div class="flex flex-wrap gap-2">
-        <p-button label="Contacto telefónico realizado" icon="pi pi-phone" severity="info" [outlined]="true" size="small"
+        <p-button label="Contacto telefónico realizado" icon="pi pi-phone" severity="info" [outlined]="true"
+          size="small"
           (click)="addQuickNote('Se ha contactado por teléfono con el usuario para verificar la información.')" />
-        <p-button label="Verificación completada" icon="pi pi-check-circle" severity="success" [outlined]="true" size="small"
-          (click)="addQuickNote('Se han verificado los datos del usuario. Perfil validado.')" />
+        <p-button label="Verificación completada" icon="pi pi-check-circle" severity="success" [outlined]="true"
+          size="small" (click)="addQuickNote('Se han verificado los datos del usuario. Perfil validado.')" />
         <p-button label="Advertencia enviada" icon="pi pi-exclamation-triangle" severity="warn" [outlined]="true"
-          size="small" (click)="addQuickNote('Se ha enviado una advertencia al usuario por comportamiento inadecuado.')" />
+          size="small"
+          (click)="addQuickNote('Se ha enviado una advertencia al usuario por comportamiento inadecuado.')" />
         <p-button label="Solicitud rechazada" icon="pi pi-times-circle" severity="danger" [outlined]="true" size="small"
           (click)="addQuickNote('Se ha rechazado una solicitud de adopción de este usuario.')" />
         <p-button label="Usuario no contactado" icon="pi pi-question-circle" severity="secondary" [outlined]="true"
-          size="small" (click)="addQuickNote('Se ha intentado contactar con el usuario sin éxito. Posiblemente inactivo.')" />
+          size="small"
+          (click)="addQuickNote('Se ha intentado contactar con el usuario sin éxito. Posiblemente inactivo.')" />
       </div>
     </div>
 
     <ng-template pTemplate="footer" class="flex items-center justify-between">
-      <p-button label="Cerrar" size="small" icon="pi pi-times" (click)="displayNotesDialog=false" styleClass="p-button-text" />
-      <p-button label="Resumir con IA" size="small" icon="pi pi-sparkles" (click)="summarizeNote()" [disabled]="!notesContent.trim()" [loading]="isSummarizing" styleClass="p-button-help p-button-sm" />
-      <p-button label="Guardar Nota" size="small" icon="pi pi-check" (click)="addNote()" [disabled]="!notesContent.trim() || notesContent.length > MAX_NOTE_LENGTH" [loading]="isAddingNote"/>
+      <p-button label="Cerrar" size="small" icon="pi pi-times" (click)="displayNotesDialog=false"
+        styleClass="p-button-text" />
+      <p-button label="Resumir con IA" size="small" icon="pi pi-sparkles" (click)="summarizeNote()"
+        [disabled]="!notesContent.trim()" [loading]="isSummarizing" styleClass="p-button-help p-button-sm" />
+      <p-button label="Guardar Nota" size="small" icon="pi pi-check" (click)="addNote()"
+        [disabled]="!notesContent.trim() || notesContent.length > MAX_NOTE_LENGTH" [loading]="isAddingNote" />
     </ng-template>
   </p-dialog>
 </div>

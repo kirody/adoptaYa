@@ -108,6 +108,10 @@ export class UsersTableComponent implements OnDestroy {
     return { 'background-color': colors[Math.abs(hash) % colors.length] };
   }
 
+  refreshData(): void {
+    this.dataChanged.emit();
+  }
+
   confirmSuspension(event: Event, user: any) {
     const action = user.status === 'active' ? 'suspender' : 'reactivar';
     const severity = user.status === 'active' ? 'danger' : 'success';
@@ -363,7 +367,7 @@ export class UsersTableComponent implements OnDestroy {
   getTranslatedStatus(status: string): string {
     switch (status) {
       case 'active': return 'Activo';
-      case 'pending_activation': return 'No Activado';
+      case 'pending_activation': return 'Pendiente activar';
       case 'suspended': return 'Suspendido';
       default: return 'Desconocido';
     }

@@ -10,6 +10,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { Roles } from '../../models/roles.enum';
 import { CardNodataComponent } from "../card-nodata/card-nodata.component";
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-log',
@@ -22,7 +23,8 @@ import { CardNodataComponent } from "../card-nodata/card-nodata.component";
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    CardNodataComponent
+    CardNodataComponent,
+    ButtonModule
 ],
   templateUrl: './log.component.html',
   styleUrl: './log.component.css',
@@ -41,6 +43,12 @@ export class LogComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.logs$ = this.logService.getLogs();
+    this.logs$.subscribe(() => (this.loading = false));
+  }
+
+  refreshLogs(): void {
+    this.loading = true;
     this.logs$ = this.logService.getLogs();
     this.logs$.subscribe(() => (this.loading = false));
   }
