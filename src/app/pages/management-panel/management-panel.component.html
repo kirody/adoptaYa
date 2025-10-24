@@ -4,6 +4,32 @@
     <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
       [style]="{ width: '50px', height: '50px' }" />
   </div> -->
+  <p-card header="Vistas Públicas" class="mb-4" *ngIf="user()?.role === 'ROLE_ADMIN'">
+      <div class="flex flex-wrap gap-2">
+
+        <p-button
+          label="Ver Listado de Animales"
+          icon="pi pi-eye"
+          [routerLink]="['/animales']"
+          styleClass="p-button-secondary p-button-sm">
+        </p-button>
+
+        <p-button
+          label="Ver Listado de Protectoras"
+          icon="pi pi-eye"
+          [routerLink]="['/protectoras']"
+          styleClass="p-button-secondary p-button-sm">
+        </p-button>
+
+        <p-button
+          label="Ir al Inicio Público"
+          icon="pi pi-home"
+          [routerLink]="['/inicio']"
+          styleClass="p-button-secondary p-button-sm">
+        </p-button>
+
+        </div>
+    </p-card>
   <div class="card h-50" *ngIf="user">
     <p-tabs value="{{ valueTab }}" scrollable>
       <p-tablist>
@@ -29,6 +55,11 @@
           <i class="fa fa-users"></i>
           <span class="font-bold whitespace-nowrap">Usuarios</span>
         </p-tab>
+        <p-tab value="5" class="flex items-center !gap-2" (click)="tabProtectors()" *ngIf="canManageProtectors()">
+          <i class="fa fa-shield-alt"></i>
+          <span class="font-bold whitespace-nowrap">Protectoras</span>
+          <p-tag *ngIf="!isLoading" severity="info" [value]="dataTable().length" [rounded]="true" />
+        </p-tab>
         <p-tab value="4" class="flex items-center !gap-2" (click)="tabLogs()" *ngIf="canManageLogs()">
           <i class="fa fa-history"></i>
           <span class="font-bold whitespace-nowrap">Registro</span>
@@ -52,6 +83,10 @@
         <p-tabpanel value="2">
           <app-users-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
             (dataChanged)="reloadData()"></app-users-table>
+        </p-tabpanel>
+        <p-tabpanel value="5">
+          <app-protectors-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
+            (dataChanged)="reloadData()"></app-protectors-table>
         </p-tabpanel>
         <p-tabpanel value="3">
           <app-statistics></app-statistics>

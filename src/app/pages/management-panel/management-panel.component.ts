@@ -10,7 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -34,9 +34,11 @@ import { NotificationsService } from '../../services/notifications.service';
 import { AnimalsTableComponent } from "../../components/animals-table/animals-table.component";
 import { UsersTableComponent } from "../../components/users-table/users-table.component";
 import { Permissions } from '../../models/permissions.enum';
+import { ProtectorsTableComponent } from '../../components/protectors-table/protectors-table.component';
 import { LogComponent } from '../../components/log/log.component';
 import { ActivatedRoute } from '@angular/router';
 import { Roles } from '../../models/roles.enum';
+import { CardModule } from "primeng/card";
 
 @Component({
   selector: 'app-management-panel',
@@ -63,7 +65,10 @@ import { Roles } from '../../models/roles.enum';
     RequestsComponent,
     AnimalsTableComponent,
     UsersTableComponent,
-    LogComponent
+    ProtectorsTableComponent,
+    LogComponent,
+    CardModule,
+    RouterModule
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './management-panel.component.html',
@@ -134,6 +139,11 @@ export class ManagementPanelComponent implements OnInit {
     return u && u.role === Roles.ADMIN;
   }
 
+  canManageProtectors(): boolean {
+    const u = this.user();
+    return u && u.role === Roles.ADMIN;
+  }
+
   initTabs() {
     if (this.user()?.role === Roles.ADMIN) {
       this.loadRequestsCount();
@@ -147,6 +157,8 @@ export class ManagementPanelComponent implements OnInit {
       this.tabUsers();
     } else if (this.valueTab === 4) {
       this.tabLogs();
+    } else if (this.valueTab === 5) {
+      this.tabProtectors();
     } else {
     }
   }
@@ -168,6 +180,8 @@ export class ManagementPanelComponent implements OnInit {
       this.tabAnimals();
     } else if (this.valueTab === 2) {
       this.tabUsers();
+    } else if (this.valueTab === 5) {
+      this.tabProtectors();
     }
     // Puedes añadir lógica para otras pestañas aquí si es necesario
   }
@@ -239,5 +253,14 @@ export class ManagementPanelComponent implements OnInit {
 
   tabLogs() {
     this.valueTab = 4;
+  }
+
+  tabProtectors() {
+    this.valueTab = 5;
+    this.isLoading = true;
+    this.protectorService.getProtectors().then((data) => {
+      this.dataTable.set(data);
+      this.isLoading = false;
+    });
   }
 }
