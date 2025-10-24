@@ -85,8 +85,7 @@
             (dataChanged)="reloadData()"></app-users-table>
         </p-tabpanel>
         <p-tabpanel value="5">
-          <app-protectors-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
-            (dataChanged)="reloadData()"></app-protectors-table>
+          <app-protectors-table (dataChanged)="reloadData()"></app-protectors-table>
         </p-tabpanel>
         <p-tabpanel value="3">
           <app-statistics></app-statistics>
