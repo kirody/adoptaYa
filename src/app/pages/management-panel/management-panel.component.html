@@ -43,6 +43,9 @@
           <p-progress-spinner *ngIf="isLoadingAnimalsCount()" strokeWidth="8" fill="transparent"
             animationDuration=".5s" [style]="{ width: '20px', height: '20px' }" />
           <p-tag *ngIf="!isLoadingAnimalsCount()" severity="warn" [value]="countTabAnimals" [rounded]="true" />
+          <!-- @if (user()?.role === 'ROLE_ADMIN') {
+            <p-tag *ngIf="!isLoadingAnimalsCount()" severity="info" [value]="countTabPendingAdmin()" [rounded]="true" pTooltip="Pendientes de publicar" tooltipPosition="top" />
+          } -->
         </p-tab>
         <p-tab value="1" class="flex items-center !gap-2" *ngIf="canManageRequests()">
           <i class="fa fa-file"></i>
@@ -74,6 +77,20 @@
       </p-tablist>
       <p-tabpanels>
         <p-tabpanel value="0">
+          @if (user()?.role === 'ROLE_ADMIN' && !isLoadingAnimalsCount() && countTabPendingAdmin() > '0') {
+          <p-message severity="info" styleClass="w-full mb-1">
+            <div class="flex items-center justify-between w-full">
+              <div class="flex items-center">
+                <i class="pi pi-info-circle text-xl mr-3"></i>
+                <span>
+                  Hay <strong>{{ countTabPendingAdmin() }}</strong> animales pendientes de publicar. Puedes ayudar a los
+                  moderadores a revisar las fichas.
+                </span>
+              </div>
+              <p-button label="Ver pendientes" (click)="filterPendingAnimals()" link></p-button>
+            </div>
+          </p-message>
+          }
           <app-animals-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
             (dataChanged)="reloadData()" [initialFilter]="initialAnimalFilter"></app-animals-table>
         </p-tabpanel>
@@ -85,7 +102,8 @@
             (dataChanged)="reloadData()"></app-users-table>
         </p-tabpanel>
         <p-tabpanel value="5">
-          <app-protectors-table (dataChanged)="reloadData()"></app-protectors-table>
+          <app-protectors-table [dataTable]="dataTable()" [isLoading]="isLoading" [user]="user()"
+            (dataChanged)="reloadData()"></app-protectors-table>
         </p-tabpanel>
         <p-tabpanel value="3">
           <app-statistics></app-statistics>

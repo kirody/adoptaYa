@@ -70,6 +70,8 @@ export class AnimalsTableComponent implements OnChanges {
   showModalScaled: boolean = false;
   @Input() isLoading = true;
   scaleComment = '';
+  hideAssignedToAdmin = false;
+  showOnlyAssignedToMe = false;
   @ViewChild('dt') table: Table | undefined;
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -93,8 +95,33 @@ export class AnimalsTableComponent implements OnChanges {
     });
   }
 
+  public applyGlobalFilter(filterValue: string): void {
+    if (this.table) {
+      this.table.filterGlobal(filterValue, 'contains');
+    }
+  }
+
   refreshData(): void {
     this.dataChanged.emit();
+  }
+
+  toggleHideAssignedToAdmin(): void {
+    this.hideAssignedToAdmin = !this.hideAssignedToAdmin;
+    if (this.hideAssignedToAdmin) {
+      this.table?.filter(false, 'assignedToAdmin', 'equals');
+    } else {
+      this.table?.filter(null, 'assignedToAdmin', 'equals'); // Limpia el filtro de esa columna
+    }
+  }
+
+  toggleShowOnlyAssignedToMe(): void {
+    this.showOnlyAssignedToMe = !this.showOnlyAssignedToMe;
+    if (this.showOnlyAssignedToMe) {
+      this.table?.filter(true, 'assignedToAdmin', 'equals');
+    } else {
+      // Limpia el filtro específico de la columna 'assignedToAdmin'
+      this.table?.filter(null, 'assignedToAdmin', 'equals');
+    }
   }
 
   // Datos principales de la revisión
@@ -474,6 +501,21 @@ export class AnimalsTableComponent implements OnChanges {
 
         logAction = 'Respuesta a escalado de animal';
         details = `El administrador '${this.user.username}' ha respondido al escalado del animal '${this.selectedScaledAnimal().name}' con el comentario: "${this.scaleComment}".`;
+
+        // Notificar al moderador que ha recibido una respuesta
+        const moderatorId = this.selectedScaledAnimal().scaled[0]?.moderator?.uid;
+        if (moderatorId) {
+          const notification = {
+            title: 'Respuesta a tu escalado',
+            message: `El administrador ${this.user.username} ha respondido a tu escalado sobre "${this.selectedScaledAnimal().name}".`,
+            severity: 'success',
+            type: 'scaled-response',
+            link: `/panel-gestion?animalId=${this.selectedScaledAnimal().id}`
+          };
+          // No necesitamos esperar a que la notificación se envíe para continuar
+          this.notificationsService.addNotification(moderatorId, notification);
+        }
+
       }
 
       await this.animalService.scaleAnimal(
@@ -523,6 +565,20 @@ export class AnimalsTableComponent implements OnChanges {
       const details = `El administrador '${this.user.username}' ha asignado para sí mismo la revisión del animal '${this.selectedScaledAnimal().name}'.`;
       await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
 
+      // Notificar al moderador que su caso ha sido asignado
+      const moderatorId = this.selectedScaledAnimal().scaled[0]?.moderator?.uid;
+      if (moderatorId) {
+        const notification = {
+          title: 'Caso asignado',
+          message: `El administrador ${this.user.username} ha comenzado a revisar tu escalado sobre "${this.selectedScaledAnimal().name}".`,
+          severity: 'info',
+          type: 'scaled-assigned',
+          link: `/panel-gestion?animalId=${this.selectedScaledAnimal().id}`
+        };
+        // No necesitamos esperar a que la notificación se envíe para continuar
+        this.notificationsService.addNotification(moderatorId, notification);
+      }
+
 
       await this.animalService.assignAnimalToAdmin(
         this.selectedScaledAnimal(),
@@ -532,5 +588,72 @@ export class AnimalsTableComponent implements OnChanges {
       this.dataChanged.emit();
       this.showInfoScaled = false;
     }
+  }
+
+  async assignToMe(event: Event, animal: Animal) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: `¿Estás seguro de que quieres asignarte la revisión de <strong>${animal.name}</strong>?`,
+      header: 'Confirmar Asignación',
+      icon: 'pi pi-user-plus',
+      acceptLabel: 'Asignar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-info',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: async () => {
+        try {
+          const details = `El administrador '${this.user.username}' se ha asignado la revisión del animal '${animal.name}'.`;
+          await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
+
+          // Notificar al moderador que su caso ha sido asignado
+          const moderatorId = animal.scaled[0]?.moderator?.uid;
+          if (moderatorId) {
+            const notification = {
+              title: 'Caso asignado',
+              message: `El administrador ${this.user.username} ha comenzado a revisar tu escalado sobre "${animal.name}".`,
+              severity: 'info',
+              type: 'scaled-assigned',
+              link: `/panel-gestion?animalId=${animal.id}`
+            };
+            this.notificationsService.addNotification(moderatorId, notification);
+          }
+
+          await this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado para revisión directa.');
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso se te ha asignado correctamente.' });
+          this.dataChanged.emit();
+        } catch (error) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo asignar el caso.' });
+          console.error('Error al auto-asignar el caso:', error);
+        }
+      }
+    });
+  }
+
+  async unassignFromMe(event: Event, animal: Animal) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: `¿Estás seguro de que quieres <strong>liberar</strong> la revisión de <strong>${animal.name}</strong>? Otro administrador podrá asignárselo.`,
+      header: 'Confirmar Liberación',
+      icon: 'pi pi-user-minus',
+      acceptLabel: 'Liberar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-info',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: async () => {
+        try {
+          // Aquí llamamos a un método en el servicio que simplemente actualiza 'assignedToAdmin' a false.
+          await this.animalService.updateAnimal(animal.id ?? '', { assignedToAdmin: false });
+
+          const details = `El administrador '${this.user.username}' ha liberado la revisión del animal '${animal.name}'.`;
+          await this.logService.addLog('Revisión de animal liberada', details, this.user, 'Animales');
+
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso ha sido liberado correctamente.' });
+          this.dataChanged.emit();
+        } catch (error) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo liberar el caso.' });
+          console.error('Error al liberar el caso:', error);
+        }
+      }
+    });
   }
 }

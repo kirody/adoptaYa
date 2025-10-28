@@ -1,1 +1,54 @@
-<p>Tabla protectoras</p>
+<div class="card flex justify-center" *ngIf="isLoading">
+  <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
+    [style]="{ width: '50px', height: '50px' }" />
+</div>
+
+<div *ngIf="!isLoading">
+  @if (dataTable && dataTable.length > 0) {
+  <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '50rem' }"
+    [globalFilterFields]="['name', 'email', 'phone', 'province']" [paginator]="true" [rows]="10"
+    [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped">
+    <ng-template pTemplate="caption">
+      <div class="flex justify-content-end items-center gap-2">
+        <p-iconField iconPosition="left">
+          <p-inputIcon>
+            <i class="pi pi-search"></i>
+          </p-inputIcon>
+          <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            placeholder="Buscar protectoras" />
+        </p-iconField>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Teléfono</th>
+        <th>Provincia</th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-protector>
+      <tr>
+        <td>{{ protector.name }}</td>
+        <td>{{ protector.email }}</td>
+        <td>{{ protector.phone }}</td>
+        <td>{{ protector.province }}</td>
+        <td>
+          <p-button icon="fa-solid fa-pen-to-square" styleClass="p-button-rounded p-button-warning p-button-text"
+            (click)="editProtector(protector.id)" pTooltip="Editar protectora" tooltipPosition="top"></p-button>
+          <p-button icon="fa-solid fa-trash" styleClass="p-button-rounded p-button-danger p-button-text"
+            (click)="deleteProtector($event, protector)" pTooltip="Eliminar protectora" tooltipPosition="top"></p-button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <tr>
+        <td colspan="4" class="font-bold">Total {{ dataTable.length }} protectoras.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+  } @else {
+  <app-card-nodata message="No hay protectoras disponibles para gestionar."></app-card-nodata>
+  }
+</div>

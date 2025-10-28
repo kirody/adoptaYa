@@ -36,8 +36,7 @@ import { ProtectorsService } from '../../../services/protectors.service';
 export class ProtectorFormComponent {
   protectorForm!: FormGroup;
   isEditMode = false;
-  pageTitle = 'Añadir Animal';
-  submitButtonText = 'Añadir Animal';
+  pageTitle = 'Añadir Protectora';
   private protectorId: string | null = null;
 
   // Constantes para el template
@@ -56,6 +55,11 @@ export class ProtectorFormComponent {
     this.protectorId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.protectorId;
 
+    if (this.isEditMode) {
+      this.pageTitle = 'Editar Protectora';
+      this.loadProtectorData(this.protectorId!);
+    }
+
     this.protectorForm = this.fb.group({
       id: [''],
       name: ['', Validators.required],
@@ -63,6 +67,28 @@ export class ProtectorFormComponent {
       phone: ['', Validators.required],
       province: ['', Validators.required],
     });
+  }
+
+  private async loadProtectorData(id: string): Promise<void> {
+    try {
+      const protectorData = await this.protectorService.getProtectorById(id);
+      if (protectorData) {
+        this.protectorForm.patchValue(protectorData);
+      } else {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se encontró la protectora para editar.',
+        });
+        this.router.navigate(['/panel-gestion']); // Redirigir si no se encuentra
+      }
+    } catch (err) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo cargar la información de la protectora.',
+      });
+    }
   }
 
   async saveProtector(): Promise<void> {

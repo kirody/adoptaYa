@@ -16,6 +16,16 @@
             [outlined]="true" (click)="clearInitialFilter()"></p-button>
         </div>
 
+        @if (user?.role === 'ROLE_MOD') {
+        <p-button (click)="toggleHideAssignedToAdmin()" [label]="hideAssignedToAdmin ? 'Mostrar todos' : 'Ocultar asignados a admin'"
+          [icon]="hideAssignedToAdmin ? 'pi pi-eye' : 'pi pi-eye-slash'" severity="info" [outlined]="true"
+          pTooltip="Oculta los animales que ya están siendo revisados por un administrador" tooltipPosition="top"></p-button>
+        }
+        @if (user?.role === 'ROLE_ADMIN') {
+        <p-button (click)="toggleShowOnlyAssignedToMe()" [label]="showOnlyAssignedToMe ? 'Mostrar todos' : 'Ver mis asignados'"
+          [icon]="showOnlyAssignedToMe ? 'pi pi-eye' : 'fa-solid fa-user-check'" severity="info" [outlined]="true"
+          pTooltip="Muestra solo los animales que te has asignado para revisar" tooltipPosition="top"></p-button>
+        }
         <p-iconField iconPosition="left">
           <p-inputIcon>
             <i class="pi pi-search"></i>
@@ -40,13 +50,26 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-animal>
-      <tr [ngClass]="{'bg-gray-100 opacity-70': user?.role === 'ROLE_MOD' && animal.assignedToAdmin}" [pTooltip]="(user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ?
-                'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
+      <tr [ngClass]="{
+            'bg-gray-100 opacity-70': user?.role === 'ROLE_MOD' && animal.assignedToAdmin,
+            'bg-orange-50': user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin,
+            'bg-blue-50': user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin
+          }"
+        [pTooltip]="(user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ?
+          'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
         tooltipPosition="top">
         <td>
           <img [src]="animal.urlImage" [alt]="animal.name" class="w-2rem rounded" />
         </td>
-        <td>{{ animal.name }} </td>
+        <td class="gap-2">{{ animal.name }}
+          @if(user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin) {
+          <i class="fa-solid fa-triangle-exclamation text-orange-500" pTooltip="Requiere revisión"
+            tooltipPosition="top"></i>
+          }
+          @if(user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin) {
+          <i class="fa-solid fa-user-check text-blue-500" pTooltip="Asignado a admin" tooltipPosition="top"></i>
+          }
+        </td>
         <td>
           <i class="fa-solid" [ngClass]="{'fa-cat': animal.specie === 'Gato', 'fa-dog': animal.specie === 'Perro'}"></i>
         </td>
@@ -66,7 +89,7 @@
         <td>
           @if (animal.scaled?.length > 0) {
           @if (getScaledStatusTag(animal); as status) {
-          <p-button [icon]="status === 'Pendiente' ? 'fa-solid fa-clock' : 'fa-solid fa-circle-info'"
+          <p-button [icon]="['Cerrado', 'Asignado a admin'].includes(status) ? 'fa-solid fa-check' : 'fa-solid fa-clock'"
             [severity]="setColorTagScaled(status)" [rounded]="true" [text]="false" (click)="openModalScaled(animal)"
             pTooltip="Ver info" tooltipPosition="top" [label]="status" size="small"></p-button>
           }
@@ -85,8 +108,7 @@
           <p-button icon="fa-solid"
             [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
             styleClass="p-button-rounded p-button-warning p-button-text"
-            (click)="modalconfirmation($event, animal, 'publish')"
-            [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin)"
+            (click)="modalconfirmation($event, animal, 'publish')" [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin)"
             [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
           @if (user?.role === 'ROLE_MOD') {
           <!-- Escalar -->
@@ -100,6 +122,13 @@
           }
           }
           @if (user?.role === 'ROLE_ADMIN') {
+          <!-- Asignar a admin -->
+          @if (true) {
+            <p-button [icon]="animal.assignedToAdmin ? 'fa-solid fa-user-minus' : 'fa-solid fa-user-plus'"
+              styleClass="p-button-rounded p-button-info p-button-text"
+              (click)="animal.assignedToAdmin ? unassignFromMe($event, animal) : assignToMe($event, animal)"
+              [pTooltip]="animal.assignedToAdmin ? 'Liberar este caso' : 'Asignarme este caso'" tooltipPosition="top"></p-button>
+          }
           <!-- Eliminar -->
           <p-button icon="fa-solid fa-trash" styleClass="p-button-rounded p-button-warning p-button-text"
             (click)="modalconfirmation($event, animal, 'delete')" pTooltip="Eliminar animal"
@@ -215,7 +244,7 @@
         </div>
         <div class="field mb-2 text-sm">
           <div class="text-color-secondary mb-1">Escalado por:</div>
-          <div class="font-medium">{{moderator.email}}</div>
+          <div class="font-medium">{{moderator.name}} ({{moderator.email}})</div>
         </div>
       </div>
       <div class="col">
@@ -265,12 +294,12 @@
     <!-- Botones de acción -->
     <div class="flex justify-content-end pt-3 border-top-1 surface-border gap-2">
       @if (showModeratorCloseButton() || showAdminCloseButton()) {
-      <p-button label="Cerrar" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
+      <p-button label="Cerrar" icon="pi pi-times" severity="secondary" (click)="showInfoScaled = false" class="p-button-outlined" />
       }
       @if (showAdminActionPanel()) {
-      <p-button label="Asignar a Administrador" severity="danger" class="p-button-outlined"
+      <p-button label="Asignar a Administrador" icon="pi pi-user-plus" severity="danger" class="p-button-outlined"
         (click)="resolveScaled('toAdmin')" [disabled]="scaleComment === ''" />
-      <p-button label="Enviar y devolver" severity="success" (click)="resolveScaled('toMod')"
+      <p-button label="Enviar y devolver" icon="pi pi-send" severity="success" (click)="resolveScaled('toMod')"
         [disabled]="scaleComment === ''" />
       }
     </div>

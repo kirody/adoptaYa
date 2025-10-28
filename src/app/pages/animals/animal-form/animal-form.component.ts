@@ -11,6 +11,7 @@ import {
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -50,6 +51,7 @@ import { GeminiService } from '../../../services/gemini.service';
     CommonModule,
     ReactiveFormsModule,
     InputTextModule,
+    DatePickerModule,
     InputNumberModule,
     ButtonModule,
     ToastModule,
@@ -119,7 +121,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       id: [''],
       name: ['', Validators.required],
       specie: ['', Validators.required],
-      age: ['', [Validators.required, Validators.min(0), Validators.max(150)]],
+      age: ['', Validators.required],
       race: ['', Validators.required],
       province: ['', Validators.required],
       description: ['', Validators.required],
@@ -162,6 +164,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
       this.user = user;
     });
+
+    console.log(this.animalForm);
+
   }
 
   ngOnDestroy(): void {

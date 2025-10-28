@@ -1,8 +1,7 @@
 <p-toast></p-toast>
 <div class="protector-form-container">
-  <app-header-page [title]="'Añadir Protectora'" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
+  <app-header-page [title]="pageTitle" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
   <div class="protector-form">
-    <span class="text-gray-400 text-sm" *ngIf="isEditMode">ID: {{ protectorForm.value.id }}</span>
     <form [formGroup]="protectorForm" (ngSubmit)="saveProtector()">
       <div class="flex gap-4">
         <div class="w-1/3 p-4">
@@ -13,6 +12,7 @@
             <span class="text-gray-400 text-sm">
               Información principal de la protectora.
             </span>
+            <span class="text-gray-400 text-sm mt-2" *ngIf="isEditMode">ID: {{ protectorForm.value.id }}</span>
           </div>
         </div>
         <div class="w-full p-4">

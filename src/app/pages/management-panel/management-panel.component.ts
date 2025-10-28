@@ -92,9 +92,12 @@ export class ManagementPanelComponent implements OnInit {
   valueTab = 0;
   countTabAnimals = '';
   countTabPending = '';
+  countTabPendingAdmin = signal('0');
   countTabRequests = '0';
 
   initialAnimalFilter: string | null = null;
+
+  @ViewChild(AnimalsTableComponent) animalsTableComponent!: AnimalsTableComponent;
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
@@ -226,7 +229,8 @@ export class ManagementPanelComponent implements OnInit {
       if (this.user()?.role === Roles.MOD) {
         this.countTabAnimals = String(animalsData.filter(animal => animal.assignedToAdmin !== true).length);
       } else {
-        this.countTabAnimals = String(this.dataTable().length);
+        this.countTabAnimals = String(processedAnimals.length);
+        this.countTabPendingAdmin.set(String(processedAnimals.filter(animal => !animal.published).length));
       }
     } catch (error) {
       console.error('Error al cargar los animales:', error);
@@ -234,6 +238,12 @@ export class ManagementPanelComponent implements OnInit {
     } finally {
       this.isLoading = false;
       this.isLoadingAnimalsCount.set(false);
+    }
+  }
+
+  filterPendingAnimals() {
+    if (this.animalsTableComponent) {
+      this.animalsTableComponent.applyGlobalFilter('Sin publicar');
     }
   }
 

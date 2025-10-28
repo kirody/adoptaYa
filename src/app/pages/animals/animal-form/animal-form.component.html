@@ -1,8 +1,7 @@
 <p-toast></p-toast>
 <div class="animal-form-container">
-  <app-header-page [title]="'Añadir Animal'" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
+  <app-header-page [title]="pageTitle" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
   <div class="animal-form">
-    <span class="text-gray-400 text-sm" *ngIf="isEditMode">ID: {{ animalForm.value.id }}</span>
     <p-message *ngIf="isAnimalScaled" severity="error" styleClass="w-full mb-4">
       <div class="flex items-center">
         <i class="pi pi-lock text-xl mr-3"></i>
@@ -23,6 +22,7 @@
               <span class="text-gray-400 text-sm">
                 Información principal del animal.
               </span>
+              <span class="text-gray-400 text-sm mt-2" *ngIf="isEditMode">ID: {{ animalForm.value.id }}</span>
               <div class="mt-3">
                 <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" severity="secondary"
                   [raised]="true" [rounded]="true">
@@ -69,8 +69,8 @@
               </div>
               <div class="w-1/2">
                 <div class="field">
-                  <label for="animalAge" class="form-label">Edad</label>
-                  <p-inputnumber inputId="integeronly" formControlName="age" class="w-full" />
+                  <label for="birthDate" class="form-label">Fecha de Nacimiento</label>
+                  <p-datepicker formControlName="age" class="w-full" dateFormat="dd/mm/yy"></p-datepicker>
                 </div>
 
                 <div class="field">
