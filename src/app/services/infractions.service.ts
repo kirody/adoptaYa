@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '../../environments/environment';
 

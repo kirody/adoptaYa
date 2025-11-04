@@ -5,28 +5,24 @@
     [style]="{ width: '350px' }"
     [draggable]="false"
     [resizable]="false"
+    [closable]="false"
   >
-    <ng-template pTemplate="header">
-      <div class="flex align-items-center">
-        <!-- <i class="pi pi-exclamation-triangle mr-2 text-red-500" style="font-size: 1.2rem;"></i> -->
-        <span class="font-bold">AVISO</span>
-      </div>
-    </ng-template>
-
-    <div class="flex align-items-center gap-3">
-      <i class="pi pi-times-circle text-red-500" style="font-size: 2.5rem"></i>
-      <span class="font-medium">{{ dialogMessage }}</span>
+    <div class="text-center p-4">
+      <i class="pi pi-exclamation-circle text-yellow-500" style="font-size: 3rem"></i>
+      <h2 class="text-xl font-bold my-4">Aviso</h2>
+      <p class="text-md text-gray-600 mb-5">{{ dialogMessage }}</p>
+      <p-button
+        label="Entendido"
+        (click)="displayDialog=false"
+        styleClass="p-button-warning w-full"
+      ></p-button>
     </div>
-
-    <ng-template pTemplate="footer">
-      <p-button label="Cerrar" (click)="displayDialog=false" styleClass="p-button-text"></p-button>
-    </ng-template>
   </p-dialog>
 
   <p-card styleClass="auth-card">
     <ng-template pTemplate="title">
       <div class="auth-title">
-        <i class="pi pi-user mr-2"></i>
+        <i class="pi pi-user mr-2 "></i>
         Iniciar Sesión
       </div>
     </ng-template>
@@ -56,7 +52,7 @@
 
     <ng-template pTemplate="footer">
       <div class="auth-footer">
-        <span>¿No tienes una cuenta?</span>
+        <span>¿No tienes una cuenta? </span>
         <a routerLink="/register" class="font-semibold ml-2">Regístrate aquí</a>
       </div>
     </ng-template>

@@ -359,6 +359,8 @@ export class UsersTableComponent implements OnDestroy {
         return 'warn';
       case 'suspended':
         return 'danger';
+      case 'infraction':
+        return 'danger';
       default:
         return 'warn';
     }
@@ -369,6 +371,7 @@ export class UsersTableComponent implements OnDestroy {
       case 'active': return 'Activo';
       case 'pending_activation': return 'Pendiente activar';
       case 'suspended': return 'Suspendido';
+      case 'infraction': return 'Infracción';
       default: return 'Desconocido';
     }
   }

@@ -44,6 +44,7 @@ import { UserData } from '../../../models/user-data';
 import { GeminiService } from '../../../services/gemini.service';
 import { UsersService } from '../../../services/users.service';
 import { InfractionsService } from '../../../services/infractions.service';
+import { DialogModule } from "primeng/dialog";
 
 @Component({
   selector: 'app-animal-form',
@@ -69,8 +70,9 @@ import { InfractionsService } from '../../../services/infractions.service';
     FormsModule,
     HeaderPageComponent,
     ToggleButtonModule,
-    DividerModule
-  ],
+    DividerModule,
+    DialogModule
+],
   templateUrl: './animal-form.component.html',
   styleUrls: ['./animal-form.component.scss'],
   providers: [MessageService],
@@ -97,6 +99,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   dataProtector: any;
   private user: UserData | null = null;
   isSaving = false;
+  showModal = false;
 
   constructor(
     private fb: FormBuilder,
@@ -251,19 +254,14 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
                 entityId: this.animalId || 'nuevo',
                 fieldName: field,
               },
-              infringingText: this.animalForm.get(field.toLowerCase())?.value,
+              infringingText: this.animalForm.get('description')?.value,
               actionTaken: 'user_suspended', // La acción que se tomará
             };
             await this.infractionsService.addInfraction(infractionData);
-            await this.userService.updateUser(this.user.uid ?? '', { status: 'suspended' });
+            await this.userService.updateUser(this.user.uid ?? '', { status: 'infraction' });
             const details = `El moderador '${this.user.username}' ha sido suspendido automáticamente por usar lenguaje inapropiado en el campo: ${field}.`;
             await this.logService.addLog('Suspensión automática de moderador', details, this.user, 'Sistema');
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Cuenta Suspendida',
-              detail: 'Tu cuenta ha sido suspendida por uso de lenguaje inapropiado. Serás desconectado.',
-              life: 8000
-            });
+            this.showModal = true;
             setTimeout(() => {
               this.authService.logout();
               this.router.navigate(['/login']);

@@ -4,7 +4,8 @@
 </div>
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
-  <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }" [globalFilterFields]="['username', 'email', 'status']" styleClass="p-datatable-striped">
+  <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }"
+    [globalFilterFields]="['username', 'email', 'status']" styleClass="p-datatable-striped">
     <ng-template pTemplate="caption">
       <div class="flex justify-content-end items-center gap-2">
         <div class="flex gap-2">
@@ -45,8 +46,10 @@
           </div>
         </td>
         <td>
-          <p-tag [value]="getTranslatedStatus(user.status || 'active')"
-            [severity]="getStatusSeverity(user.status || 'active')"></p-tag>
+          <p-tag [value]="getTranslatedStatus(user.status)" [severity]="getStatusSeverity(user.status)"
+            pTooltip="Este usuario tiene una infracción pendiente de revisión" tooltipPosition="top">
+            <i *ngIf="user.status === 'infraction'" class="fa-solid fa-triangle-exclamation text-orange-500"></i>
+          </p-tag>
         </td>
         <td>
           <div class="field">
@@ -63,7 +66,7 @@
             styleClass="p-button-rounded p-button-text" (click)="confirmActivation($event, user)"></p-button>
 
           <!-- Botón para Suspender/Reactivar -->
-          <p-button *ngIf="user.status === 'active' || user.status === 'suspended'"
+          <p-button *ngIf="user.status === 'active' || user.status === 'suspended' || user.status === 'infraction'"
             [icon]="user.status === 'active' ? 'fa-solid fa-user-slash' : 'fa-solid fa-user-check'"
             [pTooltip]="user.status === 'active' ? 'Suspender usuario' : 'Reactivar usuario'" tooltipPosition="top"
             [severity]="user.status === 'active' ? 'danger' : 'success'" styleClass="p-button-rounded p-button-text"
