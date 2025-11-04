@@ -148,11 +148,17 @@
   }
 </div>
 
-<p-dialog header="Escalar a {{selectedScaledAnimal()?.name}} a un administrador" [modal]="true"
-  [(visible)]="showModalScaled" [style]="{ width: '25rem' }">
+<p-dialog [header]="'Escalar ' + selectedScaledAnimal()?.name" [modal]="true" [(visible)]="showModalScaled"
+  [(visible)]="showModalScaled" [style]="{ width: '25rem' }" styleClass="modern-dialog" [draggable]="false" [resizable]="false">
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 text-lg font-semibold text-primary">
+      Escalar a {{selectedScaledAnimal()?.name | uppercase}}
+      <i class='pi pi-arrow-right'></i> Administrador
+    </div>
+  </ng-template>
   <span class="p-text-secondary block mb-4">Envia un mensaje a un administrador para que revise tu caso.</span>
   <div class="flex items-center mb-4">
-    <textarea rows="5" cols="100%" pTextarea [(ngModel)]="scaleComment"
+    <textarea rows="5" style="width: 100%;" pTextarea [(ngModel)]="scaleComment"
       placeholder="Escribe tu mensaje aqui..."></textarea>
   </div>
   <div class="flex justify-end gap-2">
@@ -161,8 +167,13 @@
   </div>
 </p-dialog>
 
-<p-dialog header="Información de Escalado" [modal]="true" [(visible)]="showInfoScaled" (onHide)="onInfoModalHide()"
-  [styleClass]="'modern-dialog'" [style]="{ width: '28rem' }">
+<p-dialog [modal]="true" [(visible)]="showInfoScaled" (onHide)="onInfoModalHide()"
+  [styleClass]="'modern-dialog'" [style]="{ width: '28rem' }" [draggable]="false" [resizable]="false">
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 text-lg font-semibold text-primary">
+      Información de Escalado
+    </div>
+  </ng-template>
   @if (selectedScaledAnimal()?.scaled?.length > 0) {
   <div class="p-fluid">
     <!-- Mensajes de Estado -->
@@ -263,18 +274,18 @@
     <!-- Comentarios de la conversación -->
     <div>
       <div class="field mb-4 text-sm">
-        <!-- Mensajes para el Administrador: su comentario a la derecha -->
+        <!-- Mensajes del Moderador -->
         @if (moderatorData(); as modData) {
         <div class="flex justify-content-end">
-          <div class="content-message">
+          <div class="content-message bg-gray-100 p-3 rounded-lg shadow-sm">
             <p><strong>{{modData.name}}</strong> (Moderador)</p>
             <p>{{ modData.comment }}</p>
           </div>
         </div>
         }
         @if (adminData(); as adminData) {
-        <div class="flex justify-content-start">
-          <div class="content-message">
+        <div class="flex justify-content-start mt-2">
+          <div class="content-message bg-blue-50 p-3 rounded-lg shadow-sm">
             <p><strong>{{adminData.name}}</strong> (Administrador)</p>
             <p>{{ adminData.comment }}</p>
           </div>
@@ -286,7 +297,7 @@
     <!-- Panel de acción para el administrador -->
     @if (showAdminActionPanel()) {
     <div class="flex items-center mb-4 mt-4">
-      <textarea rows="3" cols="100%" pTextarea [(ngModel)]="scaleComment"
+      <textarea rows="3" style="width: 100%;" pTextarea [(ngModel)]="scaleComment"
         placeholder="Escribe tu mensaje aqui..."></textarea>
     </div>
     }
@@ -305,19 +316,6 @@
     </div>
   </div>
   }
-</p-dialog>
-
-<p-dialog header="Escalar a {{selectedScaledAnimal()?.name}} a un administrador" [modal]="true"
-  [(visible)]="showModalScaled" [style]="{ width: '25rem' }">
-  <span class="p-text-secondary block mb-4">Envia un mensaje a un administrador para que revise tu caso.</span>
-  <div class="flex items-center mb-4">
-    <textarea rows="5" cols="100%" pTextarea [(ngModel)]="scaleComment"
-      placeholder="Escribe tu mensaje aqui..."></textarea>
-  </div>
-  <div class="flex justify-end gap-2">
-    <p-button label="Cancelar" severity="secondary" (click)="showModalScaled = false" />
-    <p-button label="Enviar" icon="pi pi-send" [disabled]="scaleComment === ''" (click)="sendScaledAnimal()" />
-  </div>
 </p-dialog>
 
 <p-toast />

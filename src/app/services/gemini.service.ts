@@ -84,4 +84,27 @@ export class GeminiService {
     }
     throw new Error('No se pudo generar un resumen.');
   }
+
+  /**
+   * Detecta si un texto contiene lenguaje inapropiado.
+   * @param text El texto a analizar.
+   * @returns Una promesa que resuelve a `true` si se encuentra lenguaje inapropiado, de lo contrario `false`.
+   */
+  async checkForProfanity(text: string): Promise<boolean> {
+    const prompt = `
+      Eres un sistema de moderación de contenido. Tu tarea es detectar si el siguiente texto contiene alguna palabra malsonante, insulto o lenguaje inapropiado en español.
+      Analiza el texto: "${text}"
+      Responde únicamente con 'true' si contiene lenguaje inapropiado, y únicamente con 'false' si no lo contiene.
+    `;
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const responseText = result.response.text().trim().toLowerCase();
+      return responseText === 'true';
+    } catch (error) {
+      console.error('Error en la moderación de contenido con IA:', error);
+      // En caso de error, asumimos que el contenido es válido para no bloquear al usuario.
+      return false;
+    }
+  }
 }

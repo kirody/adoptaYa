@@ -189,8 +189,8 @@
           </div>
         </div>
         <div class="form-buttons">
-          <p-button label="Guardar cambios" icon="pi pi-save" type="submit" [disabled]="!animalForm.valid"
-            [raised]="true" [rounded]="true"></p-button>
+          <p-button label="Guardar cambios" icon="pi pi-save" type="submit" [loading]="isSaving"
+            [disabled]="!animalForm.valid || isSaving" [raised]="true" [rounded]="true"></p-button>
         </div>
       </div>
     </form>

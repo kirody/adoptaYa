@@ -42,6 +42,8 @@ import { LogService } from '../../../services/log.service';
 import { AuthService } from '../../../services/auth.service';
 import { UserData } from '../../../models/user-data';
 import { GeminiService } from '../../../services/gemini.service';
+import { UsersService } from '../../../services/users.service';
+import { InfractionsService } from '../../../services/infractions.service';
 
 @Component({
   selector: 'app-animal-form',
@@ -94,6 +96,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   protectors: any[] = [];
   dataProtector: any;
   private user: UserData | null = null;
+  isSaving = false;
 
   constructor(
     private fb: FormBuilder,
@@ -103,6 +106,8 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     private logService: LogService,
     private authService: AuthService,
     private geminiService: GeminiService,
+    private userService: UsersService,
+    private infractionsService: InfractionsService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -213,46 +218,124 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    try {
-      if (this.isEditMode && this.animalId) {
-        const animalData = this.animalForm.value;
-        await this.animalService.updateAnimal(
-          this.animalId,
-          animalData
-        );
-        if (this.user) {
-          const details = `Se actualizó el animal '${animalData.name}'.`;
-          await this.logService.addLog('Animal actualizado', details, this.user, 'Añadir animales');
-        }
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Animal actualizado correctamente.',
-        });
-        this.router.navigate(['/panel-gestion']);
-      } else {
-        const animalData = this.animalForm.value;
-        await this.animalService.addAnimal(animalData);
-        if (this.user) {
-          const details = `Se añadió un nuevo animal: '${animalData.name}'.`;
-          await this.logService.addLog('Animal añadido', details, this.user, 'Añadir animales');
-        }
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Animal añadido correctamente.',
-        });
-        this.animalForm.reset();
+    this.isSaving = true;
+    this.animalForm.disable();
+
+    // -- Inicio de la validación con IA --
+    const fieldsToCheck = {
+      name: 'Nombre',
+      description: 'Descripción'
+    };
+    const inappropriateFields = [];
+
+    for (const fieldName in fieldsToCheck) {
+      const fieldValue = this.animalForm.get(fieldName)?.value;
+      if (fieldValue && await this.geminiService.checkForProfanity(fieldValue)) {
+        inappropriateFields.push(fieldsToCheck[fieldName as keyof typeof fieldsToCheck]);
+        // Marcar el campo como inválido visualmente
+        this.animalForm.get(fieldName)?.setErrors({ 'profanity': true });
       }
-    } catch (err: any) {
-      const action = this.isEditMode ? 'actualizar' : 'añadir';
+    }
+
+    if (inappropriateFields.length > 0) {
+      // Si el usuario es un moderador, se suspende la cuenta.
+      if (this.user?.role === 'ROLE_MOD') {
+        for (const field of inappropriateFields) {
+          try {
+            const infractionData = {
+              userId: this.user.uid,
+              username: this.user.username,
+              userEmail: this.user.email,
+              context: {
+                entity: 'animal',
+                entityId: this.animalId || 'nuevo',
+                fieldName: field,
+              },
+              infringingText: this.animalForm.get(field.toLowerCase())?.value,
+              actionTaken: 'user_suspended', // La acción que se tomará
+            };
+            await this.infractionsService.addInfraction(infractionData);
+            await this.userService.updateUser(this.user.uid ?? '', { status: 'suspended' });
+            const details = `El moderador '${this.user.username}' ha sido suspendido automáticamente por usar lenguaje inapropiado en el campo: ${field}.`;
+            await this.logService.addLog('Suspensión automática de moderador', details, this.user, 'Sistema');
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Cuenta Suspendida',
+              detail: 'Tu cuenta ha sido suspendida por uso de lenguaje inapropiado. Serás desconectado.',
+              life: 8000
+            });
+            setTimeout(() => {
+              this.authService.logout();
+              this.router.navigate(['/login']);
+            }, 8000);
+          } catch (error) {
+            console.error('Error al procesar la infracción y suspender al moderador:', error);
+          }
+        }
+        return; // Detiene cualquier otra acción
+      }
+
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: err.message || `Ha ocurrido un error al ${action} el animal.`,
+        summary: 'Contenido Inapropiado',
+        detail: `Se ha detectado lenguaje inapropiado en los campos: ${inappropriateFields.join(', ')}. Por favor, revísalos.`,
+        life: 6000
       });
-    } finally {
-      this.animalForm.enable(); // Vuelve a habilitar los campos
+      this.isSaving = false;
+      this.animalForm.enable();
+      return; // Detiene el proceso de guardado
+    } else {
+      // Si no hay lenguaje inapropiado, asegurarse de que los errores se limpien
+      for (const fieldName in fieldsToCheck) {
+        if (this.animalForm.get(fieldName)?.hasError('profanity')) {
+          this.animalForm.get(fieldName)?.setErrors(null);
+        }
+      }
+
+      try {
+        if (this.isEditMode && this.animalId) {
+          const animalData = this.animalForm.value;
+          await this.animalService.updateAnimal(
+            this.animalId,
+            animalData
+          );
+          if (this.user) {
+            const details = `Se actualizó el animal '${animalData.name}'.`;
+            await this.logService.addLog('Animal actualizado', details, this.user, 'Añadir animales');
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Animal actualizado correctamente.',
+          });
+          this.router.navigate(['/panel-gestion']);
+        } else {
+          const animalData = this.animalForm.value;
+          await this.animalService.addAnimal(animalData);
+          if (this.user) {
+            const details = `Se añadió un nuevo animal: '${animalData.name}'.`;
+            await this.logService.addLog('Animal añadido', details, this.user, 'Añadir animales');
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Animal añadido correctamente.',
+          });
+          this.animalForm.reset();
+        }
+      } catch (err: any) {
+        const action = this.isEditMode ? 'actualizar' : 'añadir';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err.message || `Ha ocurrido un error al ${action} el animal.`,
+        });
+      } finally {
+        this.isSaving = false;
+        if (!this.isAnimalScaled) {
+          this.animalForm.enable(); // Vuelve a habilitar los campos si no está escalado
+        }
+      }
     }
   }
 
