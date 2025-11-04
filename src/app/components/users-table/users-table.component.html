@@ -46,9 +46,9 @@
           </div>
         </td>
         <td>
-          <p-tag [value]="getTranslatedStatus(user.status)" [severity]="getStatusSeverity(user.status)"
-            pTooltip="Este usuario tiene una infracción pendiente de revisión" tooltipPosition="top">
-            <i *ngIf="user.status === 'infraction'" class="fa-solid fa-triangle-exclamation text-orange-500"></i>
+          <p-tag [value]="getTranslatedStatus(user.status)" [severity]="getStatusSeverity(user.status)">
+            <i *ngIf="user.status === 'infraction'" class="fa-solid fa-triangle-exclamation text-orange-500"
+              pTooltip="Este usuario tiene una infracción pendiente de revisión" tooltipPosition="top"></i>
           </p-tag>
         </td>
         <td>
