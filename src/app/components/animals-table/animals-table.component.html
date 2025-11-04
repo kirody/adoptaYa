@@ -277,7 +277,7 @@
         <!-- Mensajes del Moderador -->
         @if (moderatorData(); as modData) {
         <div class="flex justify-content-end">
-          <div class="content-message bg-gray-100 p-3 rounded-lg shadow-sm">
+          <div class="content-message">
             <p><strong>{{modData.name}}</strong> (Moderador)</p>
             <p>{{ modData.comment }}</p>
           </div>
@@ -285,7 +285,7 @@
         }
         @if (adminData(); as adminData) {
         <div class="flex justify-content-start mt-2">
-          <div class="content-message bg-blue-50 p-3 rounded-lg shadow-sm">
+          <div class="content-message">
             <p><strong>{{adminData.name}}</strong> (Administrador)</p>
             <p>{{ adminData.comment }}</p>
           </div>
