@@ -72,7 +72,7 @@ import { DialogModule } from "primeng/dialog";
     ToggleButtonModule,
     DividerModule,
     DialogModule
-],
+  ],
   templateUrl: './animal-form.component.html',
   styleUrls: ['./animal-form.component.scss'],
   providers: [MessageService],
@@ -98,8 +98,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   protectors: any[] = [];
   dataProtector: any;
   private user: UserData | null = null;
-  isSaving = false;
+  spinnerModal = false;
   showModal = false;
+  textModal = '';
 
   constructor(
     private fb: FormBuilder,
@@ -187,6 +188,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   }
 
   private async loadAnimalData(id: string): Promise<void> {
+    this.setSpinner(true, 'Cargando...');
     try {
       const animalData = (await this.animalService.getAnimalById(id)) as any;
       if (animalData) {
@@ -200,16 +202,18 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         // 2. Corrección para la Raza (race):
         // Poblamos la lista de razas ANTES de usar patchValue para evitar la condición de carrera.
         this.races = RACES_BY_SPECIES[animalData.specie] || [];
-        this.animalForm.patchValue(animalData);
+        this.animalForm.patchValue(animalData, { emitEvent: false });
 
         this.checkAnimalScaled();
         this.loadProtectorData(this.animalForm.value.protectressID);
+        this.setSpinner(false);
       } else {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: 'No se encontró el animal para editar.',
         });
+        this.setSpinner(false);
         this.router.navigate(['/panel-gestion']); // Redirigir si no se encuentra
       }
     } catch (err) {
@@ -218,6 +222,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         summary: 'Error',
         detail: 'No se pudo cargar la información del animal.',
       });
+      this.setSpinner(false);
     } finally { }
   }
 
@@ -232,7 +237,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isSaving = true;
+    this.setSpinner(true, 'Guardando...');
 
     // Obtenemos los datos ANTES de deshabilitar el formulario
     const animalData = this.animalForm.value;
@@ -256,7 +261,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
     if (inappropriateFields.length > 0) {
       await this.handleInappropriateContent(inappropriateFields);
-      this.isSaving = false;
+      this.setSpinner(false);
       this.animalForm.enable();
       return; // Detiene el proceso de guardado
     } else {
@@ -304,7 +309,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           detail: err.message || `Ha ocurrido un error al ${action} el animal.`,
         });
       } finally {
-        this.isSaving = false;
+        this.setSpinner(false);
         if (!this.isAnimalScaled) {
           this.animalForm.enable(); // Vuelve a habilitar los campos si no está escalado
         }
@@ -357,34 +362,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  async generateAnimalAI(): Promise<void> {
-    this.animalForm.disable(); // Deshabilita todos los campos del formulario
-
-    try {
-      const response = await this.geminiService.generateAnimal();
-      // patchValue es ideal porque rellena los campos que coinciden
-      // y no da error si faltan algunos.
-      this.animalForm.patchValue(response);
-      this.animalForm.get('race')?.setValue(response.race);
-      this.messageService.add({
-        severity: 'success',
-        summary: '¡Éxito!',
-        detail: 'Datos del animal generados y cargados en el formulario.',
-      });
-    } catch (err: any) {
-      console.error('Error al generar datos con IA:', err);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error de IA',
-        detail:
-          err.message ||
-          'No se pudieron generar los datos. Inténtalo de nuevo.',
-      });
-    } finally {
-      this.animalForm.enable(); // Vuelve a habilitar los campos
-    }
-  }
-
   async paste() {
     try {
       // Lee el texto del portapapeles del usuario
@@ -408,6 +385,11 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         detail: 'No se pudo acceder al portapapeles.',
       });
     }
+  }
+
+  private setSpinner(show: boolean, text: string = ''): void {
+    this.spinnerModal = show;
+    this.textModal = text;
   }
 
   checkAnimalScaled() {

@@ -23,11 +23,6 @@
                 Información principal del animal.
               </span>
               <span class="text-gray-400 text-sm mt-2" *ngIf="isEditMode">ID: {{ animalForm.value.id }}</span>
-              <div class="mt-3">
-                <p-button label="Generar con IA" icon="pi pi-sparkles" (click)="generateAnimalAI()" severity="secondary"
-                  [raised]="true" [rounded]="true">
-                </p-button>
-              </div>
             </div>
           </div>
           <div class="w-full p-4">
@@ -189,13 +184,33 @@
           </div>
         </div>
         <div class="form-buttons">
-          <p-button label="Guardar cambios" icon="pi pi-save" type="submit" [loading]="isSaving"
-            [disabled]="!animalForm.valid || isSaving" [raised]="true" [rounded]="true"></p-button>
+          <p-button label="Guardar cambios" icon="pi pi-save" type="submit"
+            [disabled]="!animalForm.valid || spinnerModal" [raised]="true" [rounded]="true"></p-button>
         </div>
       </div>
     </form>
   </div>
 </div>
+
+<!-- Modal de "Guardando" -->
+<p-dialog
+  header=""
+  [(visible)]="spinnerModal"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '250px' }"
+>
+  <div class="saving-modal-content">
+    <p-progressSpinner
+      styleClass="w-8 h-8"
+      strokeWidth="4"
+      animationDuration=".5s"
+    ></p-progressSpinner>
+    <span class="mt-4 text-lg font-semibold">{{textModal}}</span>
+  </div>
+</p-dialog>
 
 <p-dialog header="" [modal]="true" [(visible)]="showModal" [style]="{ width: '30rem' }"
   [closable]="false" [closeOnEscape]="false" [dismissableMask]="false">

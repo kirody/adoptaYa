@@ -41,22 +41,25 @@ export class GeminiService {
     return result.response.text();
   }
 
-  async generateAnimal(): Promise<any> {
+  /* async generateAnimal(): Promise<any> {
     const prompt = `
-    Genera un objeto JSON para un animal de compañía en adopción en España.
-    El objeto debe tener las claves: name, specie, age, race, province, description, urlImage, protectressName, protectressPhone, protectressEmail.
+    Genera un objeto JSON para un animal de compañía ficticio para adopción en España.
+    El objeto debe tener las claves: name, specie, age, race, province, description, urlImage, gender, size, state, protectressName, protectressPhone, protectressEmail.
 
     Sigue estas reglas ESTRICTAMENTE:
-    - "specie" DEBE ser uno de los siguientes valores: [${SPECIES.join(', ')}].
-    - "province" DEBE ser una de las siguientes provincias: [${PROVINCES_SPAIN.join(', ')}].
-    - Si "specie" es "Perro", "race" DEBE ser uno de: [${DOG_BREEDS.join(', ')}].
-    - Si "specie" es "Gato", "race" DEBE ser uno de: [${CAT_BREEDS.join(', ')}].
-    - "gender" DEBE ser uno de los siguientes valores: [${GENDERS.join(', ')}].
-    - "size" DEBE ser uno de los siguientes valores: [${SIZES.join(', ')}].
-    - "description" DEBE ser un texto descriptivo del animal, atractivo para adopción.
-    - "age" debe ser un número entre 0 y 20.
-    - "protectressName" DEBE ser un nombre válido para una protectora de animales.
-    - "urlImage" DEBES generar una imagen no muy pesada para el animal basada en el campo "specie".
+    - "name": DEBE ser un nombre de animal común en español (ej: "Toby", "Luna").
+    - "specie" DEBE ser "Gato". No uses otro valor.
+    - "race": DEBE ser uno de los siguientes valores: [${CAT_BREEDS.join(', ')}].
+    - "age": DEBE ser una fecha de nacimiento ficticia en formato 'YYYY-MM-DD'. El animal debe tener entre 0 y 15 años.
+    - "province": DEBE ser una de las provincias de la lista [${PROVINCES_SPAIN.join(', ')}].
+    - "description": DEBE ser un texto descriptivo y emotivo del animal, de 2 o 3 frases, que invite a la adopción.
+    - "urlImage": DEBES generar una URL a una imagen realista y de alta calidad del animal. La imagen debe ser libre de derechos y apropiada.
+    - "gender": DEBE ser uno de los siguientes valores: [${GENDERS.join(', ')}].
+    - "size": DEBE ser uno de los siguientes valores: [${SIZES.join(', ')}].
+    - "state": DEBE ser exactamente 'En adopción'. No uses otro valor.
+    - "protectressName": DEBE ser un nombre de protectora de animales creíble. Por ejemplo: "Amigos Peludos", "Segunda Oportunidad", "Huellas Felices". Usa el valor "Abrazos" frecuentemente.
+    - "protectressPhone": DEBE ser un número de teléfono ficticio con formato español (9 dígitos).
+    - "protectressEmail": DEBE ser un email ficticio con formato válido (ej: "contacto@protectora.org").
 
     Responde únicamente con el objeto JSON, sin texto adicional ni formato markdown.
   `;
@@ -66,7 +69,7 @@ export class GeminiService {
     const responseText = result.response.text().replace(/```json|```/g, '').trim(); // Limpia el string de respuesta
 
     return JSON.parse(responseText) as Animal;
-  }
+  } */
 
   /**
    * Genera un resumen de un texto utilizando Gemini.
