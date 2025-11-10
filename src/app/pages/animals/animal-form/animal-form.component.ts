@@ -222,7 +222,10 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
 
     this.isSaving = true;
-    this.animalForm.disable();
+
+    // Obtenemos los datos ANTES de deshabilitar el formulario
+    const animalData = this.animalForm.value;
+    this.animalForm.disable(); // Deshabilitamos para prevenir cambios durante el guardado
 
     // -- Inicio de la validación con IA --
     const fieldsToCheck = {
@@ -232,8 +235,8 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     const inappropriateFields = [];
 
     for (const fieldName in fieldsToCheck) {
-      const fieldValue = this.animalForm.get(fieldName)?.value;
-      if (fieldValue && await this.geminiService.checkForProfanity(fieldValue)) {
+      // Usamos los datos guardados en 'animalData' para la validación
+      if (animalData[fieldName] && await this.geminiService.checkForProfanity(animalData[fieldName])) {
         inappropriateFields.push(fieldsToCheck[fieldName as keyof typeof fieldsToCheck]);
         // Marcar el campo como inválido visualmente
         this.animalForm.get(fieldName)?.setErrors({ 'profanity': true });
@@ -255,7 +258,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
       try {
         if (this.isEditMode && this.animalId) {
-          const animalData = this.animalForm.value;
           await this.animalService.updateAnimal(
             this.animalId,
             animalData
@@ -271,7 +273,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           });
           this.router.navigate(['/panel-gestion']);
         } else {
-          const animalData = this.animalForm.value;
           await this.animalService.addAnimal(animalData);
           if (this.user) {
             const details = `Se añadió un nuevo animal: '${animalData.name}'.`;
@@ -314,7 +315,8 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
               entityId: this.animalId || 'nuevo',
               fieldName: field,
             },
-            infringingText: this.animalForm.get('description')?.value,
+            // Usamos el valor del formulario deshabilitado con getRawValue o de la variable que ya teníamos
+            infringingText: this.animalForm.getRawValue().description,
             actionTaken: 'user_suspended', // La acción que se tomará
           };
           await this.infractionsService.addInfraction(infractionData);
