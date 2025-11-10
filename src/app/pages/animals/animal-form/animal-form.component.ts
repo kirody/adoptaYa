@@ -188,9 +188,20 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
   private async loadAnimalData(id: string): Promise<void> {
     try {
-      const animalData = await this.animalService.getAnimalById(id);
+      const animalData = (await this.animalService.getAnimalById(id)) as any;
       if (animalData) {
+        // 1. Corrección para la Fecha de Nacimiento (age):
+        // Convertimos el Timestamp de Firestore a un objeto Date de JavaScript
+        // que el componente p-datepicker puede entender.
+        if (animalData.age && typeof animalData.age.toDate === 'function') {
+          animalData.age = animalData.age.toDate();
+        }
+
+        // 2. Corrección para la Raza (race):
+        // Poblamos la lista de razas ANTES de usar patchValue para evitar la condición de carrera.
+        this.races = RACES_BY_SPECIES[animalData.specie] || [];
         this.animalForm.patchValue(animalData);
+
         this.checkAnimalScaled();
         this.loadProtectorData(this.animalForm.value.protectressID);
       } else {
