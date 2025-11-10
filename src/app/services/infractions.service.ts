@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc } from 'firebase/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '../../environments/environment';
 
@@ -30,7 +30,26 @@ export class InfractionsService {
     );
   }
 
-  // Aquí podrías añadir más métodos en el futuro, como:
-  // getInfractions() - para que un admin las vea en una tabla.
-  // updateInfractionStatus(id, newStatus) - para marcarla como 'revisada' o 'resuelta'.
+  /**
+   * Obtiene todas las infracciones registradas para un usuario específico, ordenadas por fecha.
+   * @param userId El UID del usuario.
+   * @returns Una promesa que se resuelve con un array de todas las infracciones del usuario.
+   */
+  async getAllInfractionsByUserId(userId: string): Promise<any[]> {
+    try {
+      const infractionsCol = collection(db, 'infractions');
+      const q = query(infractionsCol, where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+
+      const infractions: any[] = [];
+      querySnapshot.forEach((doc) => {
+        infractions.push({ id: doc.id, ...doc.data() });
+      });
+
+      return infractions;
+    } catch (error) {
+      console.error("Error al obtener las infracciones:", error);
+      throw error; // Re-lanza el error para que el componente lo maneje
+    }
+  }
 }

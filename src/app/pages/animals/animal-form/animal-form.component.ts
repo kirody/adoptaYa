@@ -241,44 +241,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
 
     if (inappropriateFields.length > 0) {
-      // Si el usuario es un moderador, se suspende la cuenta.
-      if (this.user?.role === 'ROLE_MOD') {
-        for (const field of inappropriateFields) {
-          try {
-            const infractionData = {
-              userId: this.user.uid,
-              username: this.user.username,
-              userEmail: this.user.email,
-              context: {
-                entity: 'animal',
-                entityId: this.animalId || 'nuevo',
-                fieldName: field,
-              },
-              infringingText: this.animalForm.get('description')?.value,
-              actionTaken: 'user_suspended', // La acción que se tomará
-            };
-            await this.infractionsService.addInfraction(infractionData);
-            await this.userService.updateUser(this.user.uid ?? '', { status: 'infraction' });
-            const details = `El moderador '${this.user.username}' ha sido suspendido automáticamente por usar lenguaje inapropiado en el campo: ${field}.`;
-            await this.logService.addLog('Suspensión automática de moderador', details, this.user, 'Sistema');
-            this.showModal = true;
-            setTimeout(() => {
-              this.authService.logout();
-              this.router.navigate(['/login']);
-            }, 8000);
-          } catch (error) {
-            console.error('Error al procesar la infracción y suspender al moderador:', error);
-          }
-        }
-        return; // Detiene cualquier otra acción
-      }
-
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Contenido Inapropiado',
-        detail: `Se ha detectado lenguaje inapropiado en los campos: ${inappropriateFields.join(', ')}. Por favor, revísalos.`,
-        life: 6000
-      });
+      await this.handleInappropriateContent(inappropriateFields);
       this.isSaving = false;
       this.animalForm.enable();
       return; // Detiene el proceso de guardado
@@ -335,6 +298,50 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         }
       }
     }
+  }
+
+  private async handleInappropriateContent(inappropriateFields: string[]): Promise<void> {
+    // Si el usuario es un moderador, se suspende la cuenta.
+    if (this.user?.role === 'ROLE_MOD') {
+      for (const field of inappropriateFields) {
+        try {
+          const infractionData = {
+            userId: this.user.uid,
+            username: this.user.username,
+            userEmail: this.user.email,
+            context: {
+              entity: 'animal',
+              entityId: this.animalId || 'nuevo',
+              fieldName: field,
+            },
+            infringingText: this.animalForm.get('description')?.value,
+            actionTaken: 'user_suspended', // La acción que se tomará
+          };
+          await this.infractionsService.addInfraction(infractionData);
+          await this.userService.updateUser(this.user.uid ?? '', { status: 'infraction' });
+          const details = `El moderador '${this.user.username}' ha sido suspendido automáticamente por usar lenguaje inapropiado en el campo: ${field}.`;
+          await this.logService.addLog('Suspensión automática de moderador', details, this.user, 'Sistema');
+          this.showModal = true;
+          setTimeout(() => {
+            this.authService.logout();
+            this.router.navigate(['/login']);
+          }, 8000);
+        } catch (error) {
+          console.error('Error al procesar la infracción y suspender al moderador:', error);
+        }
+      }
+      return; // Detiene cualquier otra acción
+    }
+
+    // Si no es un moderador, solo muestra un mensaje de error.
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Contenido Inapropiado',
+      detail: `Se ha detectado lenguaje inapropiado en los campos: ${inappropriateFields.join(
+        ', '
+      )}. Por favor, revísalos.`,
+      life: 6000,
+    });
   }
 
   async generateAnimalAI(): Promise<void> {

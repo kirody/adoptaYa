@@ -75,9 +75,11 @@
           <p-button icon="fa-solid fa-key" pTooltip="Restablecer contraseña" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-info"
             (click)="confirmPasswordReset($event, user)"></p-button>
+          <p-button icon="fa-solid fa-triangle-exclamation" pTooltip="Ver infracción" tooltipPosition="top"
+            styleClass="p-button-rounded p-button-text p-button-danger" (click)="viewUserInfraction(user)"
+            [disabled]="user.status !== 'infraction'"></p-button>
           <p-button icon="fa-solid fa-clipboard-list" pTooltip="Ver/Añadir notas internas" tooltipPosition="top"
-            styleClass="p-button-rounded p-button-text p-button-secondary" (click)="openNotesDialog(user)"
-            [disabled]="user.role !== 'ROLE_MOD'"></p-button>
+            styleClass="p-button-rounded p-button-text p-button-secondary" (click)="openNotesDialog(user)"></p-button>
         </td>
       </tr>
     </ng-template>
@@ -162,6 +164,68 @@
         [disabled]="!notesContent.trim()" [loading]="isSummarizing" styleClass="p-button-help p-button-sm" />
       <p-button label="Guardar Nota" size="small" icon="pi pi-check" (click)="addNote()"
         [disabled]="!notesContent.trim() || notesContent.length > MAX_NOTE_LENGTH" [loading]="isAddingNote" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Dialog for Infraction Details -->
+  <p-dialog header="Historial de Infracciones de {{selectedUserForInfraction?.username}}"
+    [(visible)]="displayInfractionDialog" [modal]="true" [style]="{width: '50vw'}" [draggable]="false"
+    [resizable]="false">
+    @if (infractionHistory.length > 0) {
+    <p-accordion [(value)]="activeInfractionAccordionPanels" [multiple]="true">
+      @for (infraction of infractionHistory; track infraction.id; let i = $index) {
+      <p-accordion-panel [value]="i.toString()">
+        <p-accordion-header>
+          <div class="flex align-items-center gap-2 w-full">
+            <i class="pi pi-exclamation-triangle text-orange-500"></i>
+            <span class="font-bold">Infracción #{{ infractionHistory.length - i }}</span>
+            <span class="flex-1 text-right font-normal text-sm text-gray-500">{{ infraction.timestamp.toDate() |
+              date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </p-accordion-header>
+        <p-accordion-content>
+          <div class="infraction-details">
+            <div class="field mb-3">
+              <label class="font-semibold">Usuario asociado:</label>
+              <span class="ml-2">{{ infraction.userEmail || 'N/A' }}</span>
+            </div>
+            <div class="field mb-3">
+              <label class="font-semibold">Entidad afectada:</label>
+              <span class="ml-2">{{ infraction.entity || 'N/A' }}</span>
+            </div>
+            <div class="field mb-3">
+              <label class="font-semibold">ID de Entidad:</label>
+              <span class="ml-2">{{ infraction.entityId || 'N/A' }}</span>
+            </div>
+            <div class="field mb-3">
+              <label class="font-semibold">Campo afectado:</label>
+              <span class="ml-2">{{ infraction.fieldName || 'N/A' }}</span>
+            </div>
+            <div class="field mb-3">
+              <label class="font-semibold">Estado de la infracción:</label>
+              <p-tag [value]="infraction.status || 'Desconocido'"
+                [severity]="getStatusSeverity(infraction.status)"></p-tag>
+            </div>
+            <div class="field mb-3" *ngIf="infraction.actionTaken">
+              <label class="font-semibold">Acción tomada:</label>
+              <p-tag [value]="infraction.actionTaken" severity="info"></p-tag>
+            </div>
+            <div class="field">
+              <label class="font-semibold">Contenido reportado:</label>
+              <div class="reported-content border-1 surface-border p-3 border-round mt-2 bg-surface-50">
+                <p class="m-0" style="white-space: pre-wrap;">{{ infraction.infringingText }}</p>
+              </div>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+      }
+    </p-accordion>
+    } @else {
+    <p class="text-center">No se encontraron detalles para esta infracción.</p>
+    }
+    <ng-template pTemplate="footer">
+      <p-button label="Cerrar" icon="pi pi-times" (click)="displayInfractionDialog=false" styleClass="p-button-text" />
     </ng-template>
   </p-dialog>
 </div>

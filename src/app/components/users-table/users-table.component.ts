@@ -11,6 +11,7 @@ import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { InfractionsService } from '../../services/infractions.service';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { CardNodataComponent } from '../card-nodata/card-nodata.component';
 import { UsersService } from '../../services/users.service';
@@ -25,6 +26,7 @@ import { AuthService } from '../../services/auth.service';
 import { GeminiService } from '../../services/gemini.service';
 import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
 import { TagModule } from "primeng/tag";
+import { AccordionModule } from 'primeng/accordion';
 
 @Component({
   selector: 'app-users-table',
@@ -46,7 +48,8 @@ import { TagModule } from "primeng/tag";
     InputIconModule,
     InputTextModule,
     OrderByDatePipe,
-    TagModule
+    TagModule,
+    AccordionModule
 ],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
@@ -59,6 +62,7 @@ export class UsersTableComponent implements OnDestroy {
   private logService = inject(LogService);
   private authService = inject(AuthService);
   private geminiService = inject(GeminiService);
+  private infractionsService = inject(InfractionsService);
 
   @Input() isLoading = true;
   roles = [
@@ -81,6 +85,12 @@ export class UsersTableComponent implements OnDestroy {
   isAddingNote: boolean = false;
   isSummarizing: boolean = false;
   readonly MAX_NOTE_LENGTH = 80;
+
+  // Propiedades para el diálogo de infracciones
+  displayInfractionDialog: boolean = false;
+  selectedUserForInfraction: any | null = null;
+  infractionHistory: any[] = [];
+  activeInfractionAccordionPanels: string[] = ['0'];
 
   ngOnInit(): void {
     // Inicializa los permisos
@@ -307,6 +317,33 @@ export class UsersTableComponent implements OnDestroy {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo añadir la nota.' });
     } finally {
       this.isAddingNote = false;
+    }
+  }
+
+  async viewUserInfraction(user: any) {
+    if (!user || user.status !== 'infraction') return;
+
+    this.selectedUserForInfraction = user;
+    this.isLoading = true;
+    this.infractionHistory = []; // Limpiamos el historial previo
+    try {
+      this.activeInfractionAccordionPanels = ['0']; // Resetea para abrir el primer panel por defecto
+      // Llamamos al servicio para obtener TODAS las infracciones del usuario
+      const infractions = await this.infractionsService.getAllInfractionsByUserId(user.uid);
+
+      // Ordenamos las infracciones por fecha (timestamp) de más reciente a más antigua
+      infractions.sort((a, b) => {
+        const dateA = a.timestamp.toDate();
+        const dateB = b.timestamp.toDate();
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      this.infractionHistory = infractions;
+      this.displayInfractionDialog = true;
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el historial de infracciones.' });
+    } finally {
+      this.isLoading = false;
     }
   }
 
