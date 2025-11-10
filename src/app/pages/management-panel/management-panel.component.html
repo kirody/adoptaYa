@@ -61,7 +61,7 @@
         <p-tab value="5" class="flex items-center !gap-2" (click)="tabProtectors()" *ngIf="canManageProtectors()">
           <i class="fa fa-shield-alt"></i>
           <span class="font-bold whitespace-nowrap">Protectoras</span>
-          <p-tag *ngIf="!isLoading" severity="info" [value]="dataTable().length" [rounded]="true" />
+          <p-tag *ngIf="!isLoading" severity="info" [value]="countTabProtectors" [rounded]="true" />
         </p-tab>
         <p-tab value="4" class="flex items-center !gap-2" (click)="tabLogs()" *ngIf="canManageLogs()">
           <i class="fa fa-history"></i>

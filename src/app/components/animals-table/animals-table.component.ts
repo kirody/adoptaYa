@@ -108,7 +108,7 @@ export class AnimalsTableComponent implements OnChanges {
   toggleHideAssignedToAdmin(): void {
     this.hideAssignedToAdmin = !this.hideAssignedToAdmin;
     if (this.hideAssignedToAdmin) {
-      this.table?.filter(false, 'assignedToAdmin', 'equals');
+      this.table?.filter(true, 'assignedToAdmin', 'notEquals');
     } else {
       this.table?.filter(null, 'assignedToAdmin', 'equals'); // Limpia el filtro de esa columna
     }
@@ -118,6 +118,8 @@ export class AnimalsTableComponent implements OnChanges {
     this.showOnlyAssignedToMe = !this.showOnlyAssignedToMe;
     if (this.showOnlyAssignedToMe) {
       this.table?.filter(true, 'assignedToAdmin', 'equals');
+      console.log(this.table?.filter(true, 'assignedToAdmin', 'equals'));
+
     } else {
       // Limpia el filtro específico de la columna 'assignedToAdmin'
       this.table?.filter(null, 'assignedToAdmin', 'equals');

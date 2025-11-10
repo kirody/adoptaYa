@@ -17,7 +17,7 @@
         </div>
 
         @if (user?.role === 'ROLE_MOD') {
-        <p-button (click)="toggleHideAssignedToAdmin()" [label]="hideAssignedToAdmin ? 'Mostrar todos' : 'Ocultar asignados a admin'"
+        <p-button (click)="toggleHideAssignedToAdmin()" [label]="hideAssignedToAdmin ? 'Mostrar todos' : 'Ocultar'"
           [icon]="hideAssignedToAdmin ? 'pi pi-eye' : 'pi pi-eye-slash'" severity="info" [outlined]="true"
           pTooltip="Oculta los animales que ya están siendo revisados por un administrador" tooltipPosition="top"></p-button>
         }
@@ -135,6 +135,11 @@
             tooltipPosition="top"></p-button>
           }
         </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="10" class="text-center">No se encontraron resultados.</td>
       </tr>
     </ng-template>
     <ng-template pTemplate="footer">

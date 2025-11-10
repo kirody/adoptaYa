@@ -94,6 +94,7 @@ export class ManagementPanelComponent implements OnInit {
   countTabPending = '';
   countTabPendingAdmin = signal('0');
   countTabRequests = '0';
+  countTabProtectors = '0';
 
   initialAnimalFilter: string | null = null;
 
@@ -115,6 +116,7 @@ export class ManagementPanelComponent implements OnInit {
       });
       this.initTabs();
       this.loadRequestsCount();
+      this.loadProtectorsCount();
     });
   }
 
@@ -150,6 +152,7 @@ export class ManagementPanelComponent implements OnInit {
   initTabs() {
     if (this.user()?.role === Roles.ADMIN) {
       this.loadRequestsCount();
+      this.loadProtectorsCount();
     }
 
     if (this.valueTab === 0) {
@@ -175,6 +178,15 @@ export class ManagementPanelComponent implements OnInit {
       console.error('Error al cargar el contador de solicitudes:', error);
     } finally {
       this.isLoadingRequestsCount.set(false);
+    }
+  }
+
+  async loadProtectorsCount() {
+    try {
+      const protectors = await this.protectorService.getProtectors();
+      this.countTabProtectors = String(protectors.length);
+    } catch (error) {
+      console.error('Error al cargar el contador de protectoras:', error);
     }
   }
 
@@ -270,6 +282,7 @@ export class ManagementPanelComponent implements OnInit {
     this.isLoading = true;
     this.protectorService.getProtectors().then((data) => {
       this.dataTable.set(data);
+      this.countTabProtectors = String(data.length);
       this.isLoading = false;
     });
   }

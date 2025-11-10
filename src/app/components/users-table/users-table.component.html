@@ -55,7 +55,7 @@
           <div class="field">
             <p-select id="state" [(ngModel)]="user.role" [options]="roles" optionLabel="label" optionValue="value"
               placeholder="Selecciona un rol" styleClass="w-full" (onChange)="updateRolUser(user)" filter="true"
-              appendTo="body" [disabled]="user.status === 'suspended'">
+              appendTo="body" [disabled]="user.status !== 'active'">
             </p-select>
           </div>
         </td>
@@ -74,12 +74,13 @@
 
           <p-button icon="fa-solid fa-key" pTooltip="Restablecer contraseña" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-info"
-            (click)="confirmPasswordReset($event, user)"></p-button>
+            (click)="confirmPasswordReset($event, user)" [disabled]="user.status !== 'active'"></p-button>
           <p-button icon="fa-solid fa-triangle-exclamation" pTooltip="Ver infracción" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-danger" (click)="viewUserInfraction(user)"
             [disabled]="user.status !== 'infraction'"></p-button>
           <p-button icon="fa-solid fa-clipboard-list" pTooltip="Ver/Añadir notas internas" tooltipPosition="top"
-            styleClass="p-button-rounded p-button-text p-button-secondary" (click)="openNotesDialog(user)"></p-button>
+            styleClass="p-button-rounded p-button-text p-button-secondary" (click)="openNotesDialog(user)"
+            [disabled]="user.status !== 'active'"></p-button>
         </td>
       </tr>
     </ng-template>
