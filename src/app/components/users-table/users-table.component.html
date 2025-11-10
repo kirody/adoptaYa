@@ -187,33 +187,35 @@
           <div class="infraction-details">
             <div class="field mb-3">
               <label class="font-semibold">Usuario asociado:</label>
-              <span class="ml-2">{{ infraction.userEmail || 'N/A' }}</span>
+              <span class="ml-2">{{ infraction.userData.userEmail || 'N/A' }}</span>
             </div>
             <div class="field mb-3">
               <label class="font-semibold">Entidad afectada:</label>
-              <span class="ml-2">{{ infraction.entity || 'N/A' }}</span>
-            </div>
-            <div class="field mb-3">
-              <label class="font-semibold">ID de Entidad:</label>
-              <span class="ml-2">{{ infraction.entityId || 'N/A' }}</span>
+              <span class="ml-2 capitalize">{{infraction.context.entityId}} {{ infraction.context.entity || 'N/A' }}</span>
             </div>
             <div class="field mb-3">
               <label class="font-semibold">Campo afectado:</label>
-              <span class="ml-2">{{ infraction.fieldName || 'N/A' }}</span>
+              <span class="ml-2">{{ infraction.context.fieldName || 'N/A' }}</span>
+            </div>
+            <div class="field mb-3">
+              <label class="font-semibold">Palabras afectadas:</label>
+              <span class="ml-2">{{ infraction.context.infringingWords?.join(', ')|| 'N/A' }}</span>
             </div>
             <div class="field mb-3">
               <label class="font-semibold">Estado de la infracción:</label>
-              <p-tag [value]="infraction.status || 'Desconocido'"
+              <p-tag [value]="infraction.status === 'pending_review' ? 'Pendiente de revisión' : 'Desconocido'"
                 [severity]="getStatusSeverity(infraction.status)"></p-tag>
             </div>
             <div class="field mb-3" *ngIf="infraction.actionTaken">
               <label class="font-semibold">Acción tomada:</label>
-              <p-tag [value]="infraction.actionTaken" severity="info"></p-tag>
+              <p-tag
+                [value]="infraction.actionTaken === 'user_suspended' ? 'Suspensión automática' : infraction.actionTaken"
+                severity="info"></p-tag>
             </div>
             <div class="field">
               <label class="font-semibold">Contenido reportado:</label>
               <div class="reported-content border-1 surface-border p-3 border-round mt-2 bg-surface-50">
-                <p class="m-0" style="white-space: pre-wrap;">{{ infraction.infringingText }}</p>
+                <p class="m-0" style="white-space: pre-wrap;">{{ infraction.context.infringingText }}</p>
               </div>
             </div>
           </div>

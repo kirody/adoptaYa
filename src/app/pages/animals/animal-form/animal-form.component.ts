@@ -241,26 +241,28 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
     // Obtenemos los datos ANTES de deshabilitar el formulario
     const animalData = this.animalForm.value;
-    this.animalForm.disable(); // Deshabilitamos para prevenir cambios durante el guardado
 
     // -- Inicio de la validación con IA --
     const fieldsToCheck = {
       name: 'Nombre',
       description: 'Descripción'
     };
-    const inappropriateFields = [];
+    const inappropriateContent: { field: string, words: string[] }[] = [];
 
     for (const fieldName in fieldsToCheck) {
       // Usamos los datos guardados en 'animalData' para la validación
-      if (animalData[fieldName] && await this.geminiService.checkForProfanity(animalData[fieldName])) {
-        inappropriateFields.push(fieldsToCheck[fieldName as keyof typeof fieldsToCheck]);
-        // Marcar el campo como inválido visualmente
-        this.animalForm.get(fieldName)?.setErrors({ 'profanity': true });
+      if (animalData[fieldName]) {
+        const profanityCheck = await this.geminiService.checkForProfanity(animalData[fieldName]);
+        if (profanityCheck.hasProfanity && profanityCheck.infringingWords) {
+          inappropriateContent.push({ field: fieldsToCheck[fieldName as keyof typeof fieldsToCheck], words: profanityCheck.infringingWords });
+          // Marcar el campo como inválido visualmente
+          this.animalForm.get(fieldName)?.setErrors({ 'profanity': true });
+        }
       }
     }
 
-    if (inappropriateFields.length > 0) {
-      await this.handleInappropriateContent(inappropriateFields);
+    if (inappropriateContent.length > 0) {
+      await this.handleInappropriateContent(inappropriateContent);
       this.setSpinner(false);
       this.animalForm.enable();
       return; // Detiene el proceso de guardado
@@ -317,27 +319,30 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async handleInappropriateContent(inappropriateFields: string[]): Promise<void> {
+  private async handleInappropriateContent(inappropriateContent: { field: string, words: string[] }[]): Promise<void> {
     // Si el usuario es un moderador, se suspende la cuenta.
     if (this.user?.role === 'ROLE_MOD') {
-      for (const field of inappropriateFields) {
+      for (const infraction of inappropriateContent) {
         try {
           const infractionData = {
-            userId: this.user.uid,
-            username: this.user.username,
-            userEmail: this.user.email,
+            userData : {
+              userId: this.user.uid,
+              username: this.user.username,
+              userEmail: this.user.email,
+            },
             context: {
               entity: 'animal',
               entityId: this.animalId || 'nuevo',
-              fieldName: field,
+              fieldName: infraction.field,
+              infringingText: this.animalForm.value.description,
+              infringingWords: infraction.words, // ¡Aquí se añaden las palabras!
             },
             // Usamos el valor del formulario deshabilitado con getRawValue o de la variable que ya teníamos
-            infringingText: this.animalForm.getRawValue().description,
             actionTaken: 'user_suspended', // La acción que se tomará
           };
           await this.infractionsService.addInfraction(infractionData);
           await this.userService.updateUser(this.user.uid ?? '', { status: 'infraction' });
-          const details = `El moderador '${this.user.username}' ha sido suspendido automáticamente por usar lenguaje inapropiado en el campo: ${field}.`;
+          const details = `El moderador '${this.user.username}' ha sido suspendido por lenguaje inapropiado en el campo: ${infraction.field}. Palabras: ${infraction.words.join(', ')}.`;
           await this.logService.addLog('Suspensión automática de moderador', details, this.user, 'Sistema');
           this.showModal = true;
           setTimeout(() => {
@@ -352,12 +357,11 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
 
     // Si no es un moderador, solo muestra un mensaje de error.
+    const fieldNames = inappropriateContent.map(i => i.field).join(', ');
     this.messageService.add({
       severity: 'error',
       summary: 'Contenido Inapropiado',
-      detail: `Se ha detectado lenguaje inapropiado en los campos: ${inappropriateFields.join(
-        ', '
-      )}. Por favor, revísalos.`,
+      detail: `Se ha detectado lenguaje inapropiado en los campos: ${fieldNames}. Por favor, revísalos.`,
       life: 6000,
     });
   }
@@ -386,6 +390,34 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       });
     }
   }
+
+  async generateDescription(): Promise<void> {
+    const { name, specie, race, age } = this.animalForm.value;
+
+    if (!name || !specie || !race || !age) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Faltan datos',
+        detail: 'Por favor, completa el nombre, especie, raza y edad para generar una descripción.',
+        life: 4000
+      });
+      return;
+    }
+
+    this.setSpinner(true, 'Generando descripción...');
+
+    try {
+      const animalData = { name, specie, race, age };
+      const generatedText = await this.geminiService.generateAdoptionText(animalData);
+      this.animalForm.patchValue({ description: generatedText });
+    } catch (error) {
+      console.error('Error al generar la descripción con IA:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error de IA', detail: 'No se pudo generar la descripción.' });
+    } finally {
+      this.setSpinner(false);
+    }
+  }
+
 
   private setSpinner(show: boolean, text: string = ''): void {
     this.spinnerModal = show;

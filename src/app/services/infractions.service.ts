@@ -38,7 +38,7 @@ export class InfractionsService {
   async getAllInfractionsByUserId(userId: string): Promise<any[]> {
     try {
       const infractionsCol = collection(db, 'infractions');
-      const q = query(infractionsCol, where('userId', '==', userId));
+      const q = query(infractionsCol, where('userData.userId', '==', userId));
       const querySnapshot = await getDocs(q);
 
       const infractions: any[] = [];

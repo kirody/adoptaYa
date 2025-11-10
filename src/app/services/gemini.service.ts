@@ -28,8 +28,7 @@ export class GeminiService {
  * @returns Una descripción optimizada para la adopción.
  */
   async generateAdoptionText(animalData: any): Promise<string> {
-    const model = this.model.getGenerativeModel({ model: 'gemini-2.0-flash' });
-    const prompt = `Crea una descripción conmovedora y persuasiva para la adopción de un animal con las siguientes características:
+    const prompt = `Crea una descripción conmovedora y persuasiva (no muy larga) para la adopción de un animal con las siguientes características:
     - Nombre: ${animalData.name}
     - Especie: ${animalData.specie}
     - Edad: ${animalData.age} años
@@ -37,7 +36,7 @@ export class GeminiService {
 
     El texto debe ser positivo y destacar los puntos fuertes del animal para atraer a posibles adoptantes.
     `;
-    const result = await model.generateContent(prompt);
+    const result = await this.model.generateContent(prompt);
     return result.response.text();
   }
 
@@ -91,23 +90,27 @@ export class GeminiService {
   /**
    * Detecta si un texto contiene lenguaje inapropiado.
    * @param text El texto a analizar.
-   * @returns Una promesa que resuelve a `true` si se encuentra lenguaje inapropiado, de lo contrario `false`.
+   * @returns Una promesa que se resuelve a un objeto con `hasProfanity` (booleano) y `infringingWords` (array de strings).
    */
-  async checkForProfanity(text: string): Promise<boolean> {
+  async checkForProfanity(text: string): Promise<{ hasProfanity: boolean; infringingWords?: string[] }> {
     const prompt = `
-      Eres un sistema de moderación de contenido. Tu tarea es detectar si el siguiente texto contiene alguna palabra malsonante, insulto o lenguaje inapropiado en español.
-      Analiza el texto: "${text}"
-      Responde únicamente con 'true' si contiene lenguaje inapropiado, y únicamente con 'false' si no lo contiene.
+      Analiza el siguiente texto y detecta si contiene lenguaje ofensivo, vulgar, racista, sexista o cualquier tipo de contenido inapropiado.
+      Texto: "${text}".
+      Si encuentras palabras o frases inapropiadas, responde con un objeto JSON que tenga la clave "infringingWords" y como valor un array con esas palabras/frases.
+      Si el texto es completamente apropiado, responde con un objeto JSON vacío: {}.
+      Responde únicamente con el objeto JSON, sin explicaciones ni formato markdown.
     `;
 
     try {
       const result = await this.model.generateContent(prompt);
-      const responseText = result.response.text().trim().toLowerCase();
-      return responseText === 'true';
+      const responseText = result.response.text().replace(/```json|```/g, '').trim();
+      const responseJson = JSON.parse(responseText);
+      const infringingWords = responseJson.infringingWords || [];
+      return { hasProfanity: infringingWords.length > 0, infringingWords };
     } catch (error) {
       console.error('Error en la moderación de contenido con IA:', error);
       // En caso de error, asumimos que el contenido es válido para no bloquear al usuario.
-      return false;
+      return { hasProfanity: false };
     }
   }
 }

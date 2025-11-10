@@ -95,8 +95,10 @@
               <div class="col">
                 <div class="field">
                   <label for="description" class="form-label">Descripción</label>
-                  <textarea id="description" rows="5" cols="30" pTextarea formControlName="description"
-                    class="w-full"></textarea>
+                  <div class="flex items-start gap-2">
+                    <textarea id="description" rows="5" pTextarea formControlName="description" class="w-full"></textarea>
+                    <button type="button" pButton icon="pi pi-sparkles" (click)="generateDescription()" pTooltip="Generar descripción con IA" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -91,6 +91,8 @@ export class LoginComponent {
           this.dialogMessage = 'Tu cuenta ha sido suspendida. Contacta con un administrador.';
         } else if (error.message === 'USER_NOT_ACTIVATED') {
           this.dialogMessage = 'Tu cuenta de moderador aún no ha sido activada por un administrador.';
+        } else if (error.message === 'USER_INFRACTION') {
+          this.dialogMessage = 'Tu cuenta ha sido suspendida debido a infracciones. Contacta con un administrador.';
         } else {
           this.dialogMessage = 'Email o contraseña incorrectos';
         }

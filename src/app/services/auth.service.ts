@@ -62,7 +62,15 @@ export class AuthService {
         if (user && user['status'] !== 'active') {
           // Si está suspendido, cerramos la sesión de Firebase y lanzamos un error.
           await signOut(this.afAuth);
-          throw new Error(user['status'] === 'suspended' ? 'USER_SUSPENDED' : 'USER_NOT_ACTIVATED');
+          let errorType = 'USER_SUSPENDED'; // Valor por defecto
+          if (user['status'] === 'suspended') {
+            errorType = 'USER_SUSPENDED';
+          } else if (user['status'] === 'pending_activation') {
+            errorType = 'USER_NOT_ACTIVATED';
+          } else if (user['status'] === 'infraction') {
+            errorType = 'USER_INFRACTION';
+          }
+          throw new Error(errorType);
         }
         // Si no está suspendido, el authStateListener se encargará de actualizar el currentUser$.
         return user;
