@@ -220,7 +220,7 @@ export class AnimalsTableComponent implements OnChanges {
         }
       }
     }
-    return 'Hola';
+    return '';
   }
 
   /**
@@ -600,7 +600,7 @@ export class AnimalsTableComponent implements OnChanges {
       icon: 'pi pi-user-plus',
       acceptLabel: 'Asignar',
       rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-info',
+      acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: async () => {
         try {
@@ -639,7 +639,7 @@ export class AnimalsTableComponent implements OnChanges {
       icon: 'pi pi-user-minus',
       acceptLabel: 'Liberar',
       rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-info',
+      acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: async () => {
         try {

@@ -50,7 +50,7 @@ import { AccordionModule } from 'primeng/accordion';
     OrderByDatePipe,
     TagModule,
     AccordionModule
-],
+  ],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
 })
@@ -133,13 +133,11 @@ export class UsersTableComponent implements OnDestroy {
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: action.charAt(0).toUpperCase() + action.slice(1),
       rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: `p-button-${severity}`,
+      rejectButtonStyleClass: 'p-button-secondary',
+      acceptButtonStyleClass: user.status === 'active' ? 'p-button-danger' : 'p-button-success',
       accept: () => {
         this.toggleSuspension(user);
       },
-      reject: () => {
-        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'La operación ha sido cancelada.' });
-      }
     });
   }
 
@@ -181,6 +179,7 @@ export class UsersTableComponent implements OnDestroy {
       icon: 'pi pi-user-plus',
       acceptLabel: 'Activar',
       rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-text',
       acceptButtonStyleClass: 'p-button-success',
       accept: () => {
         this.activateNewModerator(user);
@@ -224,9 +223,10 @@ export class UsersTableComponent implements OnDestroy {
       message: `Se enviará un correo a <strong>${user.email}</strong> para restablecer su contraseña. ¿Deseas continuar?`,
       header: 'Confirmar restablecimiento',
       icon: 'pi pi-key',
-      acceptLabel: 'Enviar correo',
+      acceptLabel: 'Enviar',
       rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-info',
+      rejectButtonStyleClass: 'p-button-secondary',
+      acceptButtonStyleClass: 'p-button-success',
       accept: () => {
         this.resetPassword(user);
       },
