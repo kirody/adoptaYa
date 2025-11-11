@@ -137,6 +137,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       urlImage: ['', Validators.required],
       gender: ['', Validators.required],
       size: ['', Validators.required],
+      needsReview: [false],
       state: ['', Validators.required], // Opcional
       published: [false],
       scaled: [[]],
@@ -238,7 +239,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
 
     this.setSpinner(true, 'Guardando...');
-
     // Obtenemos los datos ANTES de deshabilitar el formulario
     const animalData = this.animalForm.value;
 
@@ -262,10 +262,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     }
 
     if (inappropriateContent.length > 0) {
-      await this.handleInappropriateContent(inappropriateContent);
-      this.setSpinner(false);
-      this.animalForm.enable();
-      return; // Detiene el proceso de guardado
+      // Si hay contenido inapropiado, gestiona la infracción y marca para revisión.
+      // La función handleInappropriateContent ahora decidirá si continuar.
+      await this.handleInappropriateContent(inappropriateContent, animalData);
     } else {
       // Si no hay lenguaje inapropiado, asegurarse de que los errores se limpien
       for (const fieldName in fieldsToCheck) {
@@ -273,55 +272,17 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           this.animalForm.get(fieldName)?.setErrors(null);
         }
       }
-
-      try {
-        if (this.isEditMode && this.animalId) {
-          await this.animalService.updateAnimal(
-            this.animalId,
-            animalData
-          );
-          if (this.user) {
-            const details = `Se actualizó el animal '${animalData.name}'.`;
-            await this.logService.addLog('Animal actualizado', details, this.user, 'Añadir animales');
-          }
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Animal actualizado correctamente.',
-          });
-          this.router.navigate(['/panel-gestion']);
-        } else {
-          await this.animalService.addAnimal(animalData);
-          if (this.user) {
-            const details = `Se añadió un nuevo animal: '${animalData.name}'.`;
-            await this.logService.addLog('Animal añadido', details, this.user, 'Añadir animales');
-          }
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Animal añadido correctamente.',
-          });
-          this.animalForm.reset();
-        }
-      } catch (err: any) {
-        const action = this.isEditMode ? 'actualizar' : 'añadir';
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: err.message || `Ha ocurrido un error al ${action} el animal.`,
-        });
-      } finally {
-        this.setSpinner(false);
-        if (!this.isAnimalScaled) {
-          this.animalForm.enable(); // Vuelve a habilitar los campos si no está escalado
-        }
+      // Si estamos editando y la ficha estaba marcada para revisión, la desmarcamos porque ya no hay infracciones.
+      if (this.isEditMode && animalData.needsReview) {
+        animalData.needsReview = false;
       }
+      // Procede a guardar el animal si no hay infracciones.
+      await this.proceedToSave(animalData);
     }
   }
 
-  private async handleInappropriateContent(inappropriateContent: { field: string, words: string[] }[]): Promise<void> {
-    // Si el usuario es un moderador, se suspende la cuenta.
-    if (this.user?.role === 'ROLE_MOD') {
+  private async handleInappropriateContent(inappropriateContent: { field: string, words: string[] }[], animalData: any): Promise<void> {
+    if (this.user?.role === 'ROLE_MOD'|| this.user?.role === 'ROLE_ADMIN') {
       for (const infraction of inappropriateContent) {
         try {
           const infractionData = {
@@ -338,22 +299,26 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
               infringingWords: infraction.words, // ¡Aquí se añaden las palabras!
             },
             // Usamos el valor del formulario deshabilitado con getRawValue o de la variable que ya teníamos
-            actionTaken: 'user_suspended', // La acción que se tomará
+            actionTaken: 'strike_added', // La acción que se tomará
           };
           await this.infractionsService.addInfraction(infractionData);
-          await this.userService.updateUser(this.user.uid ?? '', { status: 'infraction' });
-          const details = `El moderador '${this.user.username}' ha sido suspendido por lenguaje inapropiado en el campo: ${infraction.field}. Palabras: ${infraction.words.join(', ')}.`;
-          await this.logService.addLog('Suspensión automática de moderador', details, this.user, 'Sistema');
-          this.showModal = true;
-          setTimeout(() => {
-            this.authService.logout();
-            this.router.navigate(['/login']);
-          }, 8000);
+          await this.userService.incrementStrikes(this.user.uid??'');
+          const details = `Strike añadido al moderador '${this.user.username}' por lenguaje inapropiado en: ${infraction.field}. Palabras: ${infraction.words.join(', ')}.`;
+          await this.logService.addLog('Strike a moderador', details, this.user, 'Sistema');
         } catch (error) {
-          console.error('Error al procesar la infracción y suspender al moderador:', error);
+          console.error('Error al procesar la infracción y añadir strike al moderador:', error);
         }
       }
-      return; // Detiene cualquier otra acción
+      // Marcar el animal para revisión y proceder a guardarlo
+      animalData.needsReview = true;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Infracción Registrada',
+        detail: 'Se ha detectado contenido inapropiado. Se ha registrado una infracción y el animal se ha marcado para revisión.',
+        life: 8000,
+      });
+      await this.proceedToSave(animalData);
+      return;
     }
 
     // Si no es un moderador, solo muestra un mensaje de error.
@@ -364,6 +329,47 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       detail: `Se ha detectado lenguaje inapropiado en los campos: ${fieldNames}. Por favor, revísalos.`,
       life: 6000,
     });
+  }
+  private async proceedToSave(animalData: any): Promise<void> {
+    try {
+      if (this.isEditMode && this.animalId) {
+        await this.animalService.updateAnimal(
+          this.animalId,
+          animalData
+        );
+        if (this.user) {
+          const details = `Se actualizó el animal '${animalData.name}'.`;
+          await this.logService.addLog('Animal actualizado', details, this.user, 'Añadir animales');
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Animal actualizado correctamente.',
+        });
+      } else {
+        await this.animalService.addAnimal(animalData);
+        if (this.user) {
+          const details = `Se añadió un nuevo animal: '${animalData.name}'.`;
+          await this.logService.addLog('Animal añadido', details, this.user, 'Añadir animales');
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Animal añadido correctamente.',
+        });
+        this.animalForm.reset();
+      }
+    } catch (err: any) {
+      const action = this.isEditMode ? 'actualizar' : 'añadir';
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: err.message || `Ha ocurrido un error al ${action} el animal.`,
+      });
+    } finally {
+      this.setSpinner(false);
+      this.animalForm.enable();
+    }
   }
 
   async paste() {

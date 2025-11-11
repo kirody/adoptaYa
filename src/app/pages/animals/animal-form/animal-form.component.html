@@ -2,6 +2,15 @@
 <div class="animal-form-container">
   <app-header-page [title]="pageTitle" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
   <div class="animal-form">
+    <p-message *ngIf="isEditMode && animalForm.value.needsReview" severity="warn" styleClass="w-full mb-4">
+      <div class="flex items-center">
+        <i class="pi pi-exclamation-triangle text-xl mr-3"></i>
+        <div>
+          <strong>Ficha marcada para revisión</strong>
+          <p class="mt-1">Esta ficha fue marcada para ser revisada debido a una infracción por contenido inapropiado.</p>
+        </div>
+      </div>
+    </p-message>
     <p-message *ngIf="isAnimalScaled" severity="error" styleClass="w-full mb-4">
       <div class="flex items-center">
         <i class="pi pi-lock text-xl mr-3"></i>

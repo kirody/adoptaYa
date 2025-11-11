@@ -54,15 +54,20 @@
     <ng-template pTemplate="body" let-animal>
       <tr [ngClass]="{
             'bg-gray-100 opacity-70': user?.role === 'ROLE_MOD' && animal.assignedToAdmin,
-            'bg-orange-50': user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin,
-            'bg-blue-50': user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin
+            'bg-orange-50': user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin && !animal.needsReview,
+            'bg-blue-50': user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin,
+            'needs-review-row': animal.needsReview
           }" [pTooltip]="(user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ?
           'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
         tooltipPosition="top">
         <td>
           <img [src]="animal.urlImage" [alt]="animal.name" class="w-2rem rounded" />
         </td>
-        <td class="gap-2">{{ animal.name }}
+        <td>
+          <span class="mr-2">{{ animal.name }}</span>
+          @if(animal.needsReview) {
+            <i class="fa-solid fa-flag text-red-500" pTooltip="Infracción detectada. Requiere revisión." tooltipPosition="top"></i>
+          }
           @if(user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin && getScaledStatusTag(animal) !== 'Cerrado') {
           <i class="fa-solid fa-triangle-exclamation text-orange-500" pTooltip="Requiere revisión"
             tooltipPosition="top"></i>
@@ -111,7 +116,8 @@
             [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
             styleClass="p-button-rounded p-button-warning p-button-text"
             (click)="modalconfirmation($event, animal, 'publish')"
-            [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin)"
+            [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ||
+              animal.needsReview"
             [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
           @if (user?.role === 'ROLE_MOD') {
           <!-- Escalar -->

@@ -321,10 +321,9 @@ export class UsersTableComponent implements OnDestroy {
   }
 
   async viewUserInfraction(user: any) {
-    if (!user || user.status !== 'infraction') return;
+    if (!user || user.strikes <= 0) return;
 
     this.selectedUserForInfraction = user;
-    this.isLoading = true;
     this.infractionHistory = []; // Limpiamos el historial previo
     try {
       this.activeInfractionAccordionPanels = ['0']; // Resetea para abrir el primer panel por defecto

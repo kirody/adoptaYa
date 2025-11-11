@@ -27,3 +27,9 @@
 .hide-filter {
   visibility: hidden !important;
 }
+
+/* Estilo para filas que necesitan revisión */
+.needs-review-row {
+  background-color: #fff3cd; /* Un color amarillo claro para resaltar */
+  border-left: 5px solid #ffc107; /* Una barra lateral para mayor visibilidad */
+}

@@ -13,6 +13,7 @@ import {
   where,
   arrayUnion,
   Timestamp,
+  increment,
 } from 'firebase/firestore';
 import { firebaseConfig } from '../../environments/environment';
 import { UserData } from '../models/user-data';
@@ -88,6 +89,13 @@ export class UsersService {
     };
     return updateDoc(userDocRef, {
       notes: arrayUnion(noteWithTimestamp),
+    });
+  }
+
+   async incrementStrikes(uid: string): Promise<void> {
+    const userDocRef = doc(db, 'users', uid);
+    await updateDoc(userDocRef, {
+      strikes: increment(1)
     });
   }
 }

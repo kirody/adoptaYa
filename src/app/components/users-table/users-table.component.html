@@ -77,7 +77,7 @@
             (click)="confirmPasswordReset($event, user)" [disabled]="user.status !== 'active'"></p-button>
           <p-button icon="fa-solid fa-triangle-exclamation" pTooltip="Ver infracción" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-danger" (click)="viewUserInfraction(user)"
-            [disabled]="user.status !== 'infraction'"></p-button>
+            *ngIf="user.role === 'ROLE_MOD'"></p-button>
           <p-button icon="fa-solid fa-clipboard-list" pTooltip="Ver/Añadir notas internas" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-secondary" (click)="openNotesDialog(user)"
             [disabled]="user.status !== 'active'"></p-button>
