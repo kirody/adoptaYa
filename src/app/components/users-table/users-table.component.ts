@@ -16,6 +16,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { CardNodataComponent } from '../card-nodata/card-nodata.component';
 import { UsersService } from '../../services/users.service';
 import { NotificationsService } from '../../services/notifications.service';
+import { AnimalsService } from '../../services/animals.service';
 import { Permissions } from '../../models/permissions.enum';
 import { Roles } from '../../models/roles.enum';
 import { LogService } from '../../services/log.service';
@@ -63,6 +64,7 @@ export class UsersTableComponent implements OnDestroy {
   private authService = inject(AuthService);
   private geminiService = inject(GeminiService);
   private infractionsService = inject(InfractionsService);
+  private animalService = inject(AnimalsService);
 
   @Input() isLoading = true;
   roles = [
@@ -90,7 +92,15 @@ export class UsersTableComponent implements OnDestroy {
   displayInfractionDialog: boolean = false;
   selectedUserForInfraction: any | null = null;
   infractionHistory: any[] = [];
-  activeInfractionAccordionPanels: string[] = ['0'];
+  activeInfractionAccordionPanels: string[] = [];
+
+  // Propiedades para el nuevo modal de confirmación de suspensión/reactivación
+  displaySuspensionConfirmationDialog: boolean = false;
+  confirmationUser: any;
+  confirmationAction: 'suspender' | 'reactivar' | '' = '';
+  pendingAnimalNames: string[] = [];
+  showResetWarning: boolean = false;
+confirmationInput: string = ''; // Para el input de confirmación
 
   ngOnInit(): void {
     // Inicializa los permisos
@@ -122,31 +132,29 @@ export class UsersTableComponent implements OnDestroy {
     this.dataChanged.emit();
   }
 
-  confirmSuspension(event: Event, user: any) {
-    const action = user.status === 'active' ? 'suspender' : 'reactivar';
-    let message = `¿Estás seguro de que quieres <strong>${action}</strong> a ${user.username}?`;
+  async confirmSuspension(event: Event, user: any) {
+    this.confirmationUser = user;
+    this.confirmationAction = user.status === 'active' ? 'suspender' : 'reactivar';
+    this.pendingAnimalNames = [];
+    this.showResetWarning = false;
+    this.confirmationInput = ''; // Reseteamos el input
 
-    // Añadir advertencia si se está reactivando desde una suspensión automática
-    if (action === 'reactivar' && user.status === 'automatic_suspension') {
-      message += `<br><br><div class="p-3 bg-orange-50 border-left-3 border-orange-400 text-orange-800 flex align-items-center">
+    if (this.confirmationAction === 'reactivar' && user.status === 'automatic_suspension') {
+      this.isLoading = true; // Muestra spinner mientras busca datos
+      const infractions = await this.infractionsService.getAllInfractionsByUserId(user.uid);
+      const pendingReviewInfractions = infractions.filter(inf => inf.status === 'pending_review' && inf.context.entity === 'animal');
 
-                    <span>Al reactivar, se <strong>resetearán los strikes a 0</strong> y se <strong>eliminará su historial de infracciones</strong>.</span>
-                  </div>`;
+      if (pendingReviewInfractions.length > 0) {
+        const animalPromises = pendingReviewInfractions.map(inf => this.animalService.getAnimalById(inf.context.entityId));
+        const animals = await Promise.all(animalPromises);
+        this.pendingAnimalNames = animals.flatMap((animal: any) => animal?.name ? [animal.name] : []);
+      }
+
+      this.showResetWarning = true;
+      this.isLoading = false; // Oculta spinner
     }
 
-    this.confirmationService.confirm({
-      target: event.target as EventTarget, // El target es necesario para que el pop-up aparezca junto al botón
-      message: message,
-      header: `Confirmar ${action}`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: action.charAt(0).toUpperCase() + action.slice(1),
-      rejectLabel: 'Cancelar',
-      rejectButtonStyleClass: 'p-button-secondary',
-      acceptButtonStyleClass: user.status === 'active' ? 'p-button-danger' : 'p-button-success',
-      accept: () => {
-        this.toggleSuspension(user);
-      },
-    });
+    this.displaySuspensionConfirmationDialog = true;
   }
 
   async toggleSuspension(user: any) {
@@ -154,6 +162,7 @@ export class UsersTableComponent implements OnDestroy {
       return;
     }
 
+    this.displaySuspensionConfirmationDialog = false; // Cierra el modal
     this.isLoading = true;
     const newStatus = user.status === 'active' ? 'suspended' : 'active';
     const actionText = newStatus === 'suspended' ? 'suspendido' : 'reactivado';
@@ -203,6 +212,17 @@ export class UsersTableComponent implements OnDestroy {
         this.activateNewModerator(user);
       },
     });
+  }
+
+   onConfirmSuspension() {
+    if (this.confirmationUser) {
+      this.toggleSuspension(this.confirmationUser);
+    }
+  }
+
+  onRejectSuspension() {
+    this.confirmationInput = ''; // Reseteamos el input
+    this.displaySuspensionConfirmationDialog = false;
   }
 
   async activateNewModerator(user: any) {
@@ -343,7 +363,7 @@ export class UsersTableComponent implements OnDestroy {
     this.selectedUserForInfraction = user;
     this.infractionHistory = []; // Limpiamos el historial previo
     try {
-      this.activeInfractionAccordionPanels = ['0']; // Resetea para abrir el primer panel por defecto
+      this.activeInfractionAccordionPanels = []; // Resetea para abrir el primer panel por defecto
       // Llamamos al servicio para obtener TODAS las infracciones del usuario
       const infractions = await this.infractionsService.getAllInfractionsByUserId(user.uid);
 

@@ -66,15 +66,16 @@
             styleClass="p-button-rounded p-button-text" (click)="confirmActivation($event, user)"></p-button>
 
           <!-- Botón para Suspender/Reactivar -->
-          <p-button *ngIf="user.status === 'active' || user.status === 'suspended' || user.status === 'automatic_suspension'"
+          <p-button
+            *ngIf="user.status === 'active' || user.status === 'suspended' || user.status === 'automatic_suspension'"
             [icon]="user.status === 'active' ? 'fa-solid fa-user-slash' : 'fa-solid fa-user-check'"
             [pTooltip]="user.status === 'active' ? 'Suspender usuario' : 'Reactivar usuario'" tooltipPosition="top"
             [severity]="user.status === 'active' ? 'danger' : 'success'" styleClass="p-button-rounded p-button-text"
             (click)="confirmSuspension($event, user)"></p-button>
 
           <p-button icon="fa-solid fa-key" pTooltip="Restablecer contraseña" tooltipPosition="top"
-            styleClass="p-button-rounded p-button-text p-button-info"
-            (click)="confirmPasswordReset($event, user)" [disabled]="user.status !== 'active'"></p-button>
+            styleClass="p-button-rounded p-button-text p-button-info" (click)="confirmPasswordReset($event, user)"
+            [disabled]="user.status !== 'active'"></p-button>
           <p-button icon="fa-solid fa-triangle-exclamation" pTooltip="Ver infracción" tooltipPosition="top"
             styleClass="p-button-rounded p-button-text p-button-danger" (click)="viewUserInfraction(user)"
             *ngIf="user.role === 'ROLE_MOD'"></p-button>
@@ -192,7 +193,8 @@
             </div>
             <div class="field mb-3">
               <label class="font-semibold">Entidad afectada:</label>
-              <span class="ml-2 capitalize">{{infraction.context.entityId}} {{ infraction.context.entity || 'N/A' }}</span>
+              <span class="ml-2 capitalize">{{infraction.context.entityId}} {{ infraction.context.entity || 'N/A'
+                }}</span>
             </div>
             <div class="field mb-3">
               <label class="font-semibold">Campo afectado:</label>
@@ -233,6 +235,65 @@
     }
     <ng-template pTemplate="footer">
       <p-button label="Cerrar" icon="pi pi-times" (click)="displayInfractionDialog=false" styleClass="p-button-text" />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog [(visible)]="displaySuspensionConfirmationDialog" [modal]="true" [style]="{ width: '35rem' }"
+    [draggable]="false" [resizable]="false" [closable]="false" styleClass="p-dialog-irreversible">
+    <ng-template pTemplate="header">
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-exclamation-triangle text-2xl text-orange-500"></i>
+        <span class="font-bold text-xl">Acción Irreversible</span>
+      </div>
+    </ng-template>
+
+    <div class="flex flex-col gap-4 p-fluid">
+      <p>Estás a punto de <strong>{{ confirmationAction }}</strong> al usuario <strong>{{ confirmationUser?.username
+          }}</strong>.</p>
+
+      <!-- Advertencia de fichas pendientes de revisar -->
+      <div *ngIf="pendingAnimalNames.length > 0"
+        class="p-3 bg-yellow-50 border-left-3 border-yellow-400 text-yellow-800 rounded-md">
+        <div class="flex items-center">
+          <i class="pi pi-folder-open mr-3 text-xl"></i>
+          <div>
+            <p class="font-bold">Fichas pendientes de revisar</p>
+            <span *ngIf="pendingAnimalNames.length === 1">
+              Hay 1 ficha pendiente: <strong>{{ pendingAnimalNames[0] }}</strong>.
+            </span>
+            <span *ngIf="pendingAnimalNames.length > 1">
+              Hay {{ pendingAnimalNames.length }} fichas pendientes:
+              <strong>{{ pendingAnimalNames.join(', ') }}</strong>.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advertencia de reseteo de infracciones (la más importante) -->
+      <div *ngIf="showResetWarning" class="p-4 bg-red-50 border-2 border-dashed border-red-300 text-red-800 rounded-lg">
+        <div class="flex items-center">
+          <i class="pi pi-trash mr-3 text-2xl"></i>
+          <div>
+            <p class="font-bold text-lg">Esta acción no se puede deshacer</p>
+            <span class="text-sm">Al reactivar, se <strong>borrará permanentemente</strong> su historial de infracciones y sus strikes se reiniciarán a 0.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campo de confirmación para acciones irreversibles -->
+      <div *ngIf="showResetWarning" class="mt-2">
+        <label for="confirmation-input" class="block text-sm font-medium text-gray-700 mb-1">Para confirmar, escribe <strong>{{ confirmationAction }}</strong> en el campo de abajo:</label>
+        <input id="confirmation-input" type="text" pInputText [(ngModel)]="confirmationInput" class="w-full" />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" icon="pi pi-times" (click)="onRejectSuspension()"
+        styleClass="p-button-secondary"></p-button>
+      <p-button [label]="confirmationAction | titlecase" icon="pi pi-check"
+        [styleClass]="confirmationAction === 'suspender' ? 'p-button-danger' : 'p-button-success'"
+        (click)="onConfirmSuspension()"
+        [disabled]="showResetWarning && confirmationInput !== confirmationAction"></p-button>
     </ng-template>
   </p-dialog>
 </div>
