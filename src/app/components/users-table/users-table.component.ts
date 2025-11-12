@@ -124,12 +124,20 @@ export class UsersTableComponent implements OnDestroy {
 
   confirmSuspension(event: Event, user: any) {
     const action = user.status === 'active' ? 'suspender' : 'reactivar';
-    const severity = user.status === 'active' ? 'danger' : 'success';
+    let message = `¿Estás seguro de que quieres <strong>${action}</strong> a ${user.username}?`;
+
+    // Añadir advertencia si se está reactivando desde una suspensión automática
+    if (action === 'reactivar' && user.status === 'automatic_suspension') {
+      message += `<br><br><div class="p-3 bg-orange-50 border-left-3 border-orange-400 text-orange-800 flex align-items-center">
+
+                    <span>Al reactivar, se <strong>resetearán los strikes a 0</strong> y se <strong>eliminará su historial de infracciones</strong>.</span>
+                  </div>`;
+    }
 
     this.confirmationService.confirm({
       target: event.target as EventTarget, // El target es necesario para que el pop-up aparezca junto al botón
-      message: `¿Estás seguro de que quieres <strong>${action}</strong> a ${user.username}?`,
-      header: 'Confirmación de suspensión',
+      message: message,
+      header: `Confirmar ${action}`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: action.charAt(0).toUpperCase() + action.slice(1),
       rejectLabel: 'Cancelar',
@@ -152,10 +160,20 @@ export class UsersTableComponent implements OnDestroy {
     const logAction = newStatus === 'suspended' ? 'Usuario suspendido' : 'Usuario reactivado';
 
     try {
-      await this.userService.updateUser(user.uid, { status: newStatus });
+      const updateData: { status: string, strikes?: number } = { status: newStatus };
+
+      // Si se está reactivando a un usuario que fue suspendido automáticamente,
+      // se resetean sus strikes y se borran sus infracciones.
+      if (newStatus === 'active' && user.status === 'automatic_suspension') {
+        updateData.strikes = 0; // Resetea los strikes.
+        await this.infractionsService.deleteAllInfractionsByUserId(user.uid); // Borra el historial.
+      }
+
+      await this.userService.updateUser(user.uid, updateData);
 
       // Registrar la acción en el log
-      const details = `El usuario '${user.username}' ha sido ${actionText}.`;
+      let details = `El usuario '${user.username}' ha sido ${actionText}.`;
+      if (updateData.strikes === 0) details += ' Sus strikes han sido reseteados y sus infracciones eliminadas.';
       await this.logService.addLog(logAction, details, this.user, 'Usuarios');
 
       this.messageService.add({
@@ -397,7 +415,7 @@ export class UsersTableComponent implements OnDestroy {
         return 'warn';
       case 'suspended':
         return 'danger';
-      case 'infraction':
+      case 'automatic_suspension':
         return 'danger';
       default:
         return 'warn';
@@ -409,7 +427,7 @@ export class UsersTableComponent implements OnDestroy {
       case 'active': return 'Activo';
       case 'pending_activation': return 'Pendiente activar';
       case 'suspended': return 'Suspendido';
-      case 'infraction': return 'Infracción';
+      case 'automatic_suspension': return 'Suspensión automática';
       default: return 'Desconocido';
     }
   }

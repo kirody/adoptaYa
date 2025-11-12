@@ -344,7 +344,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       // Comprueba si el usuario tiene 3 o más strikes.
       if (this.user.strikes === 3) {
         // Actualiza el estado del usuario a 'suspendido'.
-        await this.userService.updateUser(this.user.uid ?? '', { status: 'suspended' });
+        await this.userService.updateUser(this.user.uid ?? '', { status: 'automatic_suspension' });
         // Deshabilita el formulario para evitar más acciones.
         this.animalForm.disable();
         // Muestra el modal de cuenta suspendida.
@@ -354,7 +354,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           this.showModalSuspendedAccount = false;
           this.authService.logout(); // Limpia la sesión.
           this.router.navigate(['/']); // Redirige al usuario a la página de inicio.
-        }, 3000);
+        }, 5000);
       }
     }
   }

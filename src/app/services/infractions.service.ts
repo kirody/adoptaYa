@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc, query, where, orderBy, getDocs, getDoc, updateDoc } from 'firebase/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc, query, where, orderBy, getDocs, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '../../environments/environment';
 
@@ -88,5 +88,18 @@ export class InfractionsService {
       console.error("Error al obtener las infracciones:", error);
       throw error; // Re-lanza el error para que el componente lo maneje
     }
+  }
+
+  // Nuevo método para eliminar todas las infracciones de un usuario
+  async deleteAllInfractionsByUserId(userId: string): Promise<void> {
+    const infractionsCol = collection(db, 'infractions');
+    const q = query(infractionsCol, where('userData.userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+
+    const batch = writeBatch(db);
+    querySnapshot.forEach((document) => {
+      batch.delete(doc(db, 'infractions', document.id));
+    });
+    await batch.commit();
   }
 }

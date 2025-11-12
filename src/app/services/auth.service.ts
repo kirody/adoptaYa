@@ -67,7 +67,7 @@ export class AuthService {
             errorType = 'USER_SUSPENDED';
           } else if (user['status'] === 'pending_activation') {
             errorType = 'USER_NOT_ACTIVATED';
-          } else if (user['status'] === 'infraction') {
+          } else if (user['status'] === 'automatic_suspension') {
             errorType = 'USER_INFRACTION';
           }
           throw new Error(errorType);

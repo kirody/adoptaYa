@@ -61,20 +61,6 @@ export class LoginComponent {
     this.authService.login(email, password).subscribe({
       next: (user) => {
         this.usersService.getUserById(user.uid).then((userData: any) => {
-          if (userData?.status === 'suspended') {
-            this.isLoading = false;
-            this.dialogMessage = 'Tu cuenta ha sido suspendida. Contacta con un administrador.';
-            this.displayDialog = true;
-            this.authService.logout(); // Cerramos sesión para evitar que quede autenticado
-            return;
-          }
-          if (userData?.status === 'pending_activation') {
-            this.isLoading = false;
-            this.dialogMessage = 'Tu cuenta de moderador aún no ha sido activada por un administrador.';
-            this.displayDialog = true;
-            this.authService.logout();
-            return;
-          }
           if (userData && ['ROLE_ADMIN', 'ROLE_MOD'].includes(userData.role)) {
             this.router.navigate(['/panel-gestion']);
           } else {
