@@ -157,6 +157,40 @@ confirmationInput: string = ''; // Para el input de confirmación
     this.displaySuspensionConfirmationDialog = true;
   }
 
+  /**
+ * Gestiona las acciones específicas al reactivar un usuario desde una suspensión automática.
+ * Esto incluye eliminar animales con infracciones pendientes y resetear el historial del usuario.
+ * @param user El usuario que está siendo reactivado.
+ * @returns El número de animales eliminados.
+ */
+  private async handleReactivationFromAutoSuspension(user: any): Promise<number> {
+    // 1. Obtener las infracciones pendientes de revisión relacionadas con animales
+    const infractions = await this.infractionsService.getAllInfractionsByUserId(user.uid);
+    const pendingAnimalInfractions = infractions.filter(inf => inf.status === 'pending_review' && inf.context.entity === 'animal');
+
+    // 2. Si hay animales pendientes de revisión, eliminarlos
+    if (pendingAnimalInfractions.length > 0) {
+      const animalIdsToDelete = pendingAnimalInfractions.map(inf => inf.context.entityId);
+      const deletePromises = animalIdsToDelete.map(animalId => this.animalService.deleteAnimal(animalId));
+      await Promise.all(deletePromises);
+
+      // Registrar la eliminación de animales en el log
+      const deletedAnimalNames = this.pendingAnimalNames.length > 0 ? ` (${this.pendingAnimalNames.join(', ')})` : '';
+      await this.logService.addLog(
+        'Animales eliminados por reactivación',
+        `Se eliminaron ${pendingAnimalInfractions.length} fichas de animales${deletedAnimalNames} asociadas a infracciones pendientes del usuario '${user.username}' durante su reactivación.`,
+        this.user,
+        'Animales'
+      );
+    }
+
+    // 3. Borrar todo el historial de infracciones del usuario
+    await this.infractionsService.deleteAllInfractionsByUserId(user.uid);
+
+    // 4. Devolver el número de animales eliminados para el registro principal
+    return pendingAnimalInfractions.length;
+  }
+
   async toggleSuspension(user: any) {
     if (!user || !user.uid) {
       return;
@@ -170,19 +204,25 @@ confirmationInput: string = ''; // Para el input de confirmación
 
     try {
       const updateData: { status: string, strikes?: number } = { status: newStatus };
+      let deletedAnimalsCount = 0;
 
       // Si se está reactivando a un usuario que fue suspendido automáticamente,
       // se resetean sus strikes y se borran sus infracciones.
       if (newStatus === 'active' && user.status === 'automatic_suspension') {
         updateData.strikes = 0; // Resetea los strikes.
-        await this.infractionsService.deleteAllInfractionsByUserId(user.uid); // Borra el historial.
+        deletedAnimalsCount = await this.handleReactivationFromAutoSuspension(user);
       }
 
       await this.userService.updateUser(user.uid, updateData);
 
       // Registrar la acción en el log
       let details = `El usuario '${user.username}' ha sido ${actionText}.`;
-      if (updateData.strikes === 0) details += ' Sus strikes han sido reseteados y sus infracciones eliminadas.';
+      if (updateData.strikes === 0) {
+        details += ' Sus strikes han sido reseteados y sus infracciones eliminadas.';
+        if (deletedAnimalsCount > 0) {
+          details += ` También se eliminaron ${deletedAnimalsCount} fichas de animales pendientes de revisión.`;
+        }
+      }
       await this.logService.addLog(logAction, details, this.user, 'Usuarios');
 
       this.messageService.add({
