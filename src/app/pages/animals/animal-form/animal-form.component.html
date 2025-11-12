@@ -2,6 +2,15 @@
 <div class="animal-form-container">
   <app-header-page [title]="pageTitle" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
   <div class="animal-form">
+    <p-message *ngIf="isClone" severity="info" styleClass="w-full mb-4">
+      <div class="flex items-center">
+        <i class="fa-solid fa-clone text-xl mr-3"></i>
+        <div>
+          <strong>Estás editando una ficha clonada.</strong>
+          <p class="mt-1">Recuerda revisar todos los campos antes de guardar.</p>
+        </div>
+      </div>
+    </p-message>
     <p-message *ngIf="isEditMode && infractionDetails?.status.toLowerCase() === 'pending_review'"
        severity="warn" styleClass="w-full mb-4">
       <div class="flex items-center">
@@ -17,7 +26,7 @@
     <p-message *ngIf="isEditMode && infractionDetails?.status.toLowerCase() === 'resolved'"
        severity="success" styleClass="w-full mb-4">
       <div class="flex items-center">
-        <i class="pi pi-check-circle text-xl mr-3"></i>
+        <i class="fa-solid fa-shield-halved text-xl mr-3"></i>
         <div>
           <strong>Ficha Corregida.</strong>
           <p class="mt-1">
@@ -220,12 +229,14 @@
             </div>
           </div>
         </div>
-        <div class="form-buttons">
-          <p-button label="Guardar cambios" icon="pi pi-save" type="submit"
-            [disabled]="!animalForm.valid || spinnerModal" [raised]="true" [rounded]="true"></p-button>
-        </div>
       </div>
     </form>
+    <div class="form-buttons-floating">
+      <p-button label="Cancelar" icon="pi pi-times" (click)="cancel()" styleClass="p-button-secondary" [raised]="true"
+        [rounded]="true"></p-button>
+      <p-button label="Guardar cambios" icon="pi pi-save" (click)="saveAnimal()"
+        [disabled]="!animalForm.valid || spinnerModal" [raised]="true" [rounded]="true"></p-button>
+    </div>
   </div>
 </div>
 
@@ -238,7 +249,7 @@
   </div>
 </p-dialog>
 
-<p-dialog header="" [modal]="true" [(visible)]="showModal" [style]="{ width: '30rem' }" [closable]="false"
+<p-dialog header="" [modal]="true" [(visible)]="showModalSuspendedAccount" [style]="{ width: '30rem' }" [closable]="false"
   [closeOnEscape]="false" [dismissableMask]="false">
   <div class="flex flex-col items-center text-center p-6">
     <i class="pi pi-exclamation-triangle text-red-500 text-6xl mb-4"></i>

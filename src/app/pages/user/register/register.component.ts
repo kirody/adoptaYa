@@ -67,6 +67,7 @@ export class RegisterComponent {
           username: username,
           email: email,
           role: 'ROLE_DEFAULT',
+          strikes: 0
         };
         this.userService.addUser(data as any).then(() => {
           this.authService.logout(); // Cerrar sesión

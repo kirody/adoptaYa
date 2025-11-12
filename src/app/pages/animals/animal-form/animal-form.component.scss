@@ -35,7 +35,7 @@
 }
 
 .animal-form {
-  padding: 20px;
+  padding: 20px 20px 65px 20px;
 }
 
 
@@ -96,4 +96,13 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
+}
+
+.form-buttons-floating {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+  display: flex;
+  gap: 0.5rem;
 }

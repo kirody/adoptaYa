@@ -225,7 +225,11 @@
       }
     </p-accordion>
     } @else {
-    <p class="text-center">No se encontraron detalles para esta infracción.</p>
+    <div class="flex flex-col items-center justify-center text-center p-5">
+      <i class="pi pi-check-circle text-green-500 text-4xl mb-3"></i>
+      <h3 class="font-bold text-lg">Todo en orden</h3>
+      <p class="text-surface-500">Este usuario no tiene infracciones registradas.</p>
+    </div>
     }
     <ng-template pTemplate="footer">
       <p-button label="Cerrar" icon="pi pi-times" (click)="displayInfractionDialog=false" styleClass="p-button-text" />

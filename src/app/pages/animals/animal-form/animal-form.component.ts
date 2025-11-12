@@ -99,9 +99,10 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   dataProtector: any;
   private user: UserData | null = null;
   spinnerModal = false;
-  showModal = false;
+  showModalSuspendedAccount = false;
   textModal = '';
   infractionDetails: any = null; // Variable para guardar detalles de la infracción
+  isClone = false; // Flag para identificar si la ficha es un clon.
 
   constructor(
     private fb: FormBuilder,
@@ -140,7 +141,8 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       protectressName: [''],
       protectressPhone: [''],
       protectressProvince: [''],
-      protectressEmail: ['']
+      protectressEmail: [''],
+      isClone: [false] // Añadido para manejar el estado de clonación
     });
 
     if (this.isEditMode) {
@@ -207,6 +209,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         this.races = RACES_BY_SPECIES[animalData.specie] || [];
         this.animalForm.patchValue(animalData, { emitEvent: false });
 
+        // 3. Verificamos si la ficha es un clon y actualizamos el flag.
+        this.isClone = animalData.isClone || false;
+
         this.checkAnimalScaled();
         this.loadProtectorData(this.animalForm.value.protectressID);
         this.setSpinner(false);
@@ -228,7 +233,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       this.setSpinner(false);
     } finally {
       this.loadInfractionDetails(this.animalId!);
-     }
+    }
   }
 
   async saveAnimal(): Promise<void> {
@@ -287,11 +292,11 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   }
 
   private async handleInappropriateContent(inappropriateContent: { field: string, words: string[] }[], animalData: any): Promise<void> {
-    if (this.user?.role === 'ROLE_MOD'|| this.user?.role === 'ROLE_ADMIN') {
+    if (this.user?.role === 'ROLE_MOD' || this.user?.role === 'ROLE_ADMIN') {
       for (const infraction of inappropriateContent) {
         try {
           const infractionData = {
-            userData : {
+            userData: {
               userId: this.user.uid,
               username: this.user.username,
               userEmail: this.user.email,
@@ -307,7 +312,8 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
             actionTaken: 'strike_added', // La acción que se tomará
           };
           await this.infractionsService.addInfraction(infractionData);
-          await this.userService.incrementStrikes(this.user.uid??'');
+          await this.userService.incrementStrikes(this.user.uid ?? '');
+          await this.handleUserSuspension();
           const details = `Strike añadido al moderador '${this.user.username}' por lenguaje inapropiado en: ${infraction.field}. Palabras: ${infraction.words.join(', ')}.`;
           await this.logService.addLog('Strike a moderador', details, this.user, 'Sistema');
         } catch (error) {
@@ -325,19 +331,42 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       await this.proceedToSave(animalData);
       return;
     }
-
-    // Si no es un moderador, solo muestra un mensaje de error.
-    const fieldNames = inappropriateContent.map(i => i.field).join(', ');
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Contenido Inapropiado',
-      detail: `Se ha detectado lenguaje inapropiado en los campos: ${fieldNames}. Por favor, revísalos.`,
-      life: 6000,
-    });
   }
+
+  /**
+ * Gestiona la suspensión de la cuenta de un usuario si alcanza los 3 strikes.
+ * Actualiza el estado del usuario, muestra un modal y cierra la sesión.
+ */
+  private async handleUserSuspension(): Promise<void> {
+    // Primero, nos aseguramos de tener los datos más recientes del usuario.
+    if (this.user?.uid) {
+      this.user = (await this.userService.getUserById(this.user.uid)) as UserData;
+      // Comprueba si el usuario tiene 3 o más strikes.
+      if (this.user.strikes === 3) {
+        // Actualiza el estado del usuario a 'suspendido'.
+        await this.userService.updateUser(this.user.uid ?? '', { status: 'suspended' });
+        // Deshabilita el formulario para evitar más acciones.
+        this.animalForm.disable();
+        // Muestra el modal de cuenta suspendida.
+        this.showModalSuspendedAccount = true;
+        // Cierra la sesión del usuario después de 3 segundos y lo redirige.
+        setTimeout(() => {
+          this.showModalSuspendedAccount = false;
+          this.authService.logout(); // Limpia la sesión.
+          this.router.navigate(['/']); // Redirige al usuario a la página de inicio.
+        }, 3000);
+      }
+    }
+  }
+
   private async proceedToSave(animalData: any): Promise<void> {
     try {
       if (this.isEditMode && this.animalId) {
+        // Si estamos editando y la ficha era un clon, la marcamos como no clon.
+        if (this.isClone) {
+          animalData.isClone = false;
+        }
+
         await this.animalService.updateAnimal(
           this.animalId,
           animalData
@@ -351,6 +380,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           summary: 'Éxito',
           detail: 'Animal actualizado correctamente.',
         });
+        this.loadAnimalData(this.animalId!);
       } else {
         await this.animalService.addAnimal(animalData);
         if (this.user) {
@@ -500,5 +530,12 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error al cargar los detalles de la infracción:', error);
     }
+  }
+
+  /**
+   * Cancela la edición y redirige al panel de gestión.
+   */
+  cancel(): void {
+    this.router.navigate(['/panel-gestion']);
   }
 }

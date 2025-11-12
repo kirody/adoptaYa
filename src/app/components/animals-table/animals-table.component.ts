@@ -279,25 +279,55 @@ export class AnimalsTableComponent implements OnChanges {
 
   /**
    * Duplica un animal y navega al formulario para crear una nueva ficha con los datos copiados.
+   * Ahora guarda directamente en la BBDD sin pasar por el formulario.
    * @param animal El animal a duplicar.
    */
-  duplicateAnimal(animal: Animal) {
-    // Crea una copia profunda para no modificar el objeto original en la tabla.
-    const animalCopy = JSON.parse(JSON.stringify(animal));
+  async duplicateAnimal(animal: Animal) {
+    this.isLoading = true;
+    try {
+      // 1. Crea una copia profunda para no modificar el objeto original en la tabla.
+      const animalCopy = JSON.parse(JSON.stringify(animal));
 
-    // Limpia o modifica los campos para la nueva ficha.
-    delete animalCopy.id; // Elimina el ID para que se cree un nuevo documento.
-    animalCopy.name = `${animal.name} (Copia)`; // Añade un sufijo para evitar nombres duplicados.
-    animalCopy.published = false; // El duplicado no debe estar publicado por defecto.
-    animalCopy.scaled = []; // Limpia el historial de escalado.
-    animalCopy.assignedToAdmin = false; // Reinicia el estado de asignación.
-    animalCopy.infraction = null; // Reinicia el estado de infracción.
+      // 2. Limpia o modifica los campos para la nueva ficha.
+      delete animalCopy.id; // Elimina el ID para que se cree un nuevo documento.
+      animalCopy.isClone = true; // Añade un flag para identificar la ficha como un clon.
+      animalCopy.published = false; // El duplicado no debe estar publicado por defecto.
+      animalCopy.scaled = []; // Limpia el historial de escalado.
+      animalCopy.assignedToAdmin = false; // Reinicia el estado de asignación.
+      animalCopy.infraction = null; // Reinicia el estado de infracción.
 
-    // Navega al formulario de animales, pasando el objeto duplicado a través del estado del router.
-    // El formulario deberá estar preparado para recibir este estado.
-    this.router.navigate(['/form-animal'], {
-      state: { animalData: animalCopy }
-    });
+      // 2.1. Reconvierte los campos de fecha que se hayan convertido a string.
+      // JSON.stringify convierte los Timestamps de Firestore a un objeto con seconds y nanoseconds,
+      // y JSON.parse los mantiene así, lo cual es correcto para Firestore.
+      // Sin embargo, si el objeto original tuviera un Date de JS, se convertiría a string.
+      // Esta lógica asegura que si el campo birthdate existe, se mantenga como un objeto válido.
+      if (animal.age) {
+        animalCopy.age = animal.age;
+      }
+
+      // 3. Llama al servicio para añadir el nuevo animal a la base de datos.
+      await this.animalService.addAnimal(animalCopy);
+
+      // 4. Registra la acción en el log.
+      const details = `Se ha creado una copia (clon) del animal '${animal.name}' (ID original: ${animal.id}).`;
+      await this.logService.addLog('Animal clonado', details, this.user, 'Animales');
+
+      // 5. Muestra un mensaje de éxito y refresca los datos de la tabla.
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `El animal '${animal.name}' ha sido duplicado correctamente.`,
+      });
+      this.dataChanged.emit();
+    } catch (error) {
+      console.error('Error al duplicar el animal:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo duplicar la ficha del animal.',
+      });
+    }
+    this.isLoading = false;
   }
   /**
    * Obtiene el texto para el tooltip del botón de editar.

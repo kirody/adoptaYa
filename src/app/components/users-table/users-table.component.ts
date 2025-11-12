@@ -321,8 +321,7 @@ export class UsersTableComponent implements OnDestroy {
   }
 
   async viewUserInfraction(user: any) {
-    if (!user || user.strikes <= 0) return;
-
+    if (!user) return;
     this.selectedUserForInfraction = user;
     this.infractionHistory = []; // Limpiamos el historial previo
     try {
@@ -330,12 +329,14 @@ export class UsersTableComponent implements OnDestroy {
       // Llamamos al servicio para obtener TODAS las infracciones del usuario
       const infractions = await this.infractionsService.getAllInfractionsByUserId(user.uid);
 
-      // Ordenamos las infracciones por fecha (timestamp) de más reciente a más antigua
-      infractions.sort((a, b) => {
-        const dateA = a.timestamp.toDate();
-        const dateB = b.timestamp.toDate();
-        return dateB.getTime() - dateA.getTime();
-      });
+      if (infractions.length > 0) {
+        // Ordenamos las infracciones por fecha (timestamp) de más reciente a más antigua
+        infractions.sort((a, b) => {
+          const dateA = a.timestamp.toDate();
+          const dateB = b.timestamp.toDate();
+          return dateB.getTime() - dateA.getTime();
+        });
+      }
 
       this.infractionHistory = infractions;
       this.displayInfractionDialog = true;
@@ -345,6 +346,7 @@ export class UsersTableComponent implements OnDestroy {
       this.isLoading = false;
     }
   }
+
 
   async updateRolUser(user: any) {
     this.isLoading = true;

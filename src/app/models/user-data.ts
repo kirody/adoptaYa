@@ -6,4 +6,5 @@ export interface UserData {
   username: string;
   permissions?: string[];
   status?: 'active' | 'suspended' | 'pending_activation';
+  strikes: number;
 }
