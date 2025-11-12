@@ -54,9 +54,9 @@
     <ng-template pTemplate="body" let-animal>
       <tr [ngClass]="{
             'bg-gray-100 opacity-70': user?.role === 'ROLE_MOD' && animal.assignedToAdmin,
-            'bg-orange-50': user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin && !animal.needsReview,
+            'bg-orange-50': user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin && animal.infraction !== 'pending_review',
             'bg-blue-50': user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin,
-            'needs-review-row': animal.needsReview
+            'needs-review-row': animal.infraction === 'pending_review'
           }" [pTooltip]="(user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ?
           'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
         tooltipPosition="top">
@@ -65,8 +65,10 @@
         </td>
         <td>
           <span class="mr-2">{{ animal.name }}</span>
-          @if(animal.needsReview) {
+          @if(animal.infraction === 'pending_review') {
             <i class="fa-solid fa-flag text-red-500" pTooltip="Infracción detectada. Requiere revisión." tooltipPosition="top"></i>
+          } @else if (animal.infraction === 'resolved') {
+            <i class="fa-solid fa-check-circle text-green-500" pTooltip="Infracción resuelta." tooltipPosition="top"></i>
           }
           @if(user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin && getScaledStatusTag(animal) !== 'Cerrado') {
           <i class="fa-solid fa-triangle-exclamation text-orange-500" pTooltip="Requiere revisión"
@@ -111,13 +113,18 @@
             (click)="editAnimal(animal.id)"
             [disabled]="isEditDisabled(animal) || (user?.role === 'ROLE_MOD' && (animal.assignedToAdmin || animal.published))"
             [pTooltip]="getEditTooltip(animal)" tooltipPosition="top"></p-button>
+          <!-- Duplicar -->
+          <p-button icon="fa-solid fa-copy" styleClass="p-button-rounded p-button-info p-button-text"
+            (click)="duplicateAnimal(animal)"
+            [disabled]="isEditDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin)"
+            pTooltip="Duplicar ficha" tooltipPosition="top"></p-button>
           <!-- Publicar -->
           <p-button icon="fa-solid"
             [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
             styleClass="p-button-rounded p-button-warning p-button-text"
             (click)="modalconfirmation($event, animal, 'publish')"
             [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ||
-              animal.needsReview"
+              animal.infraction === 'pending_review'"
             [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
           @if (user?.role === 'ROLE_MOD') {
           <!-- Escalar -->

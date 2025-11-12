@@ -2,12 +2,27 @@
 <div class="animal-form-container">
   <app-header-page [title]="pageTitle" [icon]="'fa-solid fa-circle-plus'"></app-header-page>
   <div class="animal-form">
-    <p-message *ngIf="isEditMode && animalForm.value.needsReview" severity="warn" styleClass="w-full mb-4">
+    <p-message *ngIf="isEditMode && infractionDetails?.status.toLowerCase() === 'pending_review'"
+       severity="warn" styleClass="w-full mb-4">
       <div class="flex items-center">
         <i class="pi pi-exclamation-triangle text-xl mr-3"></i>
         <div>
-          <strong>Ficha marcada para revisión</strong>
-          <p class="mt-1">Esta ficha fue marcada para ser revisada debido a una infracción por contenido inapropiado.</p>
+          <strong>Ficha marcada para revisión por contenido inapropiado.</strong>
+          <p class="mt-1" *ngIf="infractionDetails.context as context">
+            El campo <strong class="text-red-500">"{{ context.fieldName }}"</strong> contiene las siguientes palabras consideradas inapropiadas: <strong class="text-red-500">{{ context.infringingWords?.join(', ') }}</strong>.
+          </p>
+        </div>
+      </div>
+    </p-message>
+    <p-message *ngIf="isEditMode && infractionDetails?.status.toLowerCase() === 'resolved'"
+       severity="success" styleClass="w-full mb-4">
+      <div class="flex items-center">
+        <i class="pi pi-check-circle text-xl mr-3"></i>
+        <div>
+          <strong>Ficha Corregida.</strong>
+          <p class="mt-1">
+            Esta ficha tenía contenido inapropiado pero ya ha sido corregida y revisada.
+          </p>
         </div>
       </div>
     </p-message>
@@ -39,7 +54,11 @@
               <div class="w-1/2">
                 <div class="field">
                   <label for="animalName" class="form-label">Nombre</label>
-                  <input id="animalName" type="text" pInputText formControlName="name" class="w-full" />
+                  <input id="animalName" type="text" pInputText formControlName="name" class="w-full"
+                    [ngClass]="{'ng-invalid ng-dirty': animalForm.get('name')?.hasError('infraction')}" />
+                  <small *ngIf="animalForm.get('name')?.hasError('infraction')" class="p-error">
+                    {{ animalForm.get('name')?.errors?.['infraction'] }}
+                  </small>
                 </div>
 
                 <div class="field">
@@ -104,10 +123,17 @@
               <div class="col">
                 <div class="field">
                   <label for="description" class="form-label">Descripción</label>
-                  <div class="flex items-start gap-2">
-                    <textarea id="description" rows="5" pTextarea formControlName="description" class="w-full"></textarea>
-                    <button type="button" pButton icon="pi pi-sparkles" (click)="generateDescription()" pTooltip="Generar descripción con IA" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
+                  <div class="flex items-start gap-2 mb-2">
+                    <textarea id="description" rows="5" pTextarea formControlName="description" class="w-full"
+                      [ngClass]="{'ng-invalid ng-dirty': animalForm.get('description')?.hasError('infraction')}"></textarea>
+                    <button type="button" pButton icon="pi pi-sparkles" (click)="generateDescription()"
+                      pTooltip="Generar descripción con IA" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
                   </div>
+                  <small *ngIf="animalForm.get('description')?.hasError('infraction')" class="">
+                    <p-message severity="error" icon="pi pi-exclamation-triangle" variant="simple" size="small">
+                      {{ animalForm.get('description')?.errors?.['infraction'] }}
+                    </p-message>
+                  </small>
                 </div>
               </div>
             </div>
@@ -204,27 +230,16 @@
 </div>
 
 <!-- Modal de "Guardando" -->
-<p-dialog
-  header=""
-  [(visible)]="spinnerModal"
-  [modal]="true"
-  [closable]="false"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '250px' }"
->
+<p-dialog header="" [(visible)]="spinnerModal" [modal]="true" [closable]="false" [draggable]="false" [resizable]="false"
+  [style]="{ width: '250px' }">
   <div class="saving-modal-content">
-    <p-progressSpinner
-      styleClass="w-8 h-8"
-      strokeWidth="4"
-      animationDuration=".5s"
-    ></p-progressSpinner>
+    <p-progressSpinner styleClass="w-8 h-8" strokeWidth="4" animationDuration=".5s"></p-progressSpinner>
     <span class="mt-4 text-lg font-semibold">{{textModal}}</span>
   </div>
 </p-dialog>
 
-<p-dialog header="" [modal]="true" [(visible)]="showModal" [style]="{ width: '30rem' }"
-  [closable]="false" [closeOnEscape]="false" [dismissableMask]="false">
+<p-dialog header="" [modal]="true" [(visible)]="showModal" [style]="{ width: '30rem' }" [closable]="false"
+  [closeOnEscape]="false" [dismissableMask]="false">
   <div class="flex flex-col items-center text-center p-6">
     <i class="pi pi-exclamation-triangle text-red-500 text-6xl mb-4"></i>
     <h2 class="text-2xl font-bold mb-2 text-red-700">Cuenta Suspendida</h2>
@@ -235,7 +250,8 @@
       Serás desconectado automáticamente en unos segundos.
     </p>
     <div class="mt-5">
-      <p-progressSpinner [style]="{width: '50px', height: '50px'}" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s"></p-progressSpinner>
+      <p-progressSpinner [style]="{width: '50px', height: '50px'}" strokeWidth="8" fill="var(--surface-ground)"
+        animationDuration=".5s"></p-progressSpinner>
       <p class="text-gray-500 mt-2">Desconectando...</p>
     </div>
   </div>

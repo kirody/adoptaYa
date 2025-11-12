@@ -101,6 +101,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   spinnerModal = false;
   showModal = false;
   textModal = '';
+  infractionDetails: any = null; // Variable para guardar detalles de la infracción
 
   constructor(
     private fb: FormBuilder,
@@ -120,12 +121,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
     this.animalId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.animalId;
 
-    if (this.isEditMode) {
-      this.pageTitle = 'Editar Animal';
-      this.submitButtonText = 'Actualizar Animal';
-      this.loadAnimalData(this.animalId!);
-    }
-
     this.animalForm = this.fb.group({
       id: [''],
       name: ['', Validators.required],
@@ -137,7 +132,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       urlImage: ['', Validators.required],
       gender: ['', Validators.required],
       size: ['', Validators.required],
-      needsReview: [false],
+      infraction: '',
       state: ['', Validators.required], // Opcional
       published: [false],
       scaled: [[]],
@@ -147,6 +142,13 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       protectressProvince: [''],
       protectressEmail: ['']
     });
+
+    if (this.isEditMode) {
+      this.pageTitle = 'Editar Animal';
+      this.submitButtonText = 'Actualizar Animal';
+      this.loadAnimalData(this.animalId!);
+    }
+
 
     await this.loadProtectors();
     // Cuando el ID de la protectora cambia, actualizamos el nombre
@@ -224,7 +226,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         detail: 'No se pudo cargar la información del animal.',
       });
       this.setSpinner(false);
-    } finally { }
+    } finally {
+      this.loadInfractionDetails(this.animalId!);
+     }
   }
 
   async saveAnimal(): Promise<void> {
@@ -272,9 +276,10 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           this.animalForm.get(fieldName)?.setErrors(null);
         }
       }
-      // Si estamos editando y la ficha estaba marcada para revisión, la desmarcamos porque ya no hay infracciones.
-      if (this.isEditMode && animalData.needsReview) {
-        animalData.needsReview = false;
+      // Si estamos editando, había una infracción y ya ha sido corregida (no hay nuevo contenido inapropiado)
+      if (this.isEditMode && this.infractionDetails) {
+        await this.infractionsService.updateInfractionStatus(this.infractionDetails.id, 'resolved');
+        animalData.infraction = 'resolved'; // Mantenemos la marca para indicar que fue revisada y corregida.
       }
       // Procede a guardar el animal si no hay infracciones.
       await this.proceedToSave(animalData);
@@ -310,7 +315,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         }
       }
       // Marcar el animal para revisión y proceder a guardarlo
-      animalData.needsReview = true;
+      animalData.infraction = 'pending_review';
       this.messageService.add({
         severity: 'warn',
         summary: 'Infracción Registrada',
@@ -468,5 +473,32 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
         detail: 'No se pudo cargar la información de la protectora.',
       });
     } finally { }
+  }
+
+  /**
+   * Carga los detalles de una infracción específica usando su ID.
+   * @param infractionId El ID de la infracción a cargar.
+   */
+  async loadInfractionDetails(infractionId: string): Promise<void> {
+    try {
+      this.infractionDetails = await this.infractionsService.getInfractionByEntityId(infractionId);
+      if (this.infractionDetails.status === 'pending_review') {
+        const fieldName = this.infractionDetails.context?.fieldName;
+        if (fieldName) {
+          // Mapea el nombre del campo de la infracción al nombre del control del formulario.
+          const fieldMap: { [key: string]: string } = {
+            'Nombre': 'name',
+            'Descripción': 'description'
+          };
+          const formControlName = fieldMap[fieldName];
+          // Marca el campo del formulario con un error para resaltarlo.
+          this.animalForm.get(formControlName)?.setErrors({ 'infraction': 'Este campo tiene una infracción.' });
+        }
+      } else {
+        console.warn('No se encontró ninguna infracción con el ID:', infractionId);
+      }
+    } catch (error) {
+      console.error('Error al cargar los detalles de la infracción:', error);
+    }
   }
 }

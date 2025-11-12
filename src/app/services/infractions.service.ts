@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, getFirestore, setDoc, doc, query, where, orderBy, getDocs, getDoc, updateDoc } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '../../environments/environment';
 
@@ -28,6 +28,43 @@ export class InfractionsService {
       { id: docRef.id },
       { merge: true }
     );
+  }
+
+  /**
+   * Actualiza el estado de una infracción específica.
+   * @param infractionId El ID del documento de la infracción.
+   * @param status El nuevo estado para la infracción (ej. 'resolved').
+   * @returns Una promesa que se resuelve cuando la actualización se completa.
+   */
+  async updateInfractionStatus(infractionId: string, status: string): Promise<void> {
+    const infractionRef = doc(db, 'infractions', infractionId);
+    await updateDoc(infractionRef, {
+      status: status
+    });
+  }
+
+  /**
+   * Obtiene una infracción específica por su ID.
+   * @param entityId El ID de la entidad (ej. animalId) asociada a la infracción.
+   * @returns Una promesa que se resuelve con los datos de la infracción.
+   */
+  async getInfractionByEntityId(entityId: string): Promise<any> {
+    try {
+      const infractionsCol = collection(db, 'infractions');
+      // Usamos una consulta para buscar por el campo anidado 'context.entityId'
+      const q = query(infractionsCol, where('context.entityId', '==', entityId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // Devolvemos la primera infracción encontrada que coincida.
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+      }
+      return null; // No se encontraron infracciones para esa entidad.
+    } catch (error) {
+      console.error('Error al obtener la infracción por ID:', error);
+      throw error;
+    }
   }
 
   /**

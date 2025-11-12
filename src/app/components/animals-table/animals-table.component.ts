@@ -278,6 +278,28 @@ export class AnimalsTableComponent implements OnChanges {
   }
 
   /**
+   * Duplica un animal y navega al formulario para crear una nueva ficha con los datos copiados.
+   * @param animal El animal a duplicar.
+   */
+  duplicateAnimal(animal: Animal) {
+    // Crea una copia profunda para no modificar el objeto original en la tabla.
+    const animalCopy = JSON.parse(JSON.stringify(animal));
+
+    // Limpia o modifica los campos para la nueva ficha.
+    delete animalCopy.id; // Elimina el ID para que se cree un nuevo documento.
+    animalCopy.name = `${animal.name} (Copia)`; // Añade un sufijo para evitar nombres duplicados.
+    animalCopy.published = false; // El duplicado no debe estar publicado por defecto.
+    animalCopy.scaled = []; // Limpia el historial de escalado.
+    animalCopy.assignedToAdmin = false; // Reinicia el estado de asignación.
+    animalCopy.infraction = null; // Reinicia el estado de infracción.
+
+    // Navega al formulario de animales, pasando el objeto duplicado a través del estado del router.
+    // El formulario deberá estar preparado para recibir este estado.
+    this.router.navigate(['/form-animal'], {
+      state: { animalData: animalCopy }
+    });
+  }
+  /**
    * Obtiene el texto para el tooltip del botón de editar.
    * @param animal El objeto animal.
    * @returns El texto del tooltip.
