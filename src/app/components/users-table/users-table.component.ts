@@ -140,21 +140,31 @@ confirmationInput: string = ''; // Para el input de confirmación
     this.confirmationInput = ''; // Reseteamos el input
 
     if (this.confirmationAction === 'reactivar' && user.status === 'automatic_suspension') {
-      this.isLoading = true; // Muestra spinner mientras busca datos
+      await this.prepareReactivationData(user);
+    }
+
+    this.displaySuspensionConfirmationDialog = true;
+  }
+
+  private async prepareReactivationData(user: any) {
+    this.isLoading = true; //TODO:
+    try {
       const infractions = await this.infractionsService.getAllInfractionsByUserId(user.uid);
       const pendingReviewInfractions = infractions.filter(inf => inf.status === 'pending_review' && inf.context.entity === 'animal');
 
       if (pendingReviewInfractions.length > 0) {
         const animalPromises = pendingReviewInfractions.map(inf => this.animalService.getAnimalById(inf.context.entityId));
         const animals = await Promise.all(animalPromises);
-        this.pendingAnimalNames = animals.flatMap((animal: any) => animal?.name ? [animal.name] : []);
+        this.pendingAnimalNames = animals.flatMap((animal: any) => animal?.name ? [animal.name] : []).filter(name => name);
       }
 
       this.showResetWarning = true;
-      this.isLoading = false; // Oculta spinner
+    } catch (error) {
+      console.error('Error al preparar los datos de reactivación:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los datos para la reactivación.' });
+    } finally {
+      this.isLoading = false;
     }
-
-    this.displaySuspensionConfirmationDialog = true;
   }
 
   /**
@@ -191,6 +201,27 @@ confirmationInput: string = ''; // Para el input de confirmación
     return pendingAnimalInfractions.length;
   }
 
+  /**
+ * Envía una notificación a un usuario que ha sido reactivado desde una suspensión automática.
+ * @param user El usuario que recibe la notificación.
+ * @param deletedAnimalsCount El número de fichas de animales que fueron eliminadas durante el proceso.
+ */
+  private async sendReactivationNotification(user: any, deletedAnimalsCount: number) {
+    let notificationMessage = 'Tu cuenta ha sido reactivada por un administrador. Tu historial de infracciones y tus strikes han sido reseteados.';
+    if (deletedAnimalsCount > 0) {
+      notificationMessage += ` Fichas de animales eliminadas permanentemente: ${deletedAnimalsCount}.`;
+    }
+
+    const notification = {
+      title: 'Tu cuenta ha sido reactivada',
+      message: notificationMessage,
+      severity: 'success',
+      type: 'account-status',
+      link: '/perfil'
+    };
+    await this.notificationsService.addNotification(user.uid, notification);
+  }
+
   async toggleSuspension(user: any) {
     if (!user || !user.uid) {
       return;
@@ -214,6 +245,11 @@ confirmationInput: string = ''; // Para el input de confirmación
       }
 
       await this.userService.updateUser(user.uid, updateData);
+
+      // Si el usuario ha sido reactivado, enviarle una notificación
+      if (newStatus === 'active' && user.status === 'automatic_suspension') {
+        await this.sendReactivationNotification(user, deletedAnimalsCount);
+      }
 
       // Registrar la acción en el log
       let details = `El usuario '${user.username}' ha sido ${actionText}.`;
