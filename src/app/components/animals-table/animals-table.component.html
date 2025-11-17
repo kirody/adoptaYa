@@ -124,7 +124,7 @@
             <p-button icon="fa-solid"
               [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
               styleClass="p-button-rounded p-button-success p-button-text"
-              (click)="modalconfirmation($event, animal, 'publish')"
+              (click)="openConfirmationDialog(animal, 'publish')"
               [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin) || animal.infraction === 'pending_review' || animal.isClone"
               [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
 
@@ -139,7 +139,7 @@
             }
             <!-- Menú de más acciones -->
             <p-button icon="pi pi-ellipsis-v" styleClass="p-button-rounded p-button-secondary p-button-text"
-              (click)="showAnimalActions($event, animal)" pTooltip="Más acciones" tooltipPosition="top" />
+              (click)="showAnimalActions($event, animal)" pTooltip="Más acciones" tooltipPosition="top"></p-button>
           </div>
         </td>
       </tr>
@@ -333,6 +333,58 @@
     </div>
   </div>
   }
+</p-dialog>
+
+<p-dialog [(visible)]="displayConfirmationDialog" [modal]="true" [style]="{width: '30rem'}" [draggable]="false"
+  [resizable]="false" styleClass="modern-dialog">
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 text-lg font-semibold"
+      [ngClass]="confirmationActionType === 'delete' ? 'text-red-600' : 'text-primary'">
+      <i [class]="confirmationIcon"></i>
+      <span>{{ confirmationHeader }}</span>
+    </div>
+  </ng-template>
+
+  <div class="p-fluid">
+    <div class="flex flex-col items-center text-center p-4 rounded-lg border-1" [ngClass]="{
+      'bg-red-50 border-red-200 text-red-800': confirmationActionType === 'delete',
+      'bg-green-50 border-green-200 text-green-800': confirmationActionType === 'publish' && !confirmationAnimal?.published,
+      'bg-yellow-50 border-yellow-200 text-yellow-800': confirmationActionType === 'publish' && confirmationAnimal?.published
+    }">
+      <i class="text-4xl mb-3" [ngClass]="confirmationIcon"></i>
+      <p class="text-lg m-0 font-medium" [innerHTML]="confirmationMessage"></p>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (click)="displayConfirmationDialog = false" />
+    <p-button [label]="acceptButtonLabel" [icon]="acceptButtonIcon" [severity]="acceptButtonSeverity"
+      (click)="confirmAction()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="displayAssignmentDialog" [modal]="true" [style]="{width: '30rem'}" [draggable]="false"
+  [resizable]="false" styleClass="modern-dialog">
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 text-lg font-semibold"
+      [ngClass]="assignmentActionType === 'unassign' ? 'text-orange-600' : 'text-green-600'">
+      <i [class]="assignmentIcon"></i>
+      <span>{{ assignmentHeader }}</span>
+    </div>
+  </ng-template>
+
+  <div class="flex flex-col items-center text-center p-4 rounded-lg border-1" [ngClass]="{
+      'bg-green-50 border-green-200 text-green-800': assignmentActionType === 'assign',
+      'bg-orange-50 border-orange-200 text-orange-800': assignmentActionType === 'unassign'
+    }">
+    <i class="text-4xl mb-3" [ngClass]="assignmentIcon"></i>
+    <p class="text-lg m-0 font-medium" [innerHTML]="assignmentMessage"></p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (click)="displayAssignmentDialog = false" />
+    <p-button [label]="assignmentAcceptLabel" [severity]="assignmentAcceptSeverity" (click)="confirmAssignmentAction()" />
+  </ng-template>
 </p-dialog>
 
 <p-toast />

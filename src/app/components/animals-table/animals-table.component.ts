@@ -79,6 +79,27 @@ export class AnimalsTableComponent implements OnChanges {
   @ViewChild('menu') menu: Menu | undefined;
   animalActions: MenuItem[] = [];
 
+  // Propiedades para el diálogo de confirmación personalizado
+  displayConfirmationDialog = false;
+  confirmationAnimal: Animal | null = null;
+  confirmationActionType: 'publish' | 'delete' | '' = '';
+  confirmationMessage = '';
+  confirmationHeader = '';
+  confirmationIcon = '';
+  acceptButtonLabel = '';
+  acceptButtonIcon = '';
+  acceptButtonSeverity: 'success' | 'danger' = 'success';
+
+  // Propiedades para el diálogo de asignación
+  displayAssignmentDialog = false;
+  assignmentAnimal: Animal | null = null;
+  assignmentActionType: 'assign' | 'unassign' | '' = '';
+  assignmentMessage = '';
+  assignmentHeader = '';
+  assignmentIcon = '';
+  assignmentAcceptLabel = '';
+  assignmentAcceptSeverity: 'success' | 'warn' = 'success';
+
   ngOnChanges(changes: SimpleChanges): void {
     // Si el filtro inicial existe y los datos de la tabla han cambiado (se han cargado)
     if (this.initialFilter && changes['dataTable'] && changes['dataTable'].currentValue) {
@@ -346,46 +367,6 @@ export class AnimalsTableComponent implements OnChanges {
     return 'Editar ficha';
   }
 
-  modalconfirmation(event: Event, animal: any, type: string) {
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message:
-        type === 'publish' && !animal.published
-          ? '¿Quieres <strong>publicar</strong> a ' + animal.name + '?'
-          : type === 'publish' && animal.published
-            ? '¿Quieres <strong>despublicar</strong> a ' + animal.name + '?'
-            : '¿Quieres eliminar a ' + animal.name + '?',
-      header: 'Aviso',
-      closable: true,
-      closeOnEscape: true,
-      icon: 'pi pi-exclamation-triangle',
-      rejectLabel: 'Cancelar',
-      acceptLabel:
-        type === 'publish' && !animal.published
-          ? 'Publicar'
-          : type === 'publish' && animal.published
-            ? 'Despublicar'
-            : 'Eliminar',
-      acceptIcon: 'pi pi-check',
-      rejectIcon: 'pi pi-times',
-      rejectButtonProps: {
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        severity: type === 'publish' ? 'success' : 'danger',
-      },
-      accept: () => {
-        if (type === 'publish') {
-          this.publishAnimal(animal);
-        } else {
-          this.deleteAnimal(animal);
-        }
-      },
-      reject: () => { },
-    });
-  }
-
   /**
    * Determina si el botón de publicar/despublicar debe estar deshabilitado.
    * El botón se deshabilita si se intenta publicar un animal que está pendiente
@@ -472,6 +453,7 @@ export class AnimalsTableComponent implements OnChanges {
   }
 
   async deleteAnimal(animal: any) {
+    this.isLoading = true;
     try {
       await this.animalService.deleteAnimal(animal.id);
       const details = `El animal '${animal.name}' ha sido eliminado.`;
@@ -484,6 +466,8 @@ export class AnimalsTableComponent implements OnChanges {
       });
     } catch (error) {
       console.error('Error al eliminar el animal:', error);
+    } finally {
+      this.isLoading = false;
     }
   }
 
@@ -649,73 +633,6 @@ export class AnimalsTableComponent implements OnChanges {
     }
   }
 
-  async assignToMe(event: Event, animal: Animal) {
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: `¿Estás seguro de que quieres asignarte la revisión de <strong>${animal.name}</strong>?`,
-      header: 'Confirmar Asignación',
-      icon: 'pi pi-user-plus',
-      acceptLabel: 'Asignar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-success',
-      rejectButtonStyleClass: 'p-button-secondary',
-      accept: async () => {
-        try {
-          const details = `El administrador '${this.user.username}' se ha asignado la revisión del animal '${animal.name}'.`;
-          await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
-
-          // Notificar al moderador que su caso ha sido asignado
-          const moderatorId = animal.scaled[0]?.moderator?.uid;
-          if (moderatorId) {
-            const notification = {
-              title: 'Caso asignado',
-              message: `El administrador ${this.user.username} ha comenzado a revisar tu escalado sobre "${animal.name}".`,
-              severity: 'info',
-              type: 'scaled-assigned',
-              link: `/panel-gestion?animalId=${animal.id}`
-            };
-            this.notificationsService.addNotification(moderatorId, notification);
-          }
-
-          await this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado para revisión directa.');
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso se te ha asignado correctamente.' });
-          this.dataChanged.emit();
-        } catch (error) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo asignar el caso.' });
-          console.error('Error al auto-asignar el caso:', error);
-        }
-      }
-    });
-  }
-
-  async unassignFromMe(event: Event, animal: Animal) {
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: `¿Estás seguro de que quieres <strong>liberar</strong> la revisión de <strong>${animal.name}</strong>? Otro administrador podrá asignárselo.`,
-      header: 'Confirmar Liberación',
-      icon: 'pi pi-user-minus',
-      acceptLabel: 'Liberar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectButtonStyleClass: 'p-button-secondary',
-      accept: async () => {
-        try {
-          // Aquí llamamos a un método en el servicio que simplemente actualiza 'assignedToAdmin' a false.
-          await this.animalService.updateAnimal(animal.id ?? '', { assignedToAdmin: false });
-
-          const details = `El administrador '${this.user.username}' ha liberado la revisión del animal '${animal.name}'.`;
-          await this.logService.addLog('Revisión de animal liberada', details, this.user, 'Animales');
-
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso ha sido liberado correctamente.' });
-          this.dataChanged.emit();
-        } catch (error) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo liberar el caso.' });
-          console.error('Error al liberar el caso:', error);
-        }
-      }
-    });
-  }
-
   showAnimalActions(event: Event, animal: Animal) {
     this.animalActions = this.getAnimalActions(event, animal);
     this.menu?.toggle(event);
@@ -739,9 +656,9 @@ export class AnimalsTableComponent implements OnChanges {
         icon: animal.assignedToAdmin ? 'fa-solid fa-user-minus' : 'fa-solid fa-user-plus',
         command: () => {
           if (animal.assignedToAdmin) {
-            this.unassignFromMe(event, animal);
+            this.openAssignmentDialog(animal, 'unassign');
           } else {
-            this.assignToMe(event, animal);
+            this.openAssignmentDialog(animal, 'assign');
           }
         }
       });
@@ -754,10 +671,136 @@ export class AnimalsTableComponent implements OnChanges {
         label: 'Eliminar',
         icon: 'fa-solid fa-trash',
         styleClass: 'p-menuitem-danger',
-        command: () => this.modalconfirmation(event, animal, 'delete')
+        command: () => this.openConfirmationDialog(animal, 'delete')
       });
     }
 
     return items;
+  }
+
+   openConfirmationDialog(animal: Animal, type: 'publish' | 'delete') {
+    this.confirmationAnimal = animal;
+    this.confirmationActionType = type;
+
+    if (type === 'publish') {
+      const isPublishing = !animal.published;
+      this.confirmationHeader = isPublishing ? 'Confirmar Publicación' : 'Confirmar Despublicación';
+      this.confirmationIcon = isPublishing ? 'pi pi-cloud-upload' : 'pi pi-eye-slash';
+      this.confirmationMessage = `Estás a punto de <strong>${isPublishing ? 'publicar' : 'despublicar'}</strong> la ficha de <strong>${animal.name}</strong>. ¿Deseas continuar?`;
+      this.acceptButtonLabel = isPublishing ? 'Publicar' : 'Despublicar';
+      this.acceptButtonIcon = 'pi pi-check';
+      this.acceptButtonSeverity = 'success';
+    } else { // type === 'delete'
+      this.confirmationHeader = 'Confirmar Eliminación';
+      this.confirmationIcon = 'pi pi-trash';
+      this.confirmationMessage = `Estás a punto de <strong>eliminar permanentemente</strong> la ficha de <strong>${animal.name}</strong>. Esta acción no se puede deshacer.`;
+      this.acceptButtonLabel = 'Eliminar';
+      this.acceptButtonIcon = 'pi pi-check';
+      this.acceptButtonSeverity = 'danger';
+    }
+
+    this.displayConfirmationDialog = true;
+  }
+
+  /**
+   * Ejecuta la acción confirmada en el diálogo.
+   */
+  confirmAction() {
+    if (!this.confirmationAnimal) return;
+
+    if (this.confirmationActionType === 'publish') {
+      this.publishAnimal(this.confirmationAnimal);
+    } else if (this.confirmationActionType === 'delete') {
+      this.deleteAnimal(this.confirmationAnimal);
+    }
+
+    this.resetConfirmationState();
+  }
+
+  private resetConfirmationState() {
+    this.displayConfirmationDialog = false;
+    this.confirmationAnimal = null;
+    this.confirmationActionType = '';
+  }
+
+  openAssignmentDialog(animal: Animal, type: 'assign' | 'unassign') {
+    this.assignmentAnimal = animal;
+    this.assignmentActionType = type;
+
+    if (type === 'assign') {
+      this.assignmentHeader = 'Confirmar Asignación';
+      this.assignmentIcon = 'pi pi-user-plus';
+      this.assignmentMessage = `¿Estás seguro de que quieres asignarte la revisión de <strong>${animal.name}</strong>?`;
+      this.assignmentAcceptLabel = 'Asignar';
+      this.assignmentAcceptSeverity = 'success';
+    } else { // type === 'unassign'
+      this.assignmentHeader = 'Confirmar Liberación';
+      this.assignmentIcon = 'pi pi-user-minus';
+      this.assignmentMessage = `¿Estás seguro de que quieres <strong>liberar</strong> la revisión de <strong>${animal.name}</strong>? Otro administrador podrá asignárselo.`;
+      this.assignmentAcceptLabel = 'Liberar';
+      this.assignmentAcceptSeverity = 'warn';
+    }
+
+    this.displayAssignmentDialog = true;
+  }
+
+  async confirmAssignmentAction() {
+    if (!this.assignmentAnimal) return;
+
+    if (this.assignmentActionType === 'assign') {
+      await this.assignToMe(this.assignmentAnimal);
+    } else if (this.assignmentActionType === 'unassign') {
+      await this.unassignFromMe(this.assignmentAnimal);
+    }
+
+    this.resetAssignmentState();
+  }
+
+  private resetAssignmentState() {
+    this.displayAssignmentDialog = false;
+    this.assignmentAnimal = null;
+    this.assignmentActionType = '';
+  }
+
+  private async assignToMe(animal: Animal) {
+    try {
+      const details = `El administrador '${this.user.username}' se ha asignado la revisión del animal '${animal.name}'.`;
+      await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
+
+      // Notificar al moderador que su caso ha sido asignado
+      const moderatorId = animal.scaled[0]?.moderator?.uid;
+      if (moderatorId) {
+        const notification = {
+          title: 'Caso asignado',
+          message: `El administrador ${this.user.username} ha comenzado a revisar tu escalado sobre "${animal.name}".`,
+          severity: 'info',
+          type: 'scaled-assigned',
+          link: `/panel-gestion?animalId=${animal.id}`
+        };
+        this.notificationsService.addNotification(moderatorId, notification);
+      }
+
+      await this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado para revisión directa.');
+      this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso se te ha asignado correctamente.' });
+      this.dataChanged.emit();
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo asignar el caso.' });
+      console.error('Error al auto-asignar el caso:', error);
+    }
+  }
+
+  private async unassignFromMe(animal: Animal) {
+    try {
+      await this.animalService.updateAnimal(animal.id ?? '', { assignedToAdmin: false });
+
+      const details = `El administrador '${this.user.username}' ha liberado la revisión del animal '${animal.name}'.`;
+      await this.logService.addLog('Revisión de animal liberada', details, this.user, 'Animales');
+
+      this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso ha sido liberado correctamente.' });
+      this.dataChanged.emit();
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo liberar el caso.' });
+      console.error('Error al liberar el caso:', error);
+    }
   }
 }
