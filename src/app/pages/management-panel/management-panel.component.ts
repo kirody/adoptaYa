@@ -21,7 +21,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule, } from 'primeng/inputicon';
 import { AuthService } from '../../services/auth.service';
-import { UserData } from '../../models/user-data';
+import { UserData } from './../../models/user-data';
 import { Observable, take } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { StatisticsComponent } from "../../components/statistics/statistics.component";
@@ -39,6 +39,7 @@ import { LogComponent } from '../../components/log/log.component';
 import { ActivatedRoute } from '@angular/router';
 import { Roles } from '../../models/roles.enum';
 import { CardModule } from "primeng/card";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-management-panel',
@@ -81,6 +82,7 @@ export class ManagementPanelComponent implements OnInit {
   private requestsService = inject(RequestsService);
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private notificationsService = inject(NotificationsService);
 
   currentUser$: Observable<any | null>;
   /*  user!: UserData; */
@@ -96,6 +98,15 @@ export class ManagementPanelComponent implements OnInit {
   countTabRequests = '0';
   countTabProtectors = '0';
 
+  // Propiedades para el modal de aviso de reactivación
+  private notificationsSubscription: Subscription | undefined;
+  displayReactivationDialog: boolean = false;
+  reactivationNotificationMessage: string = '';
+  currentReactivationNotificationId: string | null = null;
+  reactivationNotificationType: string = '';
+  isReactivationButtonDisabled: boolean = true;
+  reactivationButtonLabel: string = 'He leído y entiendo el aviso';
+
   initialAnimalFilter: string | null = null;
 
   @ViewChild(AnimalsTableComponent) animalsTableComponent!: AnimalsTableComponent;
@@ -104,6 +115,8 @@ export class ManagementPanelComponent implements OnInit {
     this.currentUser$ = this.authService.currentUser$;
 
     this.currentUser$.subscribe((user: UserData) => {
+      if (!user) return;
+
       this.user.set(user);
       // Leemos los queryParams aquí para asegurarnos de que se procesan después de que el usuario está disponible.
       this.route.queryParams.pipe(take(1)).subscribe(params => {
@@ -116,11 +129,67 @@ export class ManagementPanelComponent implements OnInit {
       });
       this.initTabs();
       this.loadRequestsCount();
+      this.subscribeToNotifications(user.uid??'');
       this.loadProtectorsCount();
     });
   }
 
   ngOnInit() {
+  }
+
+  ngOnDestroy(): void {
+    this.notificationsSubscription?.unsubscribe();
+  }
+
+  subscribeToNotifications(userId: string): void {
+    this.notificationsSubscription?.unsubscribe();
+    this.notificationsSubscription = this.notificationsService.getUserNotifications(userId).subscribe(data => {
+      this.checkReactivationNotification(data.notifications);
+    });
+  }
+
+  /**
+   * Comprueba si hay una notificación de reactivación no leída y muestra el modal si la encuentra.
+   * @param notifications La lista de notificaciones del usuario.
+   */
+  private checkReactivationNotification(notifications: any[]): void {
+    const reactivationNotification = notifications.find(n =>
+      !n.read && n.type === 'reactivation-auto-suspension'
+    );
+
+    if (reactivationNotification) {
+      this.reactivationNotificationMessage = reactivationNotification.message;
+      this.currentReactivationNotificationId = reactivationNotification.id;
+      this.displayReactivationDialog = true;
+      this.reactivationNotificationType = reactivationNotification.type;
+      this.isReactivationButtonDisabled = true;
+
+      let countdown = 10;
+      this.reactivationButtonLabel = `Entendido (se habilitará en ${countdown}s)`;
+
+      const interval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          this.reactivationButtonLabel = `Entendido (se habilitará en ${countdown}s)`;
+        } else {
+          clearInterval(interval);
+          this.reactivationButtonLabel = 'He leído y entiendo el aviso';
+          this.isReactivationButtonDisabled = false;
+        }
+      }, 1000);
+    }
+  }
+
+  /**
+   * Cierra el diálogo de reactivación y marca la notificación como leída.
+   */
+  async onReactivationDialogClose(): Promise<void> {
+    this.displayReactivationDialog = false;
+    const u = this.user();
+    if (u && this.currentReactivationNotificationId) {
+      await this.notificationsService.markAsRead(u.uid, this.currentReactivationNotificationId);
+      this.currentReactivationNotificationId = null;
+    }
   }
 
   // --- Métodos de comprobación de permisos ---

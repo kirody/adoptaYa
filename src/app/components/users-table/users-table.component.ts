@@ -216,7 +216,7 @@ confirmationInput: string = ''; // Para el input de confirmación
       title: 'Tu cuenta ha sido reactivada',
       message: notificationMessage,
       severity: 'success',
-      type: 'account-status',
+      type: user.status === 'automatic_suspension' ? 'reactivation-auto-suspension' : 'reactivation',
       link: '/perfil'
     };
     await this.notificationsService.addNotification(user.uid, notification);

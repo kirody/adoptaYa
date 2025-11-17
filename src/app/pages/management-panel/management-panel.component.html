@@ -127,3 +127,34 @@
 
 <p-toast />
 <p-confirmdialog />
+
+
+<!-- p-dialog para el aviso de reactivación -->
+<p-dialog [(visible)]="displayReactivationDialog" [modal]="true" [closable]="false" [draggable]="false"
+  [resizable]="false" [style]="{width: '35rem'}" styleClass="p-dialog-reactivation">
+  <ng-template pTemplate="header">
+    <div class="flex items-center justify-center w-full gap-3 p-3 bg-yellow-500 text-white rounded-t-lg">
+      <i class="pi pi-exclamation-triangle text-3xl"></i>
+      <span class="font-bold text-2xl">Aviso Importante de Cuenta</span>
+    </div>
+  </ng-template>
+  <div class="flex flex-col gap-4 text-center">
+    <h3 class="font-bold text-xl m-0">Tu cuenta ha sido reactivada</h3>
+    <p class="text-gray-600">
+      Tu cuenta fue suspendida automáticamente por acumulación de infracciones. Un administrador la ha reactivado,
+      dándote una nueva oportunidad.
+    </p>
+
+    <div class="bg-gray-50 border-2 border-dashed rounded-lg p-3 text-left space-y-2" *ngIf="reactivationNotificationType === 'reactivation-auto-suspension'">
+      <p><i class="pi pi-check-circle text-green-500 mr-2"></i>Tu historial de infracciones y tus <strong>strikes han
+          sido reseteados</strong>.</p>
+      <p><i class="pi pi-trash text-red-500 mr-2"></i>Las fichas de animales asociadas a infracciones no resueltas han sido <strong>eliminadas permanentemente</strong>.</p>
+      <p><i class="pi pi-exclamation-circle text-orange-500 mr-2"></i>Por favor, revisa nuestras políticas de contenido. Futuras infracciones podrían resultar en una <strong>suspensión definitiva</strong>.</p>
+    </div>
+
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="reactivationButtonLabel" icon="pi pi-check" (click)="onReactivationDialogClose()"
+      styleClass="w-full" [disabled]="isReactivationButtonDisabled"></p-button>
+  </ng-template>
+</p-dialog>
