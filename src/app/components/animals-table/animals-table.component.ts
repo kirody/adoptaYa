@@ -1,6 +1,6 @@
 import { Component, computed, EventEmitter, inject, Input, Output, signal, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { TableModule } from "primeng/table";
-import { IconFieldModule } from "primeng/iconfield";
+import { IconFieldModule, } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { TagModule } from "primeng/tag";
 import { ButtonModule, ButtonSeverity } from "primeng/button";
@@ -8,7 +8,7 @@ import { CardNodataComponent } from "../card-nodata/card-nodata.component";
 import { CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { FormattedAgePipe } from "../../pipes/formatted-age.pipe";
-import { Animal } from '../../models/animal';
+import { Animal, } from '../../models/animal';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AnimalsService } from '../../services/animals.service';
@@ -25,6 +25,8 @@ import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { LogService } from '../../services/log.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { Table } from 'primeng/table';
+import { Menu, MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-animals-table',
@@ -45,7 +47,8 @@ import { Table } from 'primeng/table';
     ToastModule,
     TextareaModule,
     ProgressSpinnerModule,
-    InputTextModule
+    InputTextModule,
+    MenuModule
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './animals-table.component.html',
@@ -73,6 +76,8 @@ export class AnimalsTableComponent implements OnChanges {
   hideAssignedToAdmin = false;
   showOnlyAssignedToMe = false;
   @ViewChild('dt') table: Table | undefined;
+  @ViewChild('menu') menu: Menu | undefined;
+  animalActions: MenuItem[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
     // Si el filtro inicial existe y los datos de la tabla han cambiado (se han cargado)
@@ -709,5 +714,50 @@ export class AnimalsTableComponent implements OnChanges {
         }
       }
     });
+  }
+
+  showAnimalActions(event: Event, animal: Animal) {
+    this.animalActions = this.getAnimalActions(event, animal);
+    this.menu?.toggle(event);
+  }
+
+  getAnimalActions(event: Event, animal: Animal): MenuItem[] {
+    const items: MenuItem[] = [];
+
+    // Acción de Duplicar
+    items.push({
+      label: 'Duplicar',
+      icon: 'fa-solid fa-copy',
+      disabled: this.isEditDisabled(animal) || (this.user?.role === 'ROLE_MOD' && animal.assignedToAdmin) || animal.isClone,
+      command: () => this.duplicateAnimal(animal)
+    });
+
+    // Acciones solo para Admin
+    if (this.user?.role === 'ROLE_ADMIN') {
+      items.push({
+        label: animal.assignedToAdmin ? 'Liberar caso' : 'Asignarme caso',
+        icon: animal.assignedToAdmin ? 'fa-solid fa-user-minus' : 'fa-solid fa-user-plus',
+        command: () => {
+          if (animal.assignedToAdmin) {
+            this.unassignFromMe(event, animal);
+          } else {
+            this.assignToMe(event, animal);
+          }
+        }
+      });
+
+      items.push({
+        separator: true
+      });
+
+      items.push({
+        label: 'Eliminar',
+        icon: 'fa-solid fa-trash',
+        styleClass: 'p-menuitem-danger',
+        command: () => this.modalconfirmation(event, animal, 'delete')
+      });
+    }
+
+    return items;
   }
 }

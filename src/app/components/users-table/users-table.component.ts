@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter, OnDestroy, ViewChild } from '@angular/core';
 import { AvatarModule } from 'primeng/avatar';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -10,7 +10,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { InfractionsService } from '../../services/infractions.service';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { CardNodataComponent } from '../card-nodata/card-nodata.component';
@@ -28,6 +28,7 @@ import { GeminiService } from '../../services/gemini.service';
 import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
 import { TagModule } from "primeng/tag";
 import { AccordionModule } from 'primeng/accordion';
+import { Menu, MenuModule } from "primeng/menu";
 
 @Component({
   selector: 'app-users-table',
@@ -50,7 +51,8 @@ import { AccordionModule } from 'primeng/accordion';
     InputTextModule,
     OrderByDatePipe,
     TagModule,
-    AccordionModule
+    AccordionModule,
+    MenuModule
   ],
   templateUrl: './users-table.component.html',
   styleUrl: './users-table.component.css',
@@ -100,7 +102,9 @@ export class UsersTableComponent implements OnDestroy {
   confirmationAction: 'suspender' | 'reactivar' | '' = '';
   pendingAnimalNames: string[] = [];
   showResetWarning: boolean = false;
-confirmationInput: string = ''; // Para el input de confirmación
+  confirmationInput: string = ''; // Para el input de confirmación
+  @ViewChild('menu') menu: Menu | undefined;
+  userActions: MenuItem[] = [];
 
   ngOnInit(): void {
     // Inicializa los permisos
@@ -290,7 +294,7 @@ confirmationInput: string = ''; // Para el input de confirmación
     });
   }
 
-   onConfirmSuspension() {
+  onConfirmSuspension() {
     if (this.confirmationUser) {
       this.toggleSuspension(this.confirmationUser);
     }
@@ -564,6 +568,46 @@ confirmationInput: string = ''; // Para el input de confirmación
     } finally {
       this.isLoading = false;
     }
+  }
+
+  showUserActions(event: Event, user: any) {
+    this.userActions = this.getUserActions(event, user);
+    this.menu?.toggle(event);
+  }
+
+  getUserActions(event: Event, user: any): MenuItem[] {
+    const items: MenuItem[] = [];
+
+    // Acción de Restablecer Contraseña
+    items.push({
+      label: 'Restablecer contraseña',
+      icon: 'fa-solid fa-key',
+      disabled: user.status !== 'active',
+      command: () => this.confirmPasswordReset(event, user)
+    });
+
+    // Acción de Ver Notas Internas
+    items.push({
+      label: 'Ver/Añadir notas',
+      icon: 'fa-solid fa-clipboard-list',
+      disabled: user.status !== 'active',
+      command: () => this.openNotesDialog(user)
+    });
+
+    // Acción de Ver Infracción (solo para moderadores)
+    if (user.role === 'ROLE_MOD') {
+      items.push({
+        separator: true
+      });
+      items.push({
+        label: 'Ver infracción',
+        icon: 'fa-solid fa-triangle-exclamation',
+        styleClass: 'p-menuitem-warning', // Para darle un color distintivo
+        command: () => this.viewUserInfraction(user)
+      });
+    }
+
+    return items;
   }
 
   ngOnDestroy(): void { }

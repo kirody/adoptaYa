@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { LogService } from '../../services/log.service';
-import { Observable } from 'rxjs';
+import { first, Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -11,6 +11,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { Roles } from '../../models/roles.enum';
 import { CardNodataComponent } from "../card-nodata/card-nodata.component";
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from "primeng/dialog";
 
 @Component({
   selector: 'app-log',
@@ -24,7 +25,8 @@ import { ButtonModule } from 'primeng/button';
     InputIconModule,
     TooltipModule,
     CardNodataComponent,
-    ButtonModule
+    ButtonModule,
+    DialogModule
 ],
   templateUrl: './log.component.html',
   styleUrl: './log.component.css',
@@ -41,6 +43,8 @@ export class LogComponent implements OnInit {
     { label: 'Default', value: Roles.DEFAULT },
     { label: 'Mod', value: Roles.MOD },
   ];
+  displayDetailsDialog = false;
+  selectedLogDetails = '';
 
   ngOnInit(): void {
     this.logs$ = this.logService.getLogs();
@@ -94,5 +98,10 @@ export class LogComponent implements OnInit {
       default:
         return 'warn';
     }
+  }
+
+  showDetailsDialog(details: string) {
+    this.selectedLogDetails = details;
+    this.displayDetailsDialog = true;
   }
 }

@@ -2,7 +2,8 @@
   <p-table #dt [value]="(logs$ | async) || []" [loading]="loading" dataKey="id" [rows]="10"
     [showCurrentPageReport]="true" [rowsPerPageOptions]="[10, 25, 50]" [paginator]="true"
     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-    [globalFilterFields]="['username', 'action', 'details', 'context']" styleClass="p-datatable-striped">
+    [globalFilterFields]="['username', 'action', 'details', 'context']" styleClass="p-datatable-striped"
+    [tableStyle]="{'table-layout': 'fixed', 'width': '100%'}">
     <ng-template pTemplate="caption">
       <div class="flex justify-content-end items-center gap-2">
         <div class="flex gap-2">
@@ -15,7 +16,7 @@
             <i class="pi pi-search"></i>
           </p-inputIcon>
           <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-            placeholder="Buscar animales" />
+            placeholder="Buscar en logs..." />
         </p-iconField>
       </div>
     </ng-template>
@@ -25,7 +26,7 @@
         <th pSortableColumn="username" style="width:15%">Usuario <p-sortIcon field="username"></p-sortIcon></th>
         <th pSortableColumn="context" style="width:15%">Contexto <p-sortIcon field="context"></p-sortIcon></th>
         <th pSortableColumn="action" style="width:15%">Acción <p-sortIcon field="action"></p-sortIcon></th>
-        <th>Detalles</th>
+        <th style="width:35%">Detalles</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-log>
@@ -42,8 +43,10 @@
           <p-tag [value]="log.action" [severity]="getSeverity(log.action)"></p-tag>
         </td>
         <td>
-          <div class="truncate" [pTooltip]="log.details" tooltipPosition="top">
-            {{ log.details }}
+          <div class="flex items-center justify-between">
+            <span class="truncate" [pTooltip]="log.details" tooltipPosition="top">{{ log.details }}</span>
+            <p-button icon="pi pi-eye" styleClass="p-button-text p-button-secondary p-button-sm"
+              (click)="showDetailsDialog(log.details)" pTooltip="Ver detalles completos" tooltipPosition="top"></p-button>
           </div>
         </td>
       </tr>
@@ -55,4 +58,22 @@
       </tr>
     </ng-template>
   </p-table>
+
+  <p-dialog [(visible)]="displayDetailsDialog" [modal]="true" [style]="{width: '50vw', 'max-width': '600px'}"
+    [draggable]="false" [resizable]="false" styleClass="modern-dialog">
+    <ng-template pTemplate="header" class="w-full">
+      <div class="flex items-center gap-2 font-semibold">
+        <i class="pi pi-align-left"></i>
+        <span>Detalles del Log</span>
+      </div>
+    </ng-template>
+    <div class="p-3 bg-surface-900 text-surface-50 font-mono border-round-md">
+      <pre class="m-0" style="white-space: pre-wrap; word-wrap: break-word;"><code>{{ selectedLogDetails }}</code></pre>
+    </div>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-end w-full">
+        <p-button icon="pi pi-times" label="Cerrar" (click)="displayDetailsDialog=false" />
+      </div>
+    </ng-template>
+  </p-dialog>
 </div>

@@ -2,6 +2,7 @@
   <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
     [style]="{ width: '50px', height: '50px' }" />
 </div>
+<p-menu #menu [model]="animalActions" [popup]="true" />
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
   <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }"
@@ -66,14 +67,16 @@
         <td>
           <span class="mr-2">{{ animal.name }}</span>
           @if(animal.isClone) {
-            <i class="fa-solid fa-clone text-blue-500" pTooltip="Ficha clonada" tooltipPosition="top"></i>
+          <i class="fa-solid fa-clone text-blue-500" pTooltip="Ficha clonada" tooltipPosition="top"></i>
           }
           @if(animal.infraction === 'pending_review') {
-            <i class="fa-solid fa-flag text-red-500" pTooltip="Infracción detectada. Requiere revisión." tooltipPosition="top"></i>
+          <i class="fa-solid fa-flag text-red-500" pTooltip="Infracción detectada. Requiere revisión."
+            tooltipPosition="top"></i>
           } @else if (animal.infraction === 'resolved') {
-            <i class="fa-solid fa-shield-halved text-green-500" pTooltip="Infracción resuelta." tooltipPosition="top"></i>
+          <i class="fa-solid fa-shield-halved text-green-500" pTooltip="Infracción resuelta." tooltipPosition="top"></i>
           }
-          @if(user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin && getScaledStatusTag(animal) !== 'Cerrado') {
+          @if(user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin &&
+          getScaledStatusTag(animal) !== 'Cerrado') {
           <i class="fa-solid fa-triangle-exclamation text-orange-500" pTooltip="Requiere revisión"
             tooltipPosition="top"></i>
           }
@@ -111,47 +114,33 @@
         </td>
         <td>{{ animal.protectressName }}</td>
         <td>
-          <!-- Editar -->
-          <p-button icon="fa-solid fa-pen-to-square" styleClass="p-button-rounded p-button-warning p-button-text"
-            (click)="editAnimal(animal.id)"
-            [disabled]="isEditDisabled(animal) || (user?.role === 'ROLE_MOD' && (animal.assignedToAdmin || animal.published))"
-            [pTooltip]="getEditTooltip(animal)" tooltipPosition="top"></p-button>
-          <!-- Duplicar -->
-          <p-button icon="fa-solid fa-copy" styleClass="p-button-rounded p-button-info p-button-text"
-            (click)="duplicateAnimal(animal)"
-            [disabled]="isEditDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin) || animal.isClone"
-            pTooltip="Duplicar ficha" tooltipPosition="top"></p-button>
-          <!-- Publicar -->
-          <p-button icon="fa-solid"
-            [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
-            styleClass="p-button-rounded p-button-warning p-button-text"
-            (click)="modalconfirmation($event, animal, 'publish')"
-            [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ||
-              animal.infraction === 'pending_review' || animal.isClone"
-            [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
-          @if (user?.role === 'ROLE_MOD') {
-          <!-- Escalar -->
-          @if (!animal.published) {
-          <p-button icon="fa-solid"
-            [ngClass]="{'fa-comment': !hasModeratorScaled(animal), 'fa-comment-slash': hasModeratorScaled(animal)}"
-            styleClass="p-button-rounded p-button-warning p-button-text" (click)="scaledAnimal(animal)"
-            [disabled]="hasModeratorScaled(animal) || animal.assignedToAdmin"
-            [pTooltip]="hasModeratorScaled(animal) ? 'Escalado' : 'Escalar a administrador'"
-            tooltipPosition="top"></p-button>
-          }
-          }
-          @if (user?.role === 'ROLE_ADMIN') {
-          <!-- Asignar a admin -->
-          <p-button [icon]="animal.assignedToAdmin ? 'fa-solid fa-user-minus' : 'fa-solid fa-user-plus'"
-            styleClass="p-button-rounded p-button-info p-button-text"
-            (click)="animal.assignedToAdmin ? unassignFromMe($event, animal) : assignToMe($event, animal)"
-            [pTooltip]="animal.assignedToAdmin ? 'Liberar este caso' : 'Asignarme este caso'"
-            tooltipPosition="top"></p-button>
-          <!-- Eliminar -->
-          <p-button icon="fa-solid fa-trash" styleClass="p-button-rounded p-button-warning p-button-text"
-            (click)="modalconfirmation($event, animal, 'delete')" pTooltip="Eliminar animal"
-            tooltipPosition="top"></p-button>
-          }
+          <div class="flex">
+            <!-- Editar -->
+            <p-button icon="fa-solid fa-pen-to-square" styleClass="p-button-rounded p-button-warning p-button-text"
+              (click)="editAnimal(animal.id)"
+              [disabled]="isEditDisabled(animal) || (user?.role === 'ROLE_MOD' && (animal.assignedToAdmin || animal.published))"
+              [pTooltip]="getEditTooltip(animal)" tooltipPosition="top"></p-button>
+            <!-- Publicar/Despublicar -->
+            <p-button icon="fa-solid"
+              [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"
+              styleClass="p-button-rounded p-button-success p-button-text"
+              (click)="modalconfirmation($event, animal, 'publish')"
+              [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin) || animal.infraction === 'pending_review' || animal.isClone"
+              [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
+
+            @if (user?.role === 'ROLE_MOD' && !animal.published) {
+            <!-- Escalar -->
+            <p-button icon="fa-solid"
+              [ngClass]="{'fa-comment': !hasModeratorScaled(animal), 'fa-comment-slash': hasModeratorScaled(animal)}"
+              styleClass="p-button-rounded p-button-warning p-button-text" (click)="scaledAnimal(animal)"
+              [disabled]="hasModeratorScaled(animal) || animal.assignedToAdmin"
+              [pTooltip]="hasModeratorScaled(animal) ? 'Escalado' : 'Escalar a administrador'"
+              tooltipPosition="top"></p-button>
+            }
+            <!-- Menú de más acciones -->
+            <p-button icon="pi pi-ellipsis-v" styleClass="p-button-rounded p-button-secondary p-button-text"
+              (click)="showAnimalActions($event, animal)" pTooltip="Más acciones" tooltipPosition="top" />
+          </div>
         </td>
       </tr>
     </ng-template>
@@ -333,8 +322,8 @@
         class="p-button-outlined" />
       }
       @if (showAdminActionPanel()) {
-      <p-button label=" " severity="danger" class="p-button-outlined"
-        (click)="resolveScaled('toAdmin')" [disabled]="scaleComment === ''">
+      <p-button label=" " severity="danger" class="p-button-outlined" (click)="resolveScaled('toAdmin')"
+        [disabled]="scaleComment === ''">
         Admin <i class="fa-solid fa-arrow-left mx-1"></i> Mod
       </p-button>
       <p-button label=" " severity="success" (click)="resolveScaled('toMod')" [disabled]="scaleComment === ''">

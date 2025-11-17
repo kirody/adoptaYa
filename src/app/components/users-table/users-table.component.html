@@ -2,6 +2,7 @@
   <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
     [style]="{ width: '50px', height: '50px' }" />
 </div>
+<p-menu #menu [model]="userActions" [popup]="true" />
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
   <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }"
@@ -47,7 +48,7 @@
         </td>
         <td>
           <p-tag [value]="getTranslatedStatus(user.status)" [severity]="getStatusSeverity(user.status)">
-            <i *ngIf="user.status === 'infraction'" class="fa-solid fa-triangle-exclamation text-orange-500"
+            <i *ngIf="user.status === 'infraction'" class="fa-solid fa-triangle-exclamation"
               pTooltip="Este usuario tiene una infracción pendiente de revisión" tooltipPosition="top"></i>
           </p-tag>
         </td>
@@ -60,28 +61,22 @@
           </div>
         </td>
         <td>
-          <!-- Botón para Activar nuevos moderadores -->
-          <p-button *ngIf="user.status === 'pending_activation'" icon="fa-solid fa-user-plus"
-            pTooltip="Activar nuevo moderador" tooltipPosition="top" severity="success"
-            styleClass="p-button-rounded p-button-text" (click)="confirmActivation($event, user)"></p-button>
-
-          <!-- Botón para Suspender/Reactivar -->
-          <p-button
-            *ngIf="user.status === 'active' || user.status === 'suspended' || user.status === 'automatic_suspension'"
-            [icon]="user.status === 'active' ? 'fa-solid fa-user-slash' : 'fa-solid fa-user-check'"
-            [pTooltip]="user.status === 'active' ? 'Suspender usuario' : 'Reactivar usuario'" tooltipPosition="top"
-            [severity]="user.status === 'active' ? 'danger' : 'success'" styleClass="p-button-rounded p-button-text"
-            (click)="confirmSuspension($event, user)"></p-button>
-
-          <p-button icon="fa-solid fa-key" pTooltip="Restablecer contraseña" tooltipPosition="top"
-            styleClass="p-button-rounded p-button-text p-button-info" (click)="confirmPasswordReset($event, user)"
-            [disabled]="user.status !== 'active'"></p-button>
-          <p-button icon="fa-solid fa-triangle-exclamation" pTooltip="Ver infracción" tooltipPosition="top"
-            styleClass="p-button-rounded p-button-text p-button-danger" (click)="viewUserInfraction(user)"
-            *ngIf="user.role === 'ROLE_MOD'"></p-button>
-          <p-button icon="fa-solid fa-clipboard-list" pTooltip="Ver/Añadir notas internas" tooltipPosition="top"
-            styleClass="p-button-rounded p-button-text p-button-secondary" (click)="openNotesDialog(user)"
-            [disabled]="user.status !== 'active'"></p-button>
+          <div class="flex">
+            <!-- Botón para Activar nuevos moderadores -->
+            <p-button *ngIf="user.status === 'pending_activation'" icon="fa-solid fa-user-plus"
+              pTooltip="Activar nuevo moderador" tooltipPosition="top" severity="success"
+              styleClass="p-button-rounded p-button-text" (click)="confirmActivation($event, user)"></p-button>
+            <!-- Botón para Suspender/Reactivar -->
+            <p-button
+              *ngIf="user.status === 'active' || user.status === 'suspended' || user.status === 'automatic_suspension'"
+              [icon]="user.status === 'active' ? 'fa-solid fa-user-slash' : 'fa-solid fa-user-check'"
+              [pTooltip]="user.status === 'active' ? 'Suspender usuario' : 'Reactivar usuario'" tooltipPosition="top"
+              [severity]="user.status === 'active' ? 'danger' : 'success'" styleClass="p-button-rounded p-button-text"
+              (click)="confirmSuspension($event, user)"></p-button>
+            <!-- Menú de más acciones -->
+            <p-button icon="pi pi-ellipsis-v" styleClass="p-button-rounded p-button-secondary p-button-text"
+              (click)="showUserActions($event, user)" pTooltip="Más acciones" tooltipPosition="top" />
+          </div>
         </td>
       </tr>
     </ng-template>
@@ -248,13 +243,21 @@
       </div>
     </ng-template>
 
-    <div class="p-fluid text-center">
-      <p class="text-lg mb-4">
-        Estás a punto de <strong>{{ confirmationAction }}</strong> al usuario <strong>{{ confirmationUser?.username
-          }}</strong>.</p>
-
+    <div class="p-fluid">
+      <div class="flex flex-col items-center text-center p-4 mb-4 rounded-lg border-1" [ngClass]="{
+        'bg-red-50 border-red-200 text-red-800': confirmationAction === 'suspender',
+        'bg-green-50 border-green-200 text-green-800': confirmationAction === 'reactivar'
+      }">
+        <i class="text-4xl mb-3" [ngClass]="{
+          'pi pi-exclamation-triangle': confirmationAction === 'suspender',
+          'pi pi-check-circle': confirmationAction === 'reactivar'
+        }"></i>
+        <p class="text-lg m-0 font-medium">
+          Estás a punto de <strong>{{ confirmationAction }}</strong> al usuario <strong>{{ confirmationUser?.username }}</strong>.
+        </p>
+      </div>
       <!-- Panel de Consecuencias -->
-      <div *ngIf="showResetWarning" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-left">
+      <div *ngIf="showResetWarning" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-left mt-5">
         <p class="font-bold text-lg text-gray-800 mb-3">Por favor, revisa y confirma las siguientes consecuencias:</p>
 
         <ul class="list-none p-0 m-0 space-y-4">
@@ -272,8 +275,8 @@
           <!-- Consecuencia 1: Eliminación de Animales -->
           <li *ngIf="pendingAnimalNames.length > 0" class="flex items-start gap-3">
             <i class="pi pi-folder-open text-2xl text-yellow-600 mt-1"></i>
-            <div>
-              <h4 class="font-bold m-0">Eliminación de Fichas de Animales</h4>
+            <div class="w-full">
+              <h4 class="font-bold m-0">Eliminación de Fichas de Animales ({{pendingAnimalNames.length}})</h4>
               <p class="text-sm m-0">
                 Al no haberse solucionado las infracciones pendientes, las siguientes fichas serán <strong>eliminadas permanentemente</strong>:
                 <strong class="block mt-1 text-yellow-800">{{ pendingAnimalNames.join(', ') }}</strong>
