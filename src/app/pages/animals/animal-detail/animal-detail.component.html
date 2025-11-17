@@ -42,46 +42,54 @@
 
     <!-- Columna Derecha: Detalles y Acciones (Sticky) -->
     <div class="col-12 md:col-5 p-4">
-      <div class="sticky top-28">
-        <div class="p-4 border rounded-lg shadow-md bg-white dark:bg-surface-800">
-          <h2 class="font-bold text-3xl mb-2">{{currentAnimal.name}}</h2>
-          <div class="flex items-center gap-4 text-surface-500 dark:text-surface-400 mb-4">
-            <span class="flex items-center gap-2"><i [class]="`fa-solid ${icon}`"></i> {{ currentAnimal.specie }}</span>
-            <span class="flex items-center gap-2"><i [class]="`fa-solid ${gender}`"></i> {{ currentAnimal.gender
-              }}</span>
+      <div class="sticky top-20">
+        <div class="p-5 border rounded-xl shadow-lg bg-white dark:bg-surface-800">
+          <div class="flex justify-between items-start mb-3">
+            <h2 class="font-bold text-4xl text-gray-700 ">{{currentAnimal.name}}</h2>
+          </div>
+          <div class="flex items-center gap-2 mb-4">
+            <p-tag [value]="currentAnimal.specie" [icon]="'fa-solid ' + icon" severity="info" [rounded]="true"></p-tag>
+            <p-tag [value]="currentAnimal.gender" [icon]="'fa-solid ' + gender" severity="warn" [rounded]="true"></p-tag>
           </div>
 
           <!-- Lista de Detalles -->
-          <ul class="list-none p-0 m-0 text-sm space-y-2">
-            <li class="flex justify-between py-2 border-t border-surface-200 dark:border-surface-700">
-              <span class="font-semibold text-surface-600 dark:text-surface-300">Edad:</span>
-              <span>{{ currentAnimal.age }} años</span>
-            </li>
-            <li class="flex justify-between py-2 border-t border-surface-200 dark:border-surface-700">
-              <span class="font-semibold text-surface-600 dark:text-surface-300">Raza:</span>
-              <span>{{ currentAnimal.race }}</span>
-            </li>
-            <li class="flex justify-between py-2 border-t border-surface-200 dark:border-surface-700">
-              <span class="font-semibold text-surface-600 dark:text-surface-300">Tamaño:</span>
-              <span>{{ currentAnimal.size }}</span>
-            </li>
-            <li class="flex justify-between py-2 border-t border-b border-surface-200 dark:border-surface-700">
-              <span class="font-semibold text-surface-600 dark:text-surface-300">Ubicación:</span>
-              <span>{{ currentAnimal.province }}</span>
-            </li>
-          </ul>
-
+          <div class="flex flex-wrap gap-3">
+            <div
+              class="flex-auto flex items-center gap-3 p-3 rounded-lg bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600">
+              <i class="fa-solid fa-cake-candles text-xl text-primary"></i>
+              <div>
+                <span class="block text-xs font-medium text-surface-500 dark:text-surface-400">Edad</span>
+                <span class="block font-semibold text-surface-800 dark:text-surface-100">{{ currentAnimal.age | formattedAge }}</span>
+              </div>
+            </div>
+            <div
+              class="flex-auto flex items-center gap-3 p-3 rounded-lg bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600">
+              <i class="fa-solid fa-paw text-xl text-primary"></i>
+              <div>
+                <span class="block text-xs font-medium text-surface-500 dark:text-surface-400">Raza</span>
+                <span class="block font-semibold text-surface-800 dark:text-surface-100">{{ currentAnimal.race }}</span>
+              </div>
+            </div>
+            <div
+              class="flex-auto flex items-center gap-3 p-3 rounded-lg bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600">
+              <i class="fa-solid fa-ruler-vertical text-xl text-primary"></i>
+              <div>
+                <span class="block text-xs font-medium text-surface-500 dark:text-surface-400">Tamaño</span>
+                <span class="block font-semibold text-surface-800 dark:text-surface-100">{{ currentAnimal.size }}</span>
+              </div>
+            </div>
+          </div>
           <!-- Sección de Acciones -->
-          <div class="mt-3">
+          <div class="mt-4">
             <!-- Botón para Admin/Mod -->
             <button *ngIf="user?.role === Roles.ADMIN || user?.role === Roles.MOD" pButton label="Gestionar Animal"
-              icon="pi pi-cog" class="p-button-secondary w-full" (click)="goToManagementPanel()"></button>
+              icon="pi pi-cog" class="p-button-secondary w-full" (click)="goToManagementPanel()" size="large"></button>
 
             <!-- Botones para usuarios default -->
             <ng-container *ngIf="user?.role === Roles.DEFAULT">
               <div *ngIf="!requestStatus; else requestMessages">
-                <button pButton label="Solicitar adopción" icon="pi pi-heart" class="w-full"
-                  (click)="adoptionRequest()"></button>
+                <button pButton label="Solicitar adopción" icon="pi pi-heart" class="w-full p-button-raised"
+                  (click)="adoptionRequest()" size="large"></button>
               </div>
             </ng-container>
           </div>

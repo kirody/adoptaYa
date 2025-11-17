@@ -22,6 +22,8 @@ import { RequestsService } from '../../../services/requests.service';
 import { UserData } from '../../../models/user-data';
 import { Roles } from '../../../models/roles.enum';
 import { CommonService } from '../../../services/common.service';
+import { DividerModule } from "primeng/divider";
+import { FormattedAgePipe } from "../../../pipes/formatted-age.pipe";
 
 @Component({
   selector: 'app-animal-detail',
@@ -38,8 +40,10 @@ import { CommonService } from '../../../services/common.service';
     ReactiveFormsModule,
     TextareaModule,
     ToastModule,
-    MessageModule
-  ],
+    MessageModule,
+    DividerModule,
+    FormattedAgePipe
+],
   providers: [MessageService],
   templateUrl: './animal-detail.component.html',
   styleUrls: ['./animal-detail.component.css']

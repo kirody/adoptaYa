@@ -28,6 +28,7 @@ import { Table } from 'primeng/table';
 import { Menu, MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { CommonService } from '../../services/common.service';
+import { ImageModule } from 'primeng/image';
 
 @Component({
   selector: 'app-animals-table',
@@ -49,7 +50,8 @@ import { CommonService } from '../../services/common.service';
     TextareaModule,
     ProgressSpinnerModule,
     InputTextModule,
-    MenuModule
+    MenuModule,
+    ImageModule
 ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './animals-table.component.html',

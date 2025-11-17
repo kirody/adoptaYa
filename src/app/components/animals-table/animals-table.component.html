@@ -62,7 +62,7 @@
           'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
         tooltipPosition="top">
         <td>
-          <img [src]="animal.urlImage" [alt]="animal.name" class="w-2rem rounded" />
+          <p-image [src]="animal.urlImage" [alt]="animal.name" imageClass="w-2rem rounded" [preview]="true" />
         </td>
         <td>
           <span class="mr-2">{{ animal.name }}</span>
