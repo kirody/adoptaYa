@@ -71,11 +71,11 @@
               <div class="action-buttons">
                 <ng-container>
                   <button pButton pRipple icon="pi pi-check" class="p-button-rounded p-button-text p-button-success"
-                    (click)="approveRequest(request)" pTooltip="Aprobar" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
+                    (click)="approveRequest(request)" pTooltip="Aprobar" tooltipPosition="top" [disabled]="request.status === 'approved'"></button>
                   <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
-                    (click)="requestCorrection(request)" pTooltip="Solicitar corrección" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
+                    (click)="requestCorrection(request)" pTooltip="Solicitar corrección" tooltipPosition="top" [disabled]="request.status === 'needs_correction'"></button>
                   <button pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-text p-button-danger"
-                    (click)="rejectRequest(request)" pTooltip="Rechazar" tooltipPosition="top" [disabled]="request.status !== 'pending'"></button>
+                    (click)="rejectRequest(request)" pTooltip="Rechazar" tooltipPosition="top" [disabled]="request.status === 'rejected'"></button>
                 </ng-container>
               </div>
             </td>
