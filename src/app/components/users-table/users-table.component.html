@@ -47,7 +47,7 @@
           </div>
         </td>
         <td>
-          <p-tag [value]="getTranslatedStatus(user.status)" [severity]="getStatusSeverity(user.status)">
+          <p-tag [value]="commonService.getTranslatedStatus(user.status)" [severity]="commonService.getStatusSeverity(user.status)">
             <i *ngIf="user.status === 'infraction'" class="fa-solid fa-triangle-exclamation"
               pTooltip="Este usuario tiene una infracción pendiente de revisión" tooltipPosition="top"></i>
           </p-tag>
@@ -202,7 +202,7 @@
             <div class="field mb-3">
               <label class="font-semibold">Estado de la infracción:</label>
               <p-tag [value]="infraction.status === 'pending_review' ? 'Pendiente de revisión' : 'Desconocido'"
-                [severity]="getStatusSeverity(infraction.status)"></p-tag>
+                [severity]="commonService.getStatusSeverity(infraction.status)"></p-tag>
             </div>
             <div class="field mb-3" *ngIf="infraction.actionTaken">
               <label class="font-semibold">Acción tomada:</label>

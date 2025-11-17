@@ -109,24 +109,47 @@
             <h3 class="font-semibold text-xl mb-3">Mis Solicitudes de Adopción</h3>
             <p class="text-surface-600 mb-4">Aquí podrás ver el estado de las solicitudes que has enviado.</p>
 
-            <!-- Placeholder para la lista de solicitudes -->
-            <div class="requests-placeholder">
-              <div class="request-item">
-                <div class="flex items-center gap-3">
-                  <img src="https://primefaces.org/cdn/primeng/images/demo/product/bamboo-watch.jpg" alt="Animal"
-                    class="w-16 h-16 rounded-md object-cover">
-                  <div>
-                    <p class="font-bold m-0">Milo (Ejemplo)</p>
-                    <p class="text-sm text-surface-500 m-0">Solicitud enviada el 15/05/2024</p>
+            <ng-container *ngIf="!requestsLoading; else loadingRequests">
+              <div *ngIf="adoptionRequests.length > 0; else noRequests" class="space-y-4">
+                <!-- Itera sobre cada solicitud y la muestra como una tarjeta -->
+                <div *ngFor="let request of adoptionRequests"
+                  class="p-4 border rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm transition-shadow hover:shadow-md">
+                  <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <img [src]="request.animalData?.urlImage" [alt]="request.animal?.name"
+                      class="w-20 h-20 object-cover rounded-lg">
+                    <div>
+                      <h4 class="text-lg font-bold m-0">{{ request.animalData?.name || 'Animal no disponible' }}</h4>
+                      <p class="text-sm text-surface-500 m-0">en
+                        {{ request.animalData?.protectressName || 'Protectora no disponible' }}
+                      </p>
+                      <p class="text-xs text-surface-400 m-0 mt-1">Solicitud del {{ request.requestData.createdAt?.toDate() |
+                        date:'dd/MM/yyyy' }}</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <p-tag [value]="commonService.getTranslatedStatus(request.requestData.status)| titlecase" [severity]="commonService.getStatusSeverity(request.requestData.status)"
+                      class="w-full sm:w-auto justify-center"></p-tag>
+                    <a [routerLink]="['/detail-animal', request.animalData?.id]" class="w-full sm:w-auto">
+                      <p-button icon="pi pi-eye" label="Ver Ficha" styleClass="p-button-outlined w-full"></p-button>
+                    </a>
                   </div>
                 </div>
-                <p-tag severity="warn" value="Pendiente"></p-tag>
               </div>
-              <div class="mt-4 p-3 border rounded-lg bg-surface-50 text-center">
-                <i class="pi pi-info-circle mr-2"></i>
-                <span>Esta sección se encuentra en desarrollo.</span>
+            </ng-container>
+
+            <ng-template #noRequests>
+              <div class="text-center p-5 border-2 border-dashed rounded-lg bg-surface-50">
+                <i class="pi pi-folder-open text-4xl text-surface-400 mb-3"></i>
+                <p class="m-0 font-semibold text-surface-600">Aún no has realizado ninguna solicitud.</p>
+                <p class="text-sm text-surface-500 mt-1">¡Anímate a encontrar a tu nuevo mejor amigo!</p>
               </div>
-            </div>
+            </ng-template>
+
+            <ng-template #loadingRequests>
+              <div class="flex justify-center p-5">
+                <p-progressSpinner styleClass="w-8 h-8" strokeWidth="4"></p-progressSpinner>
+              </div>
+            </ng-template>
           </div>
         </ng-template>
       </p-card>

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { RequestsService } from '../../services/requests.service';
 import { CommonModule } from '@angular/common';
 import { TableModule, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
@@ -16,6 +16,7 @@ import { ToastModule } from "primeng/toast";
 import { IconFieldModule } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { InputTextModule } from 'primeng/inputtext';
+import { CommonService } from '../../services/common.service';
 
 @Component({
   selector: 'app-requests',
@@ -36,6 +37,7 @@ import { InputTextModule } from 'primeng/inputtext';
   standalone: true,
 })
 export class RequestsComponent implements OnInit, OnDestroy {
+  public commonService = inject(CommonService);
   requests: any[] = [];
   isLoading = true;
   error: string | null = null;
@@ -215,81 +217,6 @@ export class RequestsComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error al solicitar corrección:', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar la solicitud.' });
-    }
-  }
-
-
-  /**
-   * Devuelve una clase CSS basada en el estado de la solicitud.
-   * @param status El estado actual ('pending', 'approved', 'rejected').
-   * @returns La clase CSS correspondiente.
-   */
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'approved':
-        return 'status-approved';
-      case 'needs_correction':
-        return 'status-needs-correction';
-      case 'rejected':
-        return 'status-rejected';
-      default:
-        return 'status-pending';
-    }
-  }
-
-  /**
-   * Devuelve una severidad de PrimeNG basada en el estado.
-   * @param status El estado actual ('pending', 'approved', 'rejected').
-   * @returns La severidad para el componente p-tag.
-   */
-  getStatusSeverity(status: string): 'warn' | 'success' | 'danger' {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'rejected':
-        return 'danger';
-      case 'needs_correction':
-        return 'warn';
-      default:
-        return 'warn';
-    }
-  }
-
-  /**
-   * Devuelve un icono de PrimeNG basado en el estado.
-   * @param status El estado actual ('pending', 'approved', 'rejected').
-   * @returns La clase del icono para el componente p-tag.
-   */
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case 'approved':
-        return 'pi pi-check-circle';
-      case 'rejected':
-        return 'pi pi-times-circle';
-      case 'needs_correction':
-        return 'pi pi-pencil';
-      default:
-        return 'pi pi-clock';
-    }
-  }
-
-  /**
-   * Devuelve el estado traducido.
-   * @param status El estado actual ('pending', 'approved', 'rejected').
-   * @returns El texto del estado traducido.
-   */
-  getTranslatedStatus(status: string): string {
-    switch (status) {
-      case 'approved':
-        return 'Aprobada';
-      case 'rejected':
-        return 'Rechazada';
-      case 'pending':
-        return 'Pendiente';
-      case 'needs_correction':
-        return 'Necesita Corrección';
-      default:
-        return 'Desconocido';
     }
   }
 }

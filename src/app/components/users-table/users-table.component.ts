@@ -29,6 +29,7 @@ import { OrderByDatePipe } from '../../pipes/order-by-date.pipe';
 import { TagModule } from "primeng/tag";
 import { AccordionModule } from 'primeng/accordion';
 import { Menu, MenuModule } from "primeng/menu";
+import { CommonService } from '../../services/common.service';
 
 @Component({
   selector: 'app-users-table',
@@ -67,6 +68,7 @@ export class UsersTableComponent implements OnDestroy {
   private geminiService = inject(GeminiService);
   private infractionsService = inject(InfractionsService);
   private animalService = inject(AnimalsService);
+  public commonService = inject(CommonService);
 
   @Input() isLoading = true;
   roles = [
@@ -504,31 +506,6 @@ export class UsersTableComponent implements OnDestroy {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el rol.' });
     } finally {
       this.isLoading = false;
-    }
-  }
-
-  getStatusSeverity(status: string): 'success' | 'warn' | 'danger' {
-    switch (status) {
-      case 'active':
-        return 'success';
-      case 'pending_activation':
-        return 'warn';
-      case 'suspended':
-        return 'danger';
-      case 'automatic_suspension':
-        return 'danger';
-      default:
-        return 'warn';
-    }
-  }
-
-  getTranslatedStatus(status: string): string {
-    switch (status) {
-      case 'active': return 'Activo';
-      case 'pending_activation': return 'Pendiente activar';
-      case 'suspended': return 'Suspendido';
-      case 'automatic_suspension': return 'Suspensión automática';
-      default: return 'Desconocido';
     }
   }
 

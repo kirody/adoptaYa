@@ -93,7 +93,8 @@
         </td>
         <td>{{ animal.age | formattedAge}}</td>
         <td>
-          <p-tag [value]="formattedStates(animal)" [severity]="getStatus(animal)" [rounded]="true" />
+          <p-tag [value]="commonService.getTranslatedStatus(animal.state)"
+            [severity]="commonService.getStatusSeverity(animal.state)" [rounded]="true" />
         </td>
         <td>
           <i class="fa-solid"
@@ -383,7 +384,8 @@
 
   <ng-template pTemplate="footer">
     <p-button label="Cancelar" severity="secondary" (click)="displayAssignmentDialog = false" />
-    <p-button [label]="assignmentAcceptLabel" [severity]="assignmentAcceptSeverity" (click)="confirmAssignmentAction()" />
+    <p-button [label]="assignmentAcceptLabel" [severity]="assignmentAcceptSeverity"
+      (click)="confirmAssignmentAction()" />
   </ng-template>
 </p-dialog>
 

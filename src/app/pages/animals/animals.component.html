@@ -1,7 +1,8 @@
 <div class="animals-container">
   <app-header-page [title]="'Animales en Adopción'" [icon]="'fas fa-paw'"></app-header-page>
   <div class="card flex justify-center content-spinner" *ngIf="isLoading">
-    <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s" [style]="{ width: '50px', height: '50px' }" />
+    <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
+      [style]="{ width: '50px', height: '50px' }" />
   </div>
   <div class="grid animals-grid">
     <p-dataview #dv [value]="animals()" [rows]="8" [paginator]="true" [layout]="layout"
@@ -25,12 +26,12 @@
       <ng-template #list let-animals>
         <div *ngFor="let animal of animals; let first = first">
           <div class="flex flex-col sm:flex-row sm:items-center p-6 gap-4"
-            [ngClass]="{ 'border-t border-surface-200 dark:border-surface-700': !first }"
-            *ngIf="animal.published">
+            [ngClass]="{ 'border-t border-surface-200 dark:border-surface-700': !first }" *ngIf="animal.published">
             <div class="md:w-40 relative">
               <img class="block xl:block mx-auto rounded w-full" [src]="animal.urlImage" [alt]="animal.name" />
-              <p-tag [value]="formattedStates(animal)" [severity]="getStatus(animal)"
-                class="absolute dark:!bg-surface-900" [style.left.px]="4" [style.top.px]="4" />
+              <p-tag [value]="commonService.getTranslatedStatus(animal.status)"
+                [severity]="commonService.getStatusSeverity(animal.status)" class="absolute dark:!bg-surface-900"
+                [style.left.px]="4" [style.top.px]="4" />
             </div>
             <div class="flex flex-col md:flex-row justify-between md:items-center flex-1 gap-6">
               <div class="flex flex-row md:flex-col justify-between items-start gap-2">
@@ -70,8 +71,9 @@
               <div class="bg-surface-50 flex justify-center rounded">
                 <div class="relative mx-auto">
                   <img class="rounded w-full" [src]="animal.urlImage" [alt]="animal.name" style="max-width: 300px" />
-                  <p-tag [value]="formattedStates(animal)" [severity]="getStatus(animal)"
-                    class="absolute dark:!bg-surface-900" [style.left.px]="15" [style.top.px]="15" />
+                  <p-tag [value]="commonService.getTranslatedStatus(animal.state)"
+                    [severity]="commonService.getStatusSeverity(animal.state)" class="absolute dark:!bg-surface-900"
+                    [style.left.px]="15" [style.top.px]="15" />
                 </div>
               </div>
               <div class="pt-6">
@@ -93,7 +95,8 @@
                 <div class="flex flex-col gap-6 mt-6">
                   <!-- <span class="text-2xl font-semibold">{{ animal.price | currency: 'USD' }}</span> -->
                   <div class="flex gap-2">
-                    <button pButton icon="pi pi-eye" label="Ver más" class="flex-auto whitespace-nowrap" (click)="showAnimal(animal.id)"></button>
+                    <button pButton icon="pi pi-eye" label="Ver más" class="flex-auto whitespace-nowrap"
+                      (click)="showAnimal(animal.id)"></button>
                     <button pButton icon="pi pi-heart" outlined></button>
                   </div>
                 </div>

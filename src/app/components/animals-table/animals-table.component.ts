@@ -27,6 +27,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Table } from 'primeng/table';
 import { Menu, MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
+import { CommonService } from '../../services/common.service';
 
 @Component({
   selector: 'app-animals-table',
@@ -63,6 +64,7 @@ export class AnimalsTableComponent implements OnChanges {
   private userService = inject(UsersService);
   private notificationsService = inject(NotificationsService);
   private logService = inject(LogService);
+  public commonService = inject(CommonService);
 
   @Input() dataTable: any;
   @Input({ required: true }) user!: any;
@@ -189,38 +191,6 @@ export class AnimalsTableComponent implements OnChanges {
   // Función auxiliar para obtener el valor del evento (para usar en el HTML)
   getEventValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
-  }
-
-  formattedStates(animal: Animal) {
-    switch (animal.state) {
-      case 'ADOPTED':
-        return 'Adoptado';
-
-      case 'HOME':
-        return 'En acogida';
-
-      case 'ADOPTION':
-        return 'En adopción';
-
-      default:
-        return '';
-    }
-  }
-
-  getStatus(animal: Animal) {
-    switch (animal.state) {
-      case 'ADOPTED':
-        return 'danger';
-
-      case 'HOME':
-        return 'warn';
-
-      case 'ADOPTION':
-        return 'success';
-
-      default:
-        return null;
-    }
   }
 
   getScaledStatusTag(animal: any): string {

@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { Observable } from 'rxjs';
 import { firebaseConfig } from '../../environments/environment';
+import { collectionData } from '@angular/fire/firestore';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -147,5 +148,15 @@ export class RequestsService {
 
       return () => unsubscribe();
     });
+  }
+
+  async getRequestsByUserId(userId: string) {
+    const q = query(
+      collection(db, 'requests'),
+      where('userID', '==', userId)
+    );
+    // Devuelve un observable con los datos de la consulta.
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   }
 }

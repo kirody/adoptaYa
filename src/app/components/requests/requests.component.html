@@ -65,7 +65,7 @@
             <td>{{ request?.phone || 'N/A' }}</td>
             <td>{{ request?.address || 'N/A' }}</td>
             <td>
-              <p-tag [value]="getTranslatedStatus(request.status)" [severity]="getStatusSeverity(request.status)" [icon]="getStatusIcon(request.status)"></p-tag>
+              <p-tag [value]="commonService.getTranslatedStatus(request.status)" [severity]="commonService.getStatusSeverity(request.status)" [icon]="commonService.getStatusIcon(request.status)"></p-tag>
             </td>
             <td>
               <div class="action-buttons">

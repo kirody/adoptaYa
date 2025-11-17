@@ -21,6 +21,7 @@ import { MessageService } from 'primeng/api';
 import { RequestsService } from '../../../services/requests.service';
 import { UserData } from '../../../models/user-data';
 import { Roles } from '../../../models/roles.enum';
+import { CommonService } from '../../../services/common.service';
 
 @Component({
   selector: 'app-animal-detail',
@@ -53,6 +54,8 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
   private protectorService = inject(ProtectorsService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
+  public commonService = inject(CommonService);
+
   currentUser$: Observable<any | null>;
   user: UserData | undefined;
   animal = signal<Animal | null>(null);
@@ -120,38 +123,6 @@ export class AnimalDetailComponent implements OnInit, OnDestroy {
       question2: ['', Validators.required],
       question3: ['', Validators.required],
     });
-  }
-
-  formattedStates(animal: Animal) {
-    switch (animal.state) {
-      case 'ADOPTED':
-        return 'Adoptado';
-
-      case 'HOME':
-        return 'En acogida';
-
-      case 'ADOPTION':
-        return 'En adopción';
-
-      default:
-        return '';
-    }
-  }
-
-  getStatus(animal: Animal) {
-    switch (animal.state) {
-      case 'ADOPTED':
-        return 'danger';
-
-      case 'HOME':
-        return 'warn';
-
-      case 'ADOPTION':
-        return 'success';
-
-      default:
-        return null;
-    }
   }
 
   adoptionRequest() {

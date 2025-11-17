@@ -1,5 +1,5 @@
 import { AnimalsService } from './../../services/animals.service';
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { HeaderPageComponent } from '../../components/header-page/header-page.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CardNodataComponent } from "../../components/card-nodata/card-nodata.component";
+import { CommonService } from '../../services/common.service';
 
 @Component({
   selector: 'app-animals',
@@ -34,6 +35,8 @@ import { CardNodataComponent } from "../../components/card-nodata/card-nodata.co
   styleUrl: './animals.component.css',
 })
 export class AnimalsComponent implements OnInit {
+  public commonService = inject(CommonService);
+
   animals = signal<any>([]);
   layout: any = 'grid';
   options = ['list', 'grid'];
@@ -55,38 +58,6 @@ export class AnimalsComponent implements OnInit {
       this.animals.set(publishedAnimals);
       this.isLoading = false;
     });
-  }
-
-  getStatus(animal: Animal) {
-    switch (animal.state) {
-      case 'ADOPTED':
-        return 'danger';
-
-      case 'HOME':
-        return 'warn';
-
-      case 'ADOPTION':
-        return 'success';
-
-      default:
-        return null;
-    }
-  }
-
-  formattedStates(animal: Animal) {
-    switch (animal.state) {
-      case 'ADOPTED':
-        return 'Adoptado';
-
-      case 'HOME':
-        return 'En acogida';
-
-      case 'ADOPTION':
-        return 'En adopción';
-
-      default:
-        return '';
-    }
   }
 
   showAnimal(id: any) {

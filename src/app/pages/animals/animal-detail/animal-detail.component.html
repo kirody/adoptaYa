@@ -12,8 +12,8 @@
     <div class="col-12 md:col-7 p-4">
       <div class="image-container relative rounded-lg overflow-hidden shadow-lg">
         <img class="animal-image w-full" [src]="currentAnimal.urlImage" [alt]="currentAnimal.name" />
-        <p-tag [value]="formattedStates(currentAnimal)" [severity]="getStatus(currentAnimal)"
-          class="status-tag absolute" />
+        <p-tag [value]="commonService.getTranslatedStatus(currentAnimal.state??'')"
+          [severity]="commonService.getStatusSeverity(currentAnimal.state??'')" class="status-tag absolute" />
       </div>
 
       <div class="mt-6">
