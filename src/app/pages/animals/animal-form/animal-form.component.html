@@ -56,6 +56,11 @@
                 Información principal del animal.
               </span>
               <span class="text-gray-400 text-sm mt-2" *ngIf="isEditMode">ID: {{ animalForm.value.id }}</span>
+              <div *ngIf="isEditMode && animalForm.get('urlImage')?.value" class="mt-4">
+                <img [src]="animalForm.get('urlImage')?.value??''" alt="Vista previa del animal"
+                  class="w-full h-auto rounded-lg shadow-md object-cover aspect-square">
+                <small class="text-gray-400 text-xs mt-1 block">Vista previa de la imagen.</small>
+              </div>
             </div>
           </div>
           <div class="w-full p-4">

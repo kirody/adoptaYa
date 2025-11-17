@@ -12,48 +12,29 @@
           <div class="">
             <p-selectbutton [(ngModel)]="layout" [options]="options" [allowEmpty]="false">
               <ng-template #item let-item>
-                <i class="pi " [ngClass]="{ 'pi-bars': item === 'list', 'pi-table': item === 'grid' }"></i>
+                <i class="pi " [ngClass]="{ 'pi-bars': item === 'list', 'pi-table': item === 'grid'}"></i>
               </ng-template>
             </p-selectbutton>
           </div>
-          <!-- <div class="">
-            <span class="text-xl font-semibold">
-              Total de Registros: {{ dv.totalRecords }}
-            </span>
-          </div> -->
         </div>
       </ng-template>
       <ng-template #list let-animals>
-        <div *ngFor="let animal of animals; let first = first">
-          <div class="flex flex-col sm:flex-row sm:items-center p-6 gap-4"
-            [ngClass]="{ 'border-t border-surface-200 dark:border-surface-700': !first }" *ngIf="animal.published">
-            <div class="md:w-40 relative">
-              <img class="block xl:block mx-auto rounded w-full" [src]="animal.urlImage" [alt]="animal.name" />
-              <p-tag [value]="commonService.getTranslatedStatus(animal.status)"
-                [severity]="commonService.getStatusSeverity(animal.status)" class="absolute dark:!bg-surface-900"
-                [style.left.px]="4" [style.top.px]="4" />
-            </div>
-            <div class="flex flex-col md:flex-row justify-between md:items-center flex-1 gap-6">
-              <div class="flex flex-row md:flex-col justify-between items-start gap-2">
-                <div>
-                  <span class="font-medium text-surface-500 dark:text-surface-400 text-sm">{{ animal.specie
-                    }}</span>
-                  <div class="text-lg font-medium mt-2">{{ animal.name }}</div>
-                </div>
-                <!-- <div class="bg-surface-100 p-1" style="border-radius: 30px">
-                <div class="bg-surface-0 flex items-center gap-2 justify-center py-1 px-2"
-                  style="border-radius: 30px; box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.04), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)">
-                  <span class="text-surface-900 font-medium text-sm">{{ animal.rating }}</span>
-                  <i class="pi pi-star-fill text-yellow-500"></i>
-                </div>
-              </div> -->
+        <div class="grid grid-cols-12 gap-4 p-4">
+          <div *ngFor="let animal of animals" class="col-span-12 sm:col-span-6 md:col-span-4">
+            <div class="border rounded-lg overflow-hidden shadow-sm bg-surface-0 dark:bg-surface-800 flex flex-col h-full">
+              <div class="relative">
+                <img class="w-full h-48 object-cover" [src]="animal.urlImage" [alt]="animal.name" />
+                <p-tag [value]="commonService.getTranslatedStatus(animal.state)" [severity]="commonService.getStatusSeverity(animal.state)"
+                  class="absolute top-2 left-2" />
               </div>
-              <div class="flex flex-col md:items-end gap-8">
-                <!-- <span class="text-xl font-semibold">{{ animal.price | currency: 'USD' }}</span> -->
-                <div class="flex flex-row-reverse md:flex-row gap-2">
-                  <button pButton icon="pi pi-heart" [outlined]="true"></button>
-                  <button pButton icon="pi pi-eye" label="Ver más"
-                    class="flex-auto md:flex-initial whitespace-nowrap"></button>
+              <div class="p-4 flex flex-col flex-grow">
+                <h3 class="text-lg font-bold truncate text-surface-800 dark:text-surface-100">{{ animal.name }}</h3>
+                <p class="text-sm text-surface-500 dark:text-surface-400">{{ animal.specie }}</p>
+                <div class="flex-grow mt-2">
+                  <span class="text-xs text-surface-400 flex items-center gap-1"><i class="pi pi-map-marker"></i> {{ animal.province }}</span>
+                </div>
+                <div class="mt-4">
+                  <button pButton label="Ver más" icon="pi pi-eye" class="w-full" (click)="showAnimal(animal.id)"></button>
                 </div>
               </div>
             </div>
@@ -61,45 +42,20 @@
         </div>
       </ng-template>
       <ng-template #grid let-animals>
-        <div class="grid grid-cols-12 gap-4 pr-3 pl-3">
-          <div *ngFor="let animal of animals" class="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 p-2">
-            <div
-              class="p-4 border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 rounded flex flex-col">
-              <div *ngIf="animals === undefined || this.animals()?.length === 0" class="flex justify-center">
-                <p-skeleton class="!w-9/12 sm:!w-64 xl:!w-40 !h-24 mx-auto" />
+        <div class="grid grid-cols-12 gap-4 p-4">
+          <div *ngFor="let animal of animals" class="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 xl:col-span-2">
+            <div class="group bg-white dark:bg-surface-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 cursor-pointer" (click)="showAnimal(animal.id)">
+              <div class="relative aspect-square">
+                <img class="w-full h-full object-cover" [src]="animal.urlImage" [alt]="animal.name" />
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                  <button pButton label="Ver más" icon="pi pi-eye" class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-button-raised p-button-secondary"></button>
+                </div>
+                <p-tag [value]="commonService.getTranslatedStatus(animal.state)" [severity]="commonService.getStatusSeverity(animal.state)"
+                  class="absolute top-3 left-3" />
               </div>
-              <div class="bg-surface-50 flex justify-center rounded">
-                <div class="relative mx-auto">
-                  <img class="rounded w-full" [src]="animal.urlImage" [alt]="animal.name" style="max-width: 300px" />
-                  <p-tag [value]="commonService.getTranslatedStatus(animal.state)"
-                    [severity]="commonService.getStatusSeverity(animal.state)" class="absolute dark:!bg-surface-900"
-                    [style.left.px]="15" [style.top.px]="15" />
-                </div>
-              </div>
-              <div class="pt-6">
-                <div class="flex flex-row justify-between products-start gap-2">
-                  <div>
-                    <span class="font-medium text-surface-500 dark:text-surface-400 text-sm">{{
-                      animal.specie
-                      }}</span>
-                    <div class="text-lg font-medium mt-1">{{ animal.name }}</div>
-                  </div>
-                  <!-- <div class="bg-surface-100 p-1" style="border-radius: 30px; height:100%">
-                  <div class="bg-surface-0 flex products-center gap-2 justify-center py-1 px-2"
-                    style="border-radius: 30px; box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.04), 0px 1px 2px 0px rgba(0, 0, 0, 0.06)">
-                    <span class="text-surface-900 font-medium text-sm">{{ animal.rating }}</span>
-                    <i class="pi pi-star-fill text-yellow-500"></i>
-                  </div>
-                </div> -->
-                </div>
-                <div class="flex flex-col gap-6 mt-6">
-                  <!-- <span class="text-2xl font-semibold">{{ animal.price | currency: 'USD' }}</span> -->
-                  <div class="flex gap-2">
-                    <button pButton icon="pi pi-eye" label="Ver más" class="flex-auto whitespace-nowrap"
-                      (click)="showAnimal(animal.id)"></button>
-                    <button pButton icon="pi pi-heart" outlined></button>
-                  </div>
-                </div>
+              <div class="p-3">
+                <h3 class="text-lg font-bold truncate text-surface-800 dark:text-surface-100">{{ animal.name }}</h3>
+                <p class="text-sm text-surface-500 dark:text-surface-400">{{ animal.specie }}</p>
               </div>
             </div>
           </div>

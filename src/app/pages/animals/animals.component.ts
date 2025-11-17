@@ -39,7 +39,7 @@ export class AnimalsComponent implements OnInit {
 
   animals = signal<any>([]);
   layout: any = 'grid';
-  options = ['list', 'grid'];
+  options = ['grid','list'];
   isLoading = true;
 
   constructor(
