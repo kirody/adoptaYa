@@ -23,6 +23,9 @@ export class AuthService {
   private userService = inject(UsersService);
   private router: Router = inject(Router);
 
+  // Temporizador para el cierre de sesión por inactividad
+  private sessionTimeout: any;
+
   // El tipo debe ser 'any' para poder incluir tus campos personalizados como 'isSuspended'
   private _currentUser = new BehaviorSubject<any | null>(null);
   public currentUser$: Observable<any | null> = this._currentUser.asObservable();
@@ -42,12 +45,14 @@ export class AuthService {
                 this.logout(); // Esto cubre 'suspended' y 'pending_activation'
               } else {
                 this._currentUser.next(user);
+                this.startSessionTimeout(); // Inicia el temporizador de sesión
               }
             }
           });
       } else {
         // Si no hay usuario de Firebase, nos aseguramos que el estado local sea nulo.
         this._currentUser.next(null);
+        this.clearSessionTimeout(); // Limpia el temporizador si no hay usuario
       }
     });
   }
@@ -79,6 +84,7 @@ export class AuthService {
   }
 
   logout(redirectPath: string = '/'): Observable<void> {
+    this.clearSessionTimeout(); // Limpia el temporizador al cerrar sesión
     return from(signOut(this.afAuth)).pipe(
       tap(() => {
         this._currentUser.next(null);
@@ -121,5 +127,22 @@ export class AuthService {
     return this.getAuthState().pipe(
       switchMap((user) => (user ? from(sendEmailVerification(user)) : of(null)))
     );
+  }
+
+  /**
+   * Inicia el temporizador para el cierre de sesión automático por inactividad.
+   */
+  private startSessionTimeout(): void {
+    this.clearSessionTimeout(); // Limpia cualquier temporizador anterior
+    const timeout = 6 * 60 * 60 * 1000; // 6 horas en milisegundos
+    this.sessionTimeout = setTimeout(() => {
+      console.log('Cerrando sesión por inactividad.');
+      this.logout('/').subscribe();
+    }, timeout);
+  }
+
+  /** Limpia el temporizador de cierre de sesión por inactividad. */
+  private clearSessionTimeout(): void {
+    if (this.sessionTimeout) clearTimeout(this.sessionTimeout);
   }
 }

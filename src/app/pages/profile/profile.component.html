@@ -128,7 +128,7 @@
                   </div>
                   <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <p-tag [value]="commonService.getTranslatedStatus(request.requestData.status)| titlecase" [severity]="commonService.getStatusSeverity(request.requestData.status)"
-                      class="w-full sm:w-auto justify-center"></p-tag>
+                      class="w-full sm:w-auto justify-center" [icon]="commonService.getStatusIcon(request.requestData.status)"></p-tag>
                     <a [routerLink]="['/detail-animal', request.animalData?.id]" class="w-full sm:w-auto">
                       <p-button icon="pi pi-eye" label="Ver Ficha" styleClass="p-button-outlined w-full"></p-button>
                     </a>
