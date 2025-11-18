@@ -22,7 +22,7 @@
               <!-- <p-badge severity="danger"></p-badge> -->
             </i>
           </div>
-          <p-drawer [(visible)]="showSidebar" header="Iniciar conversación" position="full">
+          <p-drawer [(visible)]="showSidebar" header=" " position="full" styleClass="chat-drawer">
             <app-chat></app-chat>
           </p-drawer>
           <p-overlaybadge [value]="unreadCount > 0 ? unreadCount : 0" severity="danger" (click)="op.toggle($event)">

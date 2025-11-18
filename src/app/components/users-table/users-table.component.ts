@@ -108,6 +108,10 @@ export class UsersTableComponent implements OnDestroy {
   @ViewChild('menu') menu: Menu | undefined;
   userActions: MenuItem[] = [];
 
+  // Propiedades para el diálogo de activación de moderador
+  displayActivationDialog: boolean = false;
+  userToActivate: any | null = null;
+
   ngOnInit(): void {
     // Inicializa los permisos
     this.availablePermissions = [
@@ -280,20 +284,10 @@ export class UsersTableComponent implements OnDestroy {
     }
   }
 
-  confirmActivation(event: Event, user: any) {
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: `¿Estás seguro de que quieres <strong>activar</strong> al moderador ${user.username}?`,
-      header: 'Confirmar Activación',
-      icon: 'pi pi-user-plus',
-      acceptLabel: 'Activar',
-      rejectLabel: 'Cancelar',
-      rejectButtonStyleClass: 'p-button-text',
-      acceptButtonStyleClass: 'p-button-success',
-      accept: () => {
-        this.activateNewModerator(user);
-      },
-    });
+  confirmActivation(user: any) {
+    if (!user) return;
+    this.userToActivate = user;
+    this.displayActivationDialog = true;
   }
 
   onConfirmSuspension() {
@@ -307,6 +301,15 @@ export class UsersTableComponent implements OnDestroy {
     this.displaySuspensionConfirmationDialog = false;
   }
 
+  onConfirmActivation() {
+    this.activateNewModerator(this.userToActivate);
+    this.displayActivationDialog = false;
+  }
+
+  onRejectActivation() {
+    this.displayActivationDialog = false;
+  }
+
   async activateNewModerator(user: any) {
     if (!user || !user.uid) {
       return;
@@ -314,6 +317,7 @@ export class UsersTableComponent implements OnDestroy {
 
     this.isLoading = true;
     try {
+      this.userToActivate = null; // Limpiamos el usuario
       await this.userService.updateUser(user.uid, { status: 'active' });
 
       // Registrar la acción en el log

@@ -27,7 +27,6 @@ import { CommonService } from '../../services/common.service';
     SelectButtonModule,
     TagModule,
     FormsModule,
-    Skeleton,
     HeaderPageComponent,
     CardNodataComponent
 ],

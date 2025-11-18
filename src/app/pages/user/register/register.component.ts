@@ -67,6 +67,7 @@ export class RegisterComponent {
           username: username,
           email: email,
           role: 'ROLE_DEFAULT',
+          status: 'active',
           strikes: 0
         };
         this.userService.addUser(data as any).then(() => {

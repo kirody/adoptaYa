@@ -52,7 +52,7 @@ import { ImageModule } from 'primeng/image';
     InputTextModule,
     MenuModule,
     ImageModule
-],
+  ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './animals-table.component.html',
   styleUrl: './animals-table.component.css'
@@ -82,6 +82,8 @@ export class AnimalsTableComponent implements OnChanges {
   @ViewChild('dt') table: Table | undefined;
   @ViewChild('menu') menu: Menu | undefined;
   animalActions: MenuItem[] = [];
+  displayIdModal: boolean = false;
+  selectedAnimalForId: Animal | null = null;
 
   // Propiedades para el diálogo de confirmación personalizado
   displayConfirmationDialog = false;
@@ -605,8 +607,39 @@ export class AnimalsTableComponent implements OnChanges {
     }
   }
 
-  showAnimalActions(event: Event, animal: Animal) {
-    this.animalActions = this.getAnimalActions(event, animal);
+  showAnimalActions(event: MouseEvent, animal: Animal) {
+    const isAdmin = this.user?.role === 'ROLE_ADMIN';
+    const isMod = this.user?.role === 'ROLE_MOD';
+
+    this.animalActions = [
+      {
+        label: 'Ver ID',
+        icon: 'fa-solid fa-id-card',
+        command: () => this.showIdModal(animal),
+      },
+    ];
+
+    if (isMod && !animal.published) {
+      this.animalActions.push({
+        label: this.hasModeratorScaled(animal) ? 'Escalado' : 'Escalar',
+        icon: 'fa-solid fa-comment',
+        disabled: this.hasModeratorScaled(animal) || animal.assignedToAdmin,
+        command: () => this.scaledAnimal(animal),
+      });
+    }
+
+    if (isAdmin) {
+      this.animalActions.push({
+        label: animal.assignedToAdmin ? 'Desasignarme' : 'Asignarme',
+        icon: 'fa-solid fa-user-check',
+        command: () => this.openAssignmentDialog(animal, animal.assignedToAdmin ? 'unassign' : 'assign'),
+      });
+    }
+
+    this.animalActions.push({ separator: true });
+    this.animalActions.push({ label: 'Duplicar', icon: 'fa-solid fa-clone', command: () => this.duplicateAnimal(animal) });
+    this.animalActions.push({ label: 'Eliminar', icon: 'fa-solid fa-trash-can', command: () => this.openConfirmationDialog(animal, 'delete') });
+
     this.menu?.toggle(event);
   }
 
@@ -650,7 +683,7 @@ export class AnimalsTableComponent implements OnChanges {
     return items;
   }
 
-   openConfirmationDialog(animal: Animal, type: 'publish' | 'delete') {
+  openConfirmationDialog(animal: Animal, type: 'publish' | 'delete') {
     this.confirmationAnimal = animal;
     this.confirmationActionType = type;
 
@@ -774,5 +807,10 @@ export class AnimalsTableComponent implements OnChanges {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo liberar el caso.' });
       console.error('Error al liberar el caso:', error);
     }
+  }
+
+  showIdModal(animal: Animal) {
+    this.selectedAnimalForId = animal;
+    this.displayIdModal = true;
   }
 }

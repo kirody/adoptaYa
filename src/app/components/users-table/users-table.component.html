@@ -19,7 +19,7 @@
             <i class="pi pi-search"></i>
           </p-inputIcon>
           <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-            placeholder="Buscar animales" />
+            placeholder="Buscar usuarios" />
         </p-iconField>
       </div>
     </ng-template>
@@ -65,7 +65,7 @@
             <!-- Botón para Activar nuevos moderadores -->
             <p-button *ngIf="user.status === 'pending_activation'" icon="fa-solid fa-user-plus"
               pTooltip="Activar nuevo moderador" tooltipPosition="top" severity="success"
-              styleClass="p-button-rounded p-button-text" (click)="confirmActivation($event, user)"></p-button>
+              styleClass="p-button-rounded p-button-text" (click)="confirmActivation(user)"></p-button>
             <!-- Botón para Suspender/Reactivar -->
             <p-button
               *ngIf="user.status === 'active' || user.status === 'suspended' || user.status === 'automatic_suspension'"
@@ -315,4 +315,24 @@
         [disabled]="showResetWarning && confirmationInput !== confirmationAction"></p-button>
     </ng-template>
   </p-dialog>
+
+  <!-- Diálogo de Confirmación de Activación de Moderador -->
+<p-dialog header="Confirmar Activación" [(visible)]="displayActivationDialog" [modal]="true" [style]="{ width: '450px' }"
+  [draggable]="false" [resizable]="false">
+  <div class="confirmation-content p-3 text-center">
+    <i class="pi pi-user-plus text-5xl text-primary mb-3"></i>
+    <p class="text-lg" *ngIf="userToActivate">
+      ¿Estás seguro de que quieres <strong>activar</strong> al moderador
+      <span class="font-bold">{{ userToActivate.username }}</span>?
+    </p>
+    <p class="text-sm text-600">
+      Una vez activado, el usuario tendrá acceso a las herramientas de moderación
+      según los permisos asignados.
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button icon="pi pi-times" (click)="onRejectActivation()" label="Cancelar" styleClass="p-button-text"></p-button>
+    <p-button icon="pi pi-check" (click)="onConfirmActivation()" label="Activar" styleClass="p-button-success"></p-button>
+  </ng-template>
+</p-dialog>
 </div>

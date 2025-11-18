@@ -129,15 +129,6 @@
               [disabled]="isPublishDisabled(animal) || (user?.role === 'ROLE_MOD' && animal.assignedToAdmin) || animal.infraction === 'pending_review' || animal.isClone"
               [pTooltip]="getPublishTooltip(animal)" tooltipPosition="top"></p-button>
 
-            @if (user?.role === 'ROLE_MOD' && !animal.published) {
-            <!-- Escalar -->
-            <p-button icon="fa-solid"
-              [ngClass]="{'fa-comment': !hasModeratorScaled(animal), 'fa-comment-slash': hasModeratorScaled(animal)}"
-              styleClass="p-button-rounded p-button-warning p-button-text" (click)="scaledAnimal(animal)"
-              [disabled]="hasModeratorScaled(animal) || animal.assignedToAdmin"
-              [pTooltip]="hasModeratorScaled(animal) ? 'Escalado' : 'Escalar a administrador'"
-              tooltipPosition="top"></p-button>
-            }
             <!-- Menú de más acciones -->
             <p-button icon="pi pi-ellipsis-v" styleClass="p-button-rounded p-button-secondary p-button-text"
               (click)="showAnimalActions($event, animal)" pTooltip="Más acciones" tooltipPosition="top"></p-button>
@@ -388,6 +379,22 @@
       (click)="confirmAssignmentAction()" />
   </ng-template>
 </p-dialog>
+
+<p-dialog header="ID del Animal" [(visible)]="displayIdModal" [modal]="true" [style]="{width: '25rem'}"
+  [draggable]="false" [resizable]="false" styleClass="modern-dialog">
+  @if (selectedAnimalForId) {
+  <div class="flex flex-col items-center text-center p-4">
+    <p class="mb-2">El ID del animal <strong>{{selectedAnimalForId.name}}</strong> es:</p>
+    <div class="p-3 bg-gray-100 border-1 border-gray-300 rounded-md w-full">
+      <span class="font-mono text-lg">{{selectedAnimalForId.id}}</span>
+    </div>
+  </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" severity="secondary" (click)="displayIdModal = false" />
+  </ng-template>
+</p-dialog>
+
 
 <p-toast />
 <p-confirmdialog />

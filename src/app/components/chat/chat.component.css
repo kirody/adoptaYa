@@ -2,7 +2,20 @@
   display: block;
   height: calc(100vh - 120px);
   /* Ajusta según la altura de tu header/navbar */
-  padding: 1rem;
+}
+
+::ng-deep .chat-drawer .p-drawer-content {
+  background-color: #7a8f7b;
+  /* Cambia este color al que prefieras */
+}
+
+::ng-deep .chat-drawer .p-drawer-header {
+  background-color: #7a8f7b;
+  /* Cambia este color al que prefieras */
+}
+
+::ng-deep .chat-drawer .p-button-text.p-button-secondary {
+    color: white;
 }
 
 .chat-container {
@@ -12,8 +25,8 @@
   border-radius: 8px;
   overflow: hidden;
   background-color: #fff;
-  margin-left: 300px;
-  margin-right: 300px;
+  /* margin-left: 300px;
+  margin-right: 300px; */
 }
 
 /* Panel de Usuarios */
