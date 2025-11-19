@@ -35,16 +35,14 @@ import { CommonService } from '../../services/common.service';
 })
 export class AnimalsComponent implements OnInit {
   public commonService = inject(CommonService);
+  private route = inject(ActivatedRoute);
+  private animalService = inject(AnimalsService);
+  private router = inject(Router);
 
   animals = signal<any>([]);
   layout: any = 'grid';
   options = ['grid','list'];
   isLoading = true;
-
-  constructor(
-    private animalService: AnimalsService,
-    private router: Router
-  ) {}
 
   ngOnInit(): void {
     this.loadAnimals();
@@ -52,10 +50,19 @@ export class AnimalsComponent implements OnInit {
 
   loadAnimals() {
     this.isLoading = true;
-    this.animalService.getAnimals().then((response: any) => {
-      const publishedAnimals = response.filter((animal: Animal) => animal.published);
-      this.animals.set(publishedAnimals);
-      this.isLoading = false;
+    this.route.queryParams.subscribe(params => {
+      let protectorID = '';
+      if (params['protector']) {
+        protectorID = params['protector'];
+      }
+      this.animalService.getAnimals().then((response: any) => {
+        let publishedAnimals = response.filter((animal: Animal) => animal.published);
+        if (protectorID) {
+          publishedAnimals = publishedAnimals.filter((animal: any) => animal.protectressID === protectorID);
+        }
+        this.animals.set(publishedAnimals);
+        this.isLoading = false;
+      });
     });
   }
 

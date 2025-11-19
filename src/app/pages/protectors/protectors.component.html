@@ -32,7 +32,7 @@
             <p class="flex-1 m-0 text-sm text-surface-600 hidden md:block">{{ protector.description | slice:0:100 }}...</p>
 
             <div class="ml-auto">
-              <p-button label="Ver Animales" icon="pi pi-search" styleClass="p-button-outlined" [routerLink]="['/animales']" [queryParams]="{ protectora: protector.id }"></p-button>
+              <p-button label="Ver Animales" icon="pi pi-search" styleClass="p-button-outlined" [routerLink]="['/animales']" [queryParams]="{ protector: protector.id }"></p-button>
             </div>
           </div>
         </div>
