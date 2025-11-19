@@ -6,40 +6,69 @@
 <div *ngIf="!isLoading && user">
   @if (dataTable && dataTable.length > 0) {
   <p-table #dt [value]="dataTable" [tableStyle]="{ 'min-width': '60rem' }"
-    [globalFilterFields]="['id', 'name', 'gender', 'specie', 'protectressName', 'publishedText']" [paginator]="true"
-    [rows]="10" [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped">
+    [globalFilterFields]="['id', 'name', 'gender', 'specie', 'protectressName', 'publishedText']"
+    [(selection)]="selectedAnimals" (onRowSelect)="onSelectionChange($event)"
+    (onRowUnselect)="onSelectionChange($event)" dataKey="id" [paginator]="true" [rows]="10"
+    [rowsPerPageOptions]="[5, 10, 20]" styleClass="p-datatable-striped">
     <ng-template pTemplate="caption">
-      <div class="flex justify-content-end items-center gap-2">
+      <div class="flex justify-content-between items-center gap-2">
         <div class="flex gap-2">
-          <p-button icon="pi pi-refresh" (click)="refreshData()" pTooltip="Recargar datos" tooltipPosition="top"
-            styleClass="p-button-secondary p-button-outlined"></p-button>
-          <p-button *ngIf="initialFilter" label="Quitar filtro" icon="pi pi-filter-slash" severity="secondary"
-            [outlined]="true" (click)="clearInitialFilter()"></p-button>
-        </div>
+          <!-- Acciones en Lote -->
+          <p-button label="Publicar" icon="pi pi-cloud-upload" severity="success" [disabled]="isPublishBulkDisabled"
+            (click)="openBulkConfirmationDialog('publish')" pTooltip="Publicar seleccionados" tooltipPosition="top"
+            [rounded]="true" size="small" />
+          @if (user?.role === 'ROLE_ADMIN') {
+          <p-button label="Asignarme" icon="fa-solid fa-user-check" severity="info" [disabled]="isAssignBulkDisabled"
+            (click)="openBulkConfirmationDialog('assign')" pTooltip="Asignarme seleccionados" tooltipPosition="top"
+            [rounded]="true" size="small" />
+          }
+          <p-button label="Eliminar" icon="pi pi-trash" severity="danger" [disabled]="isDeleteBulkDisabled"
+            (click)="openBulkConfirmationDialog('delete')" pTooltip="Eliminar seleccionados" tooltipPosition="top"
+            [rounded]="true" size="small" />
 
-        @if (user?.role === 'ROLE_MOD') {
-        <p-button (click)="toggleHideAssignedToAdmin()" [label]="hideAssignedToAdmin ? 'Mostrar todos' : 'Ocultar'"
-          [icon]="hideAssignedToAdmin ? 'pi pi-eye' : 'pi pi-eye-slash'" severity="info" [outlined]="true"
-          pTooltip="Oculta los animales que ya están siendo revisados por un administrador"
-          tooltipPosition="top"></p-button>
-        }
-        @if (user?.role === 'ROLE_ADMIN') {
-        <p-button (click)="toggleShowOnlyAssignedToMe()"
-          [label]="showOnlyAssignedToMe ? 'Mostrar todos' : 'Ver mis asignados'"
-          [icon]="showOnlyAssignedToMe ? 'pi pi-eye' : 'fa-solid fa-user-check'" severity="info" [outlined]="true"
-          pTooltip="Muestra solo los animales que te has asignado para revisar" tooltipPosition="top"></p-button>
-        }
-        <p-iconField iconPosition="left">
-          <p-inputIcon>
-            <i class="pi pi-search"></i>
-          </p-inputIcon>
-          <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-            placeholder="Buscar animales" />
-        </p-iconField>
+          <p-divider layout="vertical" *ngIf="!isUnpublishBulkDisabled"></p-divider>
+
+          <p-button label="Despublicar" icon="pi pi-eye-slash" (click)="openBulkConfirmationDialog('unpublish')"
+            pTooltip="Despublicar seleccionados" tooltipPosition="top" [rounded]="true" size="small"
+            *ngIf="!isUnpublishBulkDisabled" variant="outlined" />
+        </div>
+        <div class="flex gap-2">
+          <!-- Filtros y Búsqueda -->
+          <div class="flex gap-2">
+            <p-button icon="pi pi-refresh" (click)="refreshData()" pTooltip="Recargar datos" tooltipPosition="top"
+              styleClass="p-button-secondary p-button-outlined"></p-button>
+            <p-button *ngIf="initialFilter" label="Quitar filtro" icon="pi pi-filter-slash" severity="secondary"
+              [outlined]="true" (click)="clearInitialFilter()"></p-button>
+          </div>
+          <div class="flex gap-2">
+            @if (user?.role === 'ROLE_MOD') {
+            <p-button (click)="toggleHideAssignedToAdmin()" [label]="hideAssignedToAdmin ? 'Mostrar todos' : 'Ocultar'"
+              [icon]="hideAssignedToAdmin ? 'pi pi-eye' : 'pi pi-eye-slash'" severity="info" [outlined]="true"
+              pTooltip="Oculta los animales que ya están siendo revisados por un administrador"
+              tooltipPosition="top"></p-button>
+            }
+            @if (user?.role === 'ROLE_ADMIN') {
+            <p-button (click)="toggleShowOnlyAssignedToMe()"
+              [label]="showOnlyAssignedToMe ? 'Mostrar todos' : 'Ver mis asignados'"
+              [icon]="showOnlyAssignedToMe ? 'pi pi-eye' : 'fa-solid fa-user-check'" severity="info" [outlined]="true"
+              pTooltip="Muestra solo los animales que te has asignado para revisar" tooltipPosition="top"></p-button>
+            }
+            <p-iconField iconPosition="left">
+              <p-inputIcon>
+                <i class="pi pi-search"></i>
+              </p-inputIcon>
+              <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+                placeholder="Buscar animales" />
+            </p-iconField>
+          </div>
+        </div>
       </div>
     </ng-template>
     <ng-template pTemplate="header">
       <tr>
+        <th style="width: 3rem">
+          <p-tableHeaderCheckbox />
+        </th>
         <th>Imagen</th>
         <th>Nombre</th>
         <th>Especie</th>
@@ -61,6 +90,9 @@
           }" [pTooltip]="(user?.role === 'ROLE_MOD' && animal.assignedToAdmin) ?
           'Este caso está siendo gestionado por un administrador. No puedes realizar acciones.' : ''"
         tooltipPosition="top">
+        <td>
+          <p-tableCheckbox [value]="animal" />
+        </td>
         <td>
           <p-image [src]="animal.urlImage" [alt]="animal.name" imageClass="w-2rem rounded" [preview]="true" />
         </td>
@@ -138,7 +170,7 @@
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="10" class="text-center">No se encontraron resultados.</td>
+        <td colspan="11" class="text-center">No se encontraron resultados.</td>
       </tr>
     </ng-template>
     <ng-template pTemplate="footer">
@@ -392,6 +424,30 @@
   }
   <ng-template pTemplate="footer">
     <p-button label="Cerrar" severity="secondary" (click)="displayIdModal = false" />
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo de Confirmación para Acciones en Lote -->
+<p-dialog [(visible)]="displayBulkConfirmationDialog" [modal]="true" [style]="{width: '30rem'}" [draggable]="false"
+  [resizable]="false" styleClass="modern-dialog" (onHide)="resetBulkConfirmationState()">
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 text-lg font-semibold" [ngClass]="{
+      'text-red-600': bulkActionType === 'delete',
+      'text-yellow-600': bulkActionType === 'unpublish',
+      'text-blue-600': bulkActionType === 'assign',
+      'text-primary': bulkActionType === 'publish'
+    }">
+      <span>{{ bulkConfirmationHeader }}</span>
+    </div>
+  </ng-template>
+
+  <div class="p-fluid">
+    <p class="m-0" [innerHTML]="bulkConfirmationMessage"></p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (click)="displayBulkConfirmationDialog = false" />
+    <p-button [label]="bulkAcceptButtonLabel" [severity]="bulkAcceptButtonSeverity" (click)="confirmBulkAction()" />
   </ng-template>
 </p-dialog>
 

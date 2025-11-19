@@ -29,6 +29,7 @@ import { Menu, MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { CommonService } from '../../services/common.service';
 import { ImageModule } from 'primeng/image';
+import { DividerModule } from "primeng/divider";
 
 @Component({
   selector: 'app-animals-table',
@@ -51,8 +52,9 @@ import { ImageModule } from 'primeng/image';
     ProgressSpinnerModule,
     InputTextModule,
     MenuModule,
-    ImageModule
-  ],
+    ImageModule,
+    DividerModule
+],
   providers: [ConfirmationService, MessageService],
   templateUrl: './animals-table.component.html',
   styleUrl: './animals-table.component.css'
@@ -105,6 +107,15 @@ export class AnimalsTableComponent implements OnChanges {
   assignmentIcon = '';
   assignmentAcceptLabel = '';
   assignmentAcceptSeverity: 'success' | 'warn' = 'success';
+
+  selectedAnimals: Animal[] = [];
+  // Propiedades para el diálogo de confirmación de acciones en lote
+  displayBulkConfirmationDialog = false;
+  bulkActionType: 'publish' | 'unpublish' | 'delete' | 'assign' | '' = '';
+  bulkConfirmationMessage = '';
+  bulkConfirmationHeader = '';
+  bulkAcceptButtonLabel = '';
+  bulkAcceptButtonSeverity: 'success' | 'danger' | 'info' | 'warn' = 'success';
 
   ngOnChanges(changes: SimpleChanges): void {
     // Si el filtro inicial existe y los datos de la tabla han cambiado (se han cargado)
@@ -812,5 +823,123 @@ export class AnimalsTableComponent implements OnChanges {
   showIdModal(animal: Animal) {
     this.selectedAnimalForId = animal;
     this.displayIdModal = true;
+  }
+
+  openBulkConfirmationDialog(type: 'publish' | 'unpublish' | 'delete' | 'assign') {
+    this.bulkActionType = type;
+    const count = this.selectedAnimals.length;
+
+    switch (type) {
+      case 'publish':
+        this.bulkConfirmationHeader = 'Confirmar Publicación en Lote';
+        this.bulkConfirmationMessage = `Estás a punto de <strong>publicar ${count}</strong> fichas de animales. ¿Deseas continuar?`;
+        this.bulkAcceptButtonLabel = `Publicar ${count} fichas`;
+        this.bulkAcceptButtonSeverity = 'success';
+        break;
+      case 'unpublish':
+        this.bulkConfirmationHeader = 'Confirmar Despublicación en Lote';
+        this.bulkConfirmationMessage = `Estás a punto de <strong>despublicar ${count}</strong> fichas de animales. ¿Deseas continuar?`;
+        this.bulkAcceptButtonLabel = `Despublicar ${count} fichas`;
+        this.bulkAcceptButtonSeverity = 'warn';
+        break;
+      case 'delete':
+        this.bulkConfirmationHeader = 'Confirmar Eliminación en Lote';
+        this.bulkConfirmationMessage = `Estás a punto de <strong>eliminar permanentemente ${count}</strong> fichas de animales. Esta acción no se puede deshacer.`;
+        this.bulkAcceptButtonLabel = `Eliminar ${count} fichas`;
+        this.bulkAcceptButtonSeverity = 'danger';
+        break;
+      case 'assign':
+        this.bulkConfirmationHeader = 'Confirmar Asignación en Lote';
+        this.bulkConfirmationMessage = `Estás a punto de <strong>asignarte ${count}</strong> casos para su revisión. ¿Deseas continuar?`;
+        this.bulkAcceptButtonLabel = `Asignarme ${count} casos`;
+        this.bulkAcceptButtonSeverity = 'info';
+        break;
+    }
+
+    this.displayBulkConfirmationDialog = true;
+  }
+
+  async confirmBulkAction() {
+    this.isLoading = true;
+    this.displayBulkConfirmationDialog = false;
+
+    const promises: Promise<any>[] = [];
+    const action = this.bulkActionType;
+
+    for (const animal of this.selectedAnimals) {
+      switch (action) {
+        case 'publish':
+          promises.push(this.animalService.updateAnimal(animal.id!, { published: true, assignedToAdmin: false }));
+          break;
+        case 'unpublish':
+          promises.push(this.animalService.updateAnimal(animal.id!, { published: false }));
+          break;
+        case 'delete':
+          promises.push(this.animalService.deleteAnimal(animal.id!));
+          break;
+        case 'assign':
+          promises.push(this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado en lote para revisión.'));
+          break;
+      }
+    }
+
+    try {
+      await Promise.all(promises);
+
+      // Logging
+      const details = `Acción en lote '${action}' completada para ${this.selectedAnimals.length} animales por ${this.user.username}.`;
+      await this.logService.addLog(`Acción en lote: ${action}`, details, this.user, 'Animales');
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `La operación en lote se ha completado correctamente para ${this.selectedAnimals.length} fichas.`,
+      });
+
+    } catch (error) {
+      console.error(`Error al ejecutar la acción en lote '${action}':`, error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Ocurrió un error al procesar una o más fichas.',
+      });
+    } finally {
+      this.dataChanged.emit();
+      this.selectedAnimals = [];
+      this.isLoading = false;
+    }
+  }
+
+  resetBulkConfirmationState() {
+    this.displayBulkConfirmationDialog = false;
+    this.bulkActionType = '';
+  }
+
+  // Helpers para deshabilitar botones de acciones en lote
+  get isPublishBulkDisabled(): boolean {
+    if (this.selectedAnimals.length === 0) return true;
+    // Deshabilitado si algún animal seleccionado ya está publicado o está pendiente de revisión
+    return this.selectedAnimals.some(animal => animal.published || this.isPublishDisabled(animal));
+  }
+
+  get isUnpublishBulkDisabled(): boolean {
+    if (this.selectedAnimals.length === 0) return true;
+    // Deshabilitado si algún animal seleccionado no está publicado
+    return this.selectedAnimals.some(animal => !animal.published);
+  }
+
+  get isAssignBulkDisabled(): boolean {
+    if (this.selectedAnimals.length === 0) return true;
+    // Deshabilitado si algún animal seleccionado ya está asignado a un admin
+    return this.selectedAnimals.some(animal => animal.assignedToAdmin);
+  }
+
+  get isDeleteBulkDisabled(): boolean {
+    return this.selectedAnimals.length === 0;
+  }
+
+  onSelectionChange(event: any) {
+    // Este método se puede usar si se necesita lógica adicional cuando cambia la selección.
+    // Por ahora, el [(selection)] maneja la actualización de la propiedad.
   }
 }
