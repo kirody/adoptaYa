@@ -9,29 +9,30 @@
     <div *ngIf="!isLoading && protectors.length > 0">
       <!-- Lista simple de protectoras -->
       <div class="protector-list">
-        <div *ngFor="let protector of protectors" class="protector-list-item col-12">
-          <div class="flex align-items-center p-3 gap-4">
-            <!-- Contenedor para la imagen o la inicial -->
+        <div *ngFor="let protector of protectors" class="protector-list-item col-12 mb-3">
+          <div class="surface-card shadow-2 border-round flex flex-column md:flex-row align-items-center p-3 gap-4">
+            <!-- Imagen o Inicial -->
             <ng-container *ngIf="protector.urlImage && protector.urlImage.trim() !== ''; else initialPlaceholder">
-              <img class="w-6rem h-6rem shadow-2 block border-round protector-image" [src]="protector.urlImage" [alt]="protector.name" />
+              <img class="w-8rem h-8rem shadow-2 block border-round protector-image object-cover" [src]="protector.urlImage" [alt]="protector.name" />
             </ng-container>
             <ng-template #initialPlaceholder>
-              <div class="w-6rem h-6rem shadow-2 block border-round protector-initials-placeholder flex align-items-center justify-content-center">
-                <span class="text-3xl font-bold">{{ protector.name.charAt(0).toUpperCase() }}</span>
+              <div class="w-8rem h-8rem shadow-2 block border-round protector-initials-placeholder flex align-items-center justify-content-center">
+                <span class="text-3xl font-bold text-gray-500">{{ protector.name.charAt(0).toUpperCase() }}</span>
               </div>
             </ng-template>
 
-            <div class="flex-1">
+            <!-- Información Principal -->
+            <div class="flex-1 text-center md:text-left">
               <div class="text-xl font-bold text-900">{{ protector.name }}</div>
-              <div class="flex align-items-center gap-2 text-sm text-surface-500">
+              <div class="flex align-items-center justify-content-center md:justify-content-start gap-2 text-sm text-surface-500">
                 <i class="pi pi-map-marker"></i>
                 <span>{{ protector.province }}</span>
               </div>
+              <p class="m-0 mt-2 text-sm text-surface-600">Teléfono: {{ protector.phone }}</p>
             </div>
 
-            <p class="flex-1 m-0 text-sm text-surface-600 hidden md:block">{{ protector.description | slice:0:100 }}...</p>
-
-            <div class="ml-auto">
+            <!-- Botón -->
+            <div class="md:ml-auto mt-3 md:mt-0">
               <p-button label="Ver Animales" icon="pi pi-search" styleClass="p-button-outlined" [routerLink]="['/animales']" [queryParams]="{ protector: protector.id }"></p-button>
             </div>
           </div>

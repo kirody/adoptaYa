@@ -60,6 +60,10 @@ export class AnimalsComponent implements OnInit {
         if (protectorID) {
           publishedAnimals = publishedAnimals.filter((animal: any) => animal.protectressID === protectorID);
         }
+        // Ordenar por destacados primero
+        publishedAnimals.sort((a: Animal, b: Animal) =>
+          (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
+        );
         this.animals.set(publishedAnimals);
         this.isLoading = false;
       });

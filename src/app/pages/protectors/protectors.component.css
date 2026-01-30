@@ -3,10 +3,6 @@
   object-fit: cover;
 }
 
-.protector-list-item:not(:last-child) {
-  border-bottom: 1px solid var(--p-surface-200);
-}
-
 .protector-initials-placeholder {
   background-color: var(--p-primary-100);
   color: var(--p-primary-600);

@@ -49,7 +49,20 @@
           </div>
           <div class="flex items-center gap-2 mb-4">
             <p-tag [value]="currentAnimal.specie" [icon]="'fa-solid ' + icon" severity="info" [rounded]="true"></p-tag>
-            <p-tag [value]="currentAnimal.gender" [icon]="'fa-solid ' + gender" severity="warn" [rounded]="true"></p-tag>
+            <p-tag [value]="currentAnimal.gender" [icon]="'fa-solid ' + gender" severity="warn"
+              [rounded]="true"></p-tag>
+          </div>
+
+          <!-- Mensaje de Adopción Urgente -->
+          <div *ngIf="currentAnimal.featured"
+            class="flex items-start gap-3 p-4 rounded-lg border-l-4 border-red-400 bg-red-50 text-red-800 mb-4">
+            <i class="pi pi-exclamation-triangle text-2xl text-red-600 mt-1"></i>
+            <div>
+              <h4 class="font-bold m-0">¡Adopción Urgente!</h4>
+              <p class="text-sm m-0 mt-1">{{ currentAnimal.name }} necesita encontrar un hogar lo antes posible.
+                Considera darle
+                una oportunidad.</p>
+            </div>
           </div>
 
           <!-- Lista de Detalles -->
@@ -59,7 +72,8 @@
               <i class="fa-solid fa-cake-candles text-xl text-primary"></i>
               <div>
                 <span class="block text-xs font-medium text-surface-500 dark:text-surface-400">Edad</span>
-                <span class="block font-semibold text-surface-800 dark:text-surface-100">{{ currentAnimal.age | formattedAge }}</span>
+                <span class="block font-semibold text-surface-800 dark:text-surface-100">{{ currentAnimal.age |
+                  formattedAge }}</span>
               </div>
             </div>
             <div
@@ -79,6 +93,7 @@
               </div>
             </div>
           </div>
+
           <!-- Sección de Acciones -->
           <div class="mt-4">
             <!-- Botón para Admin/Mod -->

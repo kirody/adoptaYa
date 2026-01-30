@@ -17,4 +17,6 @@ export interface Animal {
   protectressID: string;
   protectressName: string;
   isClone?: boolean;
+  featured: boolean;
+  infraction?: string | null;
 }

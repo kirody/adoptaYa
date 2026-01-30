@@ -21,20 +21,30 @@
       <ng-template #list let-animals>
         <div class="grid grid-cols-12 gap-4 p-4">
           <div *ngFor="let animal of animals" class="col-span-12 sm:col-span-6 md:col-span-4">
-            <div class="border rounded-lg overflow-hidden shadow-sm bg-surface-0 dark:bg-surface-800 flex flex-col h-full">
+            <div
+              class="border rounded-lg overflow-hidden shadow-sm bg-surface-0 dark:bg-surface-800 flex flex-col h-full">
               <div class="relative">
                 <img class="w-full h-48 object-cover" [src]="animal.urlImage" [alt]="animal.name" />
-                <p-tag [value]="commonService.getTranslatedStatus(animal.state)" [severity]="commonService.getStatusSeverity(animal.state)"
-                  class="absolute top-2 left-2" />
+                <p-tag [value]="commonService.getTranslatedStatus(animal.state)"
+                  [severity]="commonService.getStatusSeverity(animal.state)" class="absolute top-2 left-2" />
               </div>
               <div class="p-4 flex flex-col flex-grow">
-                <h3 class="text-lg font-bold truncate text-surface-800 dark:text-surface-100">{{ animal.name }}</h3>
-                <p class="text-sm text-surface-500 dark:text-surface-400">{{ animal.specie }}</p>
+                <div class="flex items-center">
+                  <h3 class="text-lg font-bold truncate text-surface-800 dark:text-surface-100">{{ animal.name }}</h3>
+                </div>
+                <div class="flex align-items-center justify-content-between">
+                  <p class="text-sm text-surface-500 dark:text-surface-400">{{ animal.specie }}</p>
+                  @if(animal.featured){
+                  <p-tag value="URGENTE" severity="danger" class="ml-2" [rounded]="true"></p-tag>
+                  }
+                </div>
                 <div class="flex-grow mt-2">
-                  <span class="text-xs text-surface-400 flex items-center gap-1"><i class="pi pi-map-marker"></i> {{ animal.province }}</span>
+                  <span class="text-xs text-surface-400 flex items-center gap-1"><i class="pi pi-map-marker"></i> {{
+                    animal.province }}</span>
                 </div>
                 <div class="mt-4">
-                  <button pButton label="Ver más" icon="pi pi-eye" class="w-full" (click)="showAnimal(animal.id)"></button>
+                  <button pButton label="Ver más" icon="pi pi-eye" class="w-full"
+                    (click)="showAnimal(animal.id)"></button>
                 </div>
               </div>
             </div>
@@ -43,19 +53,31 @@
       </ng-template>
       <ng-template #grid let-animals>
         <div class="grid grid-cols-12 gap-4 p-4">
-          <div *ngFor="let animal of animals" class="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 xl:col-span-2">
-            <div class="group bg-white dark:bg-surface-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 cursor-pointer" (click)="showAnimal(animal.id)">
+          <div *ngFor="let animal of animals"
+            class="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3 xl:col-span-2">
+            <div
+              class="group bg-white dark:bg-surface-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 cursor-pointer"
+              (click)="showAnimal(animal.id)">
               <div class="relative aspect-square">
                 <img class="w-full h-full object-cover" [src]="animal.urlImage" [alt]="animal.name" />
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
-                  <button pButton label="Ver más" icon="pi pi-eye" class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-button-raised p-button-secondary"></button>
+                <div
+                  class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                  <button pButton label="Ver más" icon="pi pi-eye"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-button-raised p-button-secondary"></button>
                 </div>
-                <p-tag [value]="commonService.getTranslatedStatus(animal.state)" [severity]="commonService.getStatusSeverity(animal.state)"
-                  class="absolute top-3 left-3" />
+                <p-tag [value]="commonService.getTranslatedStatus(animal.state)"
+                  [severity]="commonService.getStatusSeverity(animal.state)" class="absolute top-3 left-3" />
               </div>
               <div class="p-3">
-                <h3 class="text-lg font-bold truncate text-surface-800 dark:text-surface-100">{{ animal.name }}</h3>
-                <p class="text-sm text-surface-500 dark:text-surface-400">{{ animal.specie }}</p>
+                <div class="flex items-center">
+                  <h3 class="text-lg font-bold truncate text-surface-800 dark:text-surface-100">{{ animal.name }}</h3>
+                </div>
+                <div class="flex align-items-center justify-content-between">
+                  <p class="text-sm text-surface-500 dark:text-surface-400">{{ animal.specie }}</p>
+                  @if(animal.featured){
+                  <p-tag value="URGENTE" severity="danger" class="ml-2" [rounded]="true"></p-tag>
+                  }
+                </div>
               </div>
             </div>
           </div>

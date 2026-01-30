@@ -123,6 +123,12 @@ export class AnimalsTableComponent implements OnChanges {
       // Aplicamos el filtro. El setTimeout asegura que la tabla ya se ha renderizado con los nuevos datos.
       setTimeout(() => this.table?.filterGlobal(this.initialFilter!, 'contains'), 0);
     }
+
+    // Ordenar los datos para mostrar los destacados primero
+    if (changes['dataTable'] && changes['dataTable'].currentValue) {
+      this.dataTable.sort((a: Animal, b: Animal) =>
+        (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+    }
   }
 
   clearInitialFilter(): void {
@@ -306,6 +312,7 @@ export class AnimalsTableComponent implements OnChanges {
       animalCopy.scaled = []; // Limpia el historial de escalado.
       animalCopy.assignedToAdmin = false; // Reinicia el estado de asignación.
       animalCopy.infraction = null; // Reinicia el estado de infracción.
+      animalCopy.featured = null; // Reinicia el estado de destacado.
 
       // 2.1. Reconvierte los campos de fecha que se hayan convertido a string.
       // JSON.stringify convierte los Timestamps de Firestore a un objeto con seconds y nanoseconds,
@@ -639,6 +646,13 @@ export class AnimalsTableComponent implements OnChanges {
       });
     }
 
+    // Acción de Destacar (disponible para todos los roles con permisos)
+    this.animalActions.push({
+      label: animal.featured ? 'No destacar' : 'Destacar',
+      icon: animal.featured ? 'fa-regular fa-star' : 'pi pi-star-fill',
+      command: () => this.toggleFeatured(animal)
+    });
+
     if (isAdmin) {
       this.animalActions.push({
         label: animal.assignedToAdmin ? 'Desasignarme' : 'Asignarme',
@@ -654,6 +668,41 @@ export class AnimalsTableComponent implements OnChanges {
     this.menu?.toggle(event);
   }
 
+  /**
+   * Destaca o no destaca un animal.
+   * @param animal El animal a modificar.
+   */
+  async toggleFeatured(animal: Animal) {
+    this.isLoading = true;
+    const newFeaturedState = !animal.featured;
+    const actionText = newFeaturedState ? 'destacado' : 'no destacado';
+    const logAction = newFeaturedState ? 'Animal destacado' : 'Animal no destacado';
+
+    try {
+      await this.animalService.updateAnimal(animal.id!, { featured: newFeaturedState });
+
+      const details = `El animal ${animal.name} ha sido ${actionText} por ${this.user.username}.`;
+      await this.logService.addLog(logAction, details, this.user, 'Animales');
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `El animal ${animal.name} ha sido ${actionText} correctamente.`,
+      });
+
+      this.dataChanged.emit(); // Refresca los datos en el componente padre
+    } catch (error) {
+      console.error('Error al cambiar el estado de destacado del animal:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo actualizar el estado de destacado del animal.',
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   getAnimalActions(event: Event, animal: Animal): MenuItem[] {
     const items: MenuItem[] = [];
 
@@ -664,6 +713,14 @@ export class AnimalsTableComponent implements OnChanges {
       disabled: this.isEditDisabled(animal) || (this.user?.role === 'ROLE_MOD' && animal.assignedToAdmin) || animal.isClone,
       command: () => this.duplicateAnimal(animal)
     });
+
+    // Acción de Destacar
+    items.push({
+      label: animal.featured ? 'No destacar' : 'Destacar',
+      icon: animal.featured ? 'fa-regular fa-star' : 'fa-solid fa-star',
+      command: () => this.toggleFeatured(animal)
+    });
+
 
     // Acciones solo para Admin
     if (this.user?.role === 'ROLE_ADMIN') {

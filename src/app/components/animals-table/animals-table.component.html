@@ -97,24 +97,30 @@
           <p-image [src]="animal.urlImage" [alt]="animal.name" imageClass="w-2rem rounded" [preview]="true" />
         </td>
         <td>
-          <span class="mr-2">{{ animal.name }}</span>
-          @if(animal.isClone) {
-          <i class="fa-solid fa-clone text-blue-500" pTooltip="Ficha clonada" tooltipPosition="top"></i>
-          }
-          @if(animal.infraction === 'pending_review') {
-          <i class="fa-solid fa-flag text-red-500" pTooltip="Infracción detectada. Requiere revisión."
-            tooltipPosition="top"></i>
-          } @else if (animal.infraction === 'resolved') {
-          <i class="fa-solid fa-shield-halved text-green-500" pTooltip="Infracción resuelta." tooltipPosition="top"></i>
-          }
-          @if(user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin &&
-          getScaledStatusTag(animal) !== 'Cerrado') {
-          <i class="fa-solid fa-triangle-exclamation text-orange-500" pTooltip="Requiere revisión"
-            tooltipPosition="top"></i>
-          }
-          @if(user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin) {
-          <i class="fa-solid fa-user-check text-blue-500" pTooltip="Asignado a admin" tooltipPosition="top"></i>
-          }
+          <div class="flex items-center gap-2">
+            <span class="font-bold">{{ animal.name }}</span>
+            <i *ngIf="animal.featured" class="fa-solid fa-star text-yellow-500" pTooltip="Animal destacado"
+              tooltipPosition="top"></i>
+
+            @if(animal.isClone) {
+            <i class="fa-solid fa-clone text-blue-500" pTooltip="Ficha clonada" tooltipPosition="top"></i>
+            }
+            @if(animal.infraction === 'pending_review') {
+            <i class="fa-solid fa-flag text-red-500" pTooltip="Infracción detectada. Requiere revisión."
+              tooltipPosition="top"></i>
+            } @else if (animal.infraction === 'resolved') {
+            <i class="fa-solid fa-shield-halved text-green-500" pTooltip="Infracción resuelta"
+              tooltipPosition="top"></i>
+            }
+            @if(user?.role === 'ROLE_ADMIN' && hasModeratorScaled(animal) && !animal.assignedToAdmin &&
+            getScaledStatusTag(animal) !== 'Cerrado') {
+            <i class="fa-solid fa-triangle-exclamation text-orange-500" pTooltip="Requiere revisión"
+              tooltipPosition="top"></i>
+            }
+            @if(user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin) {
+            <i class="fa-solid fa-user-check text-blue-500" pTooltip="Asignado a admin" tooltipPosition="top"></i>
+            }
+          </div>
         </td>
         <td>
           <i class="fa-solid" [ngClass]="{'fa-cat': animal.specie === 'Gato', 'fa-dog': animal.specie === 'Perro'}"></i>

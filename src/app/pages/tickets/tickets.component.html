@@ -1,0 +1,88 @@
+<div class="p-4">
+  <p-toast></p-toast>
+  <app-header-page [title]="'Gestión de Tickets'" [icon]="'pi pi-ticket'"></app-header-page>
+
+  <div class="mt-4">
+    <div class="flex align-items-center justify-content-between mb-4">
+      <h3 class="m-0 text-xl font-bold">Tickets Abiertos</h3>
+      <p-button label="Crear Ticket" icon="pi pi-plus" (click)="openNewTicketDialog()"></p-button>
+    </div>
+
+    <p-table
+      [value]="tickets()"
+      [paginator]="true"
+      [rows]="10"
+      [loading]="loading"
+      [rowHover]="true"
+      responsiveLayout="scroll"
+      styleClass="p-datatable-sm">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id" style="width: 10%">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="type" style="width: 20%">Tipo <p-sortIcon field="type"></p-sortIcon></th>
+          <th pSortableColumn="subject">Asunto <p-sortIcon field="subject"></p-sortIcon></th>
+          <th pSortableColumn="status" style="width: 15%">Estado <p-sortIcon field="status"></p-sortIcon></th>
+          <th pSortableColumn="createdAt" style="width: 15%">Fecha <p-sortIcon field="createdAt"></p-sortIcon></th>
+          <th style="width: 10%">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-ticket>
+        <tr>
+          <td><span class="font-bold">{{ ticket.id }}</span></td>
+          <td><p-tag [value]="ticket.type" [severity]="getTypeSeverity(ticket.type)"></p-tag></td>
+          <td>{{ ticket.subject }}</td>
+          <td><p-tag [value]="ticket.status" [severity]="getStatusSeverity(ticket.status)" [rounded]="true"></p-tag></td>
+          <td>{{ ticket.createdAt | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" styleClass="p-button-secondary" (click)="viewTicket(ticket)" pTooltip="Ver detalles" tooltipPosition="top"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center p-4">No hay tickets abiertos actualmente.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [(visible)]="displayDialog"
+  [style]="{width: '650px'}"
+  header="Crear Nuevo Ticket"
+  [modal]="true"
+  styleClass="p-fluid"
+  [draggable]="false"
+  [resizable]="false">
+
+  <ng-template pTemplate="content">
+    <form [formGroup]="ticketForm" class="flex flex-column gap-3 mt-2">
+      <div class="field">
+        <label for="subject" class="font-bold block mb-2">Asunto</label>
+        <input type="text" pInputText class="w-full" id="subject" formControlName="subject" placeholder="Resumen del problema" />
+        <small class="p-error block mt-1" *ngIf="ticketForm.get('subject')?.invalid && ticketForm.get('subject')?.touched">El asunto es obligatorio.</small>
+      </div>
+
+      <div class="field">
+        <label for="type" class="font-bold block mb-2">Tipo</label>
+        <p-select id="type" class="w-full" [options]="ticketTypes" formControlName="type" placeholder="Selecciona un tipo" appendTo="body"></p-select>
+        <small class="p-error block mt-1" *ngIf="ticketForm.get('type')?.invalid && ticketForm.get('type')?.touched">El tipo es obligatorio.</small>
+      </div>
+
+      <div class="field">
+        <label for="description" class="font-bold block mb-2">Descripción</label>
+        <textarea id="description" class="w-full" pInputTextarea formControlName="description" rows="5" placeholder="Detalla el problema..."></textarea>
+        <small class="p-error block mt-1" *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">La descripción es obligatoria.</small>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+    <button pButton pRipple label="Guardar" icon="pi pi-check" class="p-button-text" (click)="saveTicket()"></button>
+  </ng-template>
+</p-dialog>

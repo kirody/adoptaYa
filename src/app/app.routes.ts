@@ -13,6 +13,7 @@ import { ManagementPanelComponent } from './pages/management-panel/management-pa
 import { roleGuard } from './guards/role.guard';
 import { ProtectorFormComponent } from './pages/protectors/protector-form/protector-form.component';
 import { LogoutConfirmationComponent } from './pages/logout-confirmation/logout-confirmation.component';
+import { TicketsComponent } from './pages/tickets/tickets.component';
 
 export const routes: Routes = [
   {
@@ -74,6 +75,12 @@ export const routes: Routes = [
     component: ManagementPanelComponent,
     canActivate: [roleGuard],
     data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
+  },
+  {
+    path: 'tickets',
+    component: TicketsComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['ROLE_ADMIN'] }
   },
   {
     path: 'login',
