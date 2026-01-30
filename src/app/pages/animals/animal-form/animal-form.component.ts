@@ -94,7 +94,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
   private speciesChangesSubscription!: Subscription;
   private userSubscription!: Subscription;
-  isAnimalScaled = false;
   protectors: any[] = [];
   dataProtector: any;
   private user: UserData | null = null;
@@ -136,7 +135,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
       infraction: '',
       state: ['', Validators.required], // Opcional
       published: [false],
-      scaled: [[]],
       protectressID: [''],
       protectressName: [''],
       protectressPhone: [''],
@@ -211,8 +209,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
 
         // 3. Verificamos si la ficha es un clon y actualizamos el flag.
         this.isClone = animalData.isClone || false;
-
-        this.checkAnimalScaled();
         this.loadProtectorData(this.animalForm.value.protectressID);
         this.setSpinner(false);
       } else {
@@ -463,16 +459,6 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   private setSpinner(show: boolean, text: string = ''): void {
     this.spinnerModal = show;
     this.textModal = text;
-  }
-
-  checkAnimalScaled() {
-    this.isAnimalScaled =
-      this.animalForm.value.scaled[0]?.animalData?.id ===
-      this.animalForm.value.id;
-
-    if (this.isAnimalScaled) {
-      this.animalForm.disable();
-    }
   }
 
   async loadProtectors(): Promise<void> {

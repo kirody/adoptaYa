@@ -35,15 +35,6 @@
         </div>
       </div>
     </p-message>
-    <p-message *ngIf="isAnimalScaled" severity="error" styleClass="w-full mb-4">
-      <div class="flex items-center">
-        <i class="pi pi-lock text-xl mr-3"></i>
-        <div>
-          <strong>Edición no disponible</strong>
-          <p class="mt-1">Para proteger el historial, los campos de un animal escalado no se pueden modificar.</p>
-        </div>
-      </div>
-    </p-message>
     <form [formGroup]="animalForm" (ngSubmit)="saveAnimal()">
       <div>
         <div class="flex gap-4">
@@ -122,7 +113,7 @@
                   <div class="flex items-center">
                     <input id="animalUrlImage" type="text" pInputText formControlName="urlImage" class="w-full" />
                     <button type="button" pButton icon="pi pi-clipboard" (click)="paste()"
-                      pTooltip="Pegar URL del portapapeles" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
+                      pTooltip="Pegar URL del portapapeles" tooltipPosition="top"></button>
                   </div>
                 </div>
                 <div class="field">
@@ -141,7 +132,7 @@
                     <textarea id="description" rows="5" pTextarea formControlName="description" class="w-full"
                       [ngClass]="{'ng-invalid ng-dirty': animalForm.get('description')?.hasError('infraction')}"></textarea>
                     <button type="button" pButton icon="pi pi-sparkles" (click)="generateDescription()"
-                      pTooltip="Generar descripción con IA" tooltipPosition="top" [disabled]="isAnimalScaled"></button>
+                      pTooltip="Generar descripción con IA" tooltipPosition="top"></button>
                   </div>
                   <small *ngIf="animalForm.get('description')?.hasError('infraction')" class="">
                     <p-message severity="error" icon="pi pi-exclamation-triangle" variant="simple" size="small">

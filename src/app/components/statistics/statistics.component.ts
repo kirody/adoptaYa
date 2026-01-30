@@ -22,7 +22,6 @@ private animalService = inject(AnimalsService);
   animalsInHome = 0;
   animalsCats = 0;
   animalsDogs = 0;
-  animalsScaled = 0;
 
   ngOnInit(): void {
     this.totalAnimals();
@@ -32,7 +31,6 @@ private animalService = inject(AnimalsService);
     this.totalCats();
     this.totalDogs();
     this.totalPendingAnimals();
-    this.totalScaled();
   }
 
   totalAnimals() {
@@ -74,12 +72,6 @@ private animalService = inject(AnimalsService);
   totalDogs() {
     this.animalService.getAnimalsByField('specie', '==', 'Perro').then((data) => {
       this.animalsDogs = data.length;
-    });
-  }
-
-  totalScaled() {
-    this.animalService.getScaledAnimals().then((data) => {
-      this.animalsScaled = data.length;
     });
   }
 }

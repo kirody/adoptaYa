@@ -13,7 +13,6 @@ export interface Animal {
   published?: boolean;
   publishedText?: string;
   assignedToAdmin?: boolean;
-  scaled: any;
   protectressID: string;
   protectressName: string;
   isClone?: boolean;

@@ -74,13 +74,7 @@ export class AnimalsTableComponent implements OnChanges {
   @Input({ required: true }) user!: any;
   @Output() dataChanged = new EventEmitter<void>();
   @Input() initialFilter: string | null = null;
-  showInfoScaled: boolean = false;
-  selectedScaledAnimal = signal<any>([]);
-  showModalScaled: boolean = false;
   @Input() isLoading = true;
-  scaleComment = '';
-  hideAssignedToAdmin = false;
-  showOnlyAssignedToMe = false;
   @ViewChild('dt') table: Table | undefined;
   @ViewChild('menu') menu: Menu | undefined;
   animalActions: MenuItem[] = [];
@@ -154,140 +148,15 @@ export class AnimalsTableComponent implements OnChanges {
     this.dataChanged.emit();
   }
 
-  toggleHideAssignedToAdmin(): void {
-    this.hideAssignedToAdmin = !this.hideAssignedToAdmin;
-    if (this.hideAssignedToAdmin) {
-      this.table?.filter(true, 'assignedToAdmin', 'notEquals');
-    } else {
-      this.table?.filter(null, 'assignedToAdmin', 'equals'); // Limpia el filtro de esa columna
-    }
-  }
-
-  toggleShowOnlyAssignedToMe(): void {
-    this.showOnlyAssignedToMe = !this.showOnlyAssignedToMe;
-    if (this.showOnlyAssignedToMe) {
-      this.table?.filter(true, 'assignedToAdmin', 'equals');
-      console.log(this.table?.filter(true, 'assignedToAdmin', 'equals'));
-
-    } else {
-      // Limpia el filtro específico de la columna 'assignedToAdmin'
-      this.table?.filter(null, 'assignedToAdmin', 'equals');
-    }
-  }
-
-  // Datos principales de la revisión
-  moderatorData = computed(() => this.selectedScaledAnimal()?.scaled[0]?.moderator);
-  adminData = computed(() => this.selectedScaledAnimal()?.scaled[0]?.admin);
-
-  // Mensajes de estado
-  showModPendingMessage = computed(() => this.user?.role === 'ROLE_MOD' && !this.adminData()
-  );
-
-  showModResolvedMessage = computed(() => this.user?.role === 'ROLE_MOD' &&
-    !!this.adminData() &&
-    !this.selectedScaledAnimal()?.assignedToAdmin
-  );
-
-  showAdminPendingMessage = computed(() => this.user?.role === 'ROLE_ADMIN' && !this.adminData()
-  );
-
-  showAdminResolvedMessage = computed(() => this.user?.role === 'ROLE_ADMIN' &&
-    !!this.adminData() &&
-    !this.selectedScaledAnimal()?.assignedToAdmin
-  );
-
-  showAdminToAssignedMessage = computed(() => this.user?.role === 'ROLE_ADMIN' &&
-    this.selectedScaledAnimal()?.assignedToAdmin
-  );
-
-  showModToAssignedMessage = computed(() => this.user?.role === 'ROLE_MOD' &&
-    this.selectedScaledAnimal()?.assignedToAdmin
-  );
 
   // Botones y campos de acción
-  showAdminActionPanel = computed(() => this.user?.role === 'ROLE_ADMIN' && !this.adminData());
+  /* showAdminActionPanel = computed(() => this.user?.role === 'ROLE_ADMIN' && !this.adminData());
   showModeratorCloseButton = computed(() => this.user?.role === 'ROLE_MOD');
-  showAdminCloseButton = computed(() => this.user?.role === 'ROLE_ADMIN' && !!this.adminData());
+  showAdminCloseButton = computed(() => this.user?.role === 'ROLE_ADMIN' && !!this.adminData()); */
 
   // Función auxiliar para obtener el valor del evento (para usar en el HTML)
   getEventValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
-  }
-
-  getScaledStatusTag(animal: any): string {
-    if (animal.scaled?.length > 0) {
-      const hasAdmin = animal.scaled.some((item: any) => item?.admin);
-      const hasModerator = this.hasModeratorScaled(animal);
-
-      if (animal.assignedToAdmin) {
-        return 'Asignado a admin';
-      }
-
-      if (hasAdmin && hasModerator) {
-        return 'Cerrado';
-      }
-
-      // Si un moderador lo ha escalado, pero un admin no ha respondido aún.
-      if (hasModerator && !hasAdmin) {
-        if (this.user?.role === 'ROLE_ADMIN') {
-          return 'Pendiente';
-        }
-        if (this.user?.role === 'ROLE_MOD') {
-          return 'Revisando';
-        }
-      }
-    }
-    return '';
-  }
-
-  /**
-   * Verifica si un animal específico ya ha sido escalado por un moderador.
-   * Se usa para deshabilitar el botón "escalar" en la tabla de pendientes.
-   * @param animal El objeto animal de la fila de la tabla.
-   * @returns `true` si ya ha sido escalado por un moderador, de lo contrario `false`.
-   */
-  hasModeratorScaled(animal: Animal): boolean {
-    if (!animal?.scaled || !Array.isArray(animal.scaled)) {
-      return false;
-    }
-    // Devuelve true si encuentra algún objeto en el array que tenga la clave 'moderator'.
-    return animal.scaled.some(
-      (item: any) => item && typeof item === 'object' && 'moderator' in item
-    );
-  }
-
-  setColorTagScaled(status: any): ButtonSeverity {
-    if (status === 'Asignado a admin' && this.user?.role === 'ROLE_MOD') {
-      return 'secondary';
-    } else if (status === 'Asignado a admin' && this.user?.role === 'ROLE_ADMIN') {
-      return 'info';
-    } else if (status === 'Cerrado') {
-      return 'secondary';
-    } else if (status === 'Pendiente' && this.user?.role === 'ROLE_ADMIN') {
-      return 'warn';
-    } else {
-      return 'info';
-    }
-  }
-
-  openModalScaled(animal: Animal) {
-    this.showInfoScaled = true;
-    this.selectedScaledAnimal.set(animal);
-  }
-
-  /**
-   * Determina si el botón de editar debe estar deshabilitado.
-   * El botón se deshabilita si un animal está pendiente de revisión por un administrador.
-   * @param animal El objeto animal.
-   * @returns `true` si el botón debe estar deshabilitado.
-   */
-  isEditDisabled(animal: Animal): boolean {
-    // No se puede editar un animal si ha sido escalado por un moderador
-    // y aún no ha sido revisado por un administrador.
-    const hasModerator = this.hasModeratorScaled(animal);
-    const hasAdmin = animal.scaled?.some((item: any) => item?.admin);
-
-    return hasModerator && !hasAdmin;
   }
 
   editAnimal(animalID: string) {
@@ -309,8 +178,6 @@ export class AnimalsTableComponent implements OnChanges {
       delete animalCopy.id; // Elimina el ID para que se cree un nuevo documento.
       animalCopy.isClone = true; // Añade un flag para identificar la ficha como un clon.
       animalCopy.published = false; // El duplicado no debe estar publicado por defecto.
-      animalCopy.scaled = []; // Limpia el historial de escalado.
-      animalCopy.assignedToAdmin = false; // Reinicia el estado de asignación.
       animalCopy.infraction = null; // Reinicia el estado de infracción.
       animalCopy.featured = null; // Reinicia el estado de destacado.
 
@@ -347,50 +214,6 @@ export class AnimalsTableComponent implements OnChanges {
     }
     this.isLoading = false;
   }
-  /**
-   * Obtiene el texto para el tooltip del botón de editar.
-   * @param animal El objeto animal.
-   * @returns El texto del tooltip.
-   */
-  getEditTooltip(animal: Animal): string {
-    if (this.isEditDisabled(animal)) {
-      return 'Pendiente de revisión por un administrador';
-    }
-    return 'Editar ficha';
-  }
-
-  /**
-   * Determina si el botón de publicar/despublicar debe estar deshabilitado.
-   * El botón se deshabilita si se intenta publicar un animal que está pendiente
-   * de revisión por un administrador.
-   * @param animal El objeto animal.
-   * @returns `true` si el botón debe estar deshabilitado.
-   */
-  isPublishDisabled(animal: Animal): boolean {
-    if (animal.published) {
-      // Siempre se puede despublicar un animal.
-      return false;
-    }
-
-    // No se puede publicar un animal si ha sido escalado por un moderador
-    // y aún no ha sido revisado por un administrador.
-    const hasModerator = this.hasModeratorScaled(animal);
-    const hasAdmin = animal.scaled?.some((item: any) => item?.admin);
-
-    return hasModerator && !hasAdmin;
-  }
-
-  getPublishTooltip(animal: Animal): string {
-    if (this.isPublishDisabled(animal)) {
-      return 'Pendiente de revisión por un administrador';
-    }
-    return animal.published ? 'Despublicar' : 'Publicar';
-  }
-
-  scaledAnimal(animal: Animal) {
-    this.showModalScaled = true;
-    this.selectedScaledAnimal.set(animal);
-  }
 
   async publishAnimal(animal: any) {
     this.isLoading = true;
@@ -405,21 +228,11 @@ export class AnimalsTableComponent implements OnChanges {
     const logAction = newPublishedState ? 'Animal publicado' : 'Animal despublicado';
     const updateData: any = { published: newPublishedState };
 
-    // Si se está publicando, se resetea el estado de escalado.
-    if (newPublishedState) {
-      updateData.assignedToAdmin = false;
-    }
-
     const updatePromise = this.animalService.updateAnimal(
       animal.id,
       updateData
     );
     const promises = [updatePromise];
-
-    // Si se está publicando el animal y tiene un escalado, se elimina la subcolección.
-    if (newPublishedState && animal.scaled && animal.scaled.length > 0) {
-      promises.push(this.animalService.deleteScaledSubcollection(animal.id));
-    }
 
     try {
       await Promise.all(promises);
@@ -463,168 +276,6 @@ export class AnimalsTableComponent implements OnChanges {
     }
   }
 
-  sendScaledAnimal() {
-    this.scaleAnimal();
-  }
-
-  async scaleAnimal() {
-    if (!this.scaleComment.trim() || !this.selectedScaledAnimal()) {
-      return;
-    }
-
-    this.isLoading = true;
-
-    try {
-      if (!this.user) {
-        throw new Error('No se pudo obtener la información del user.');
-      }
-      let scaleData = {};
-      let logAction = '';
-      let details = '';
-      if (this.user?.role === 'ROLE_MOD') {
-        scaleData = {
-          moderator: {
-            uid: this.user.uid,
-            email: this.user.email,
-            name: this.user.username,
-            comment: this.scaleComment,
-            dateHour: {
-              date: new Date().toLocaleDateString(),
-              hour: new Date().toLocaleTimeString(),
-            },
-            animalData: {
-              id: this.selectedScaledAnimal().id,
-              name: this.selectedScaledAnimal().name,
-            },
-          },
-        };
-
-        logAction = 'Animal escalado a admin';
-        details = `El moderador '${this.user.username}' ha escalado el animal '${this.selectedScaledAnimal().name}' para revisión con el comentario: "${this.scaleComment}".`;
-
-        // Notificar a los administradores
-        const admins = await this.userService.getUsersByRole('ROLE_ADMIN');
-        const notificationPromises = admins.map((admin: any) => {
-          const notification = {
-            title: 'Animal Escalado para Revisión',
-            message: `El moderador ${this.user.username} ha escalado el animal "${this.selectedScaledAnimal().name}" para su revisión.`,
-            severity: 'warn',
-            type: 'animal-scaled',
-            link: `/panel-gestion` // O un enlace directo si es posible
-          };
-          return this.notificationsService.addNotification(admin.uid, notification);
-        });
-        await Promise.all(notificationPromises);
-
-      } else {
-        scaleData = {
-          admin: {
-            uid: this.user.uid,
-            email: this.user.email,
-            comment: this.scaleComment,
-            name: this.user.username,
-            dateHour: {
-              date: new Date().toLocaleDateString(),
-              hour: new Date().toLocaleTimeString(),
-            },
-            animalData: {
-              id: this.selectedScaledAnimal().id,
-              name: this.selectedScaledAnimal().name,
-            },
-          },
-        };
-
-        logAction = 'Respuesta a escalado de animal';
-        details = `El administrador '${this.user.username}' ha respondido al escalado del animal '${this.selectedScaledAnimal().name}' con el comentario: "${this.scaleComment}".`;
-
-        // Notificar al moderador que ha recibido una respuesta
-        const moderatorId = this.selectedScaledAnimal().scaled[0]?.moderator?.uid;
-        if (moderatorId) {
-          const notification = {
-            title: 'Respuesta a tu escalado',
-            message: `El administrador ${this.user.username} ha respondido a tu escalado sobre "${this.selectedScaledAnimal().name}".`,
-            severity: 'success',
-            type: 'scaled-response',
-            link: `/panel-gestion?animalId=${this.selectedScaledAnimal().id}`
-          };
-          // No necesitamos esperar a que la notificación se envíe para continuar
-          this.notificationsService.addNotification(moderatorId, notification);
-        }
-
-      }
-
-      await this.animalService.scaleAnimal(
-        this.selectedScaledAnimal().id,
-        scaleData
-      );
-
-      // Registrar la acción en el log
-      await this.logService.addLog(logAction, details, this.user, 'Animales');
-
-      this.dataChanged.emit();
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: `El animal ${this.selectedScaledAnimal().name
-          } ha sido escalado con éxito.`,
-      });
-      this.showModalScaled = false;
-      this.scaleComment = '';
-      this.selectedScaledAnimal.set(null);
-      this.isLoading = false;
-    } catch (error) {
-      console.error('Error al destacar el animal:', error);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo destacar el animal.',
-      });
-      this.isLoading = false;
-    }
-  }
-
-  /*
-   * Se ejecuta cuando el diálogo de información de escalado se cierra.
-   * Limpia el estado para evitar que los datos persistan entre aperturas.
-   */
-  onInfoModalHide() {
-    this.selectedScaledAnimal.set(null);
-    this.scaleComment = '';
-  }
-
-  async resolveScaled(type: string) {
-    if (type === 'toMod') {
-      await this.scaleAnimal();
-      this.showInfoScaled = false;
-    } else {
-      const details = `El administrador '${this.user.username}' ha asignado para sí mismo la revisión del animal '${this.selectedScaledAnimal().name}'.`;
-      await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
-
-      // Notificar al moderador que su caso ha sido asignado
-      const moderatorId = this.selectedScaledAnimal().scaled[0]?.moderator?.uid;
-      if (moderatorId) {
-        const notification = {
-          title: 'Caso asignado',
-          message: `El administrador ${this.user.username} ha comenzado a revisar tu escalado sobre "${this.selectedScaledAnimal().name}".`,
-          severity: 'info',
-          type: 'scaled-assigned',
-          link: `/panel-gestion?animalId=${this.selectedScaledAnimal().id}`
-        };
-        // No necesitamos esperar a que la notificación se envíe para continuar
-        this.notificationsService.addNotification(moderatorId, notification);
-      }
-
-
-      await this.animalService.assignAnimalToAdmin(
-        this.selectedScaledAnimal(),
-        this.user,
-        this.scaleComment
-      );
-      this.dataChanged.emit();
-      this.showInfoScaled = false;
-    }
-  }
-
   showAnimalActions(event: MouseEvent, animal: Animal) {
     const isAdmin = this.user?.role === 'ROLE_ADMIN';
     const isMod = this.user?.role === 'ROLE_MOD';
@@ -637,19 +288,10 @@ export class AnimalsTableComponent implements OnChanges {
       },
     ];
 
-    if (isMod && !animal.published) {
-      this.animalActions.push({
-        label: this.hasModeratorScaled(animal) ? 'Escalado' : 'Escalar',
-        icon: 'fa-solid fa-comment',
-        disabled: this.hasModeratorScaled(animal) || animal.assignedToAdmin,
-        command: () => this.scaledAnimal(animal),
-      });
-    }
-
     // Acción de Destacar (disponible para todos los roles con permisos)
     this.animalActions.push({
       label: animal.featured ? 'No destacar' : 'Destacar',
-      icon: animal.featured ? 'fa-regular fa-star' : 'pi pi-star-fill',
+      icon: animal.featured ? 'fa-regular fa-star' : 'fa-solid fa-star',
       command: () => this.toggleFeatured(animal)
     });
 
@@ -710,7 +352,7 @@ export class AnimalsTableComponent implements OnChanges {
     items.push({
       label: 'Duplicar',
       icon: 'fa-solid fa-copy',
-      disabled: this.isEditDisabled(animal) || (this.user?.role === 'ROLE_MOD' && animal.assignedToAdmin) || animal.isClone,
+      disabled: animal.isClone,
       command: () => this.duplicateAnimal(animal)
     });
 
@@ -839,21 +481,7 @@ export class AnimalsTableComponent implements OnChanges {
     try {
       const details = `El administrador '${this.user.username}' se ha asignado la revisión del animal '${animal.name}'.`;
       await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
-
-      // Notificar al moderador que su caso ha sido asignado
-      const moderatorId = animal.scaled[0]?.moderator?.uid;
-      if (moderatorId) {
-        const notification = {
-          title: 'Caso asignado',
-          message: `El administrador ${this.user.username} ha comenzado a revisar tu escalado sobre "${animal.name}".`,
-          severity: 'info',
-          type: 'scaled-assigned',
-          link: `/panel-gestion?animalId=${animal.id}`
-        };
-        this.notificationsService.addNotification(moderatorId, notification);
-      }
-
-      await this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado para revisión directa.');
+      //await this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado para revisión directa.');
       this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso se te ha asignado correctamente.' });
       this.dataChanged.emit();
     } catch (error) {
@@ -934,9 +562,6 @@ export class AnimalsTableComponent implements OnChanges {
         case 'delete':
           promises.push(this.animalService.deleteAnimal(animal.id!));
           break;
-        case 'assign':
-          promises.push(this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado en lote para revisión.'));
-          break;
       }
     }
 
@@ -976,7 +601,7 @@ export class AnimalsTableComponent implements OnChanges {
   get isPublishBulkDisabled(): boolean {
     if (this.selectedAnimals.length === 0) return true;
     // Deshabilitado si algún animal seleccionado ya está publicado o está pendiente de revisión
-    return this.selectedAnimals.some(animal => animal.published || this.isPublishDisabled(animal));
+    return this.selectedAnimals.some(animal => animal.published);
   }
 
   get isUnpublishBulkDisabled(): boolean {

@@ -92,8 +92,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         return 'pi pi-times-circle';
       case 'request-correction':
         return 'pi pi-pencil';
-      case 'animal-scaled':
-        return 'pi pi-exclamation-triangle';
       default:
         return 'pi pi-bell';
     }
