@@ -4,36 +4,26 @@
     <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration=".0.5s"
       [style]="{ width: '50px', height: '50px' }" />
   </div> -->
-  <p-card header="Vistas Públicas" class="mb-4" *ngIf="user()?.role === 'ROLE_ADMIN'">
-    <div class="flex justify-content-between">
-      <div class="flex flex-wrap gap-2">
-        <p-button
-          label="Ver animales publicados"
-          icon="pi pi-eye"
-          [routerLink]="['/animales']"
-          styleClass="p-button-secondary p-button-sm">
-        </p-button>
+  <p-card header="" class="mb-3">
+    <div class="flex" [ngClass]="{'justify-content-between': user()?.role === 'ROLE_ADMIN',
+      'justify-content-end': user()?.role === 'ROLE_MOD'}">
+      <div class="flex" *ngIf="user()?.role === 'ROLE_ADMIN'">
+        <div class="flex flex-wrap gap-2">
+          <p-button label="Ver animales publicados" icon="pi pi-eye" [routerLink]="['/animales']"
+            styleClass="p-button-secondary p-button-sm">
+          </p-button>
 
-        <p-button
-          label="Ver Listado de Protectoras"
-          icon="pi pi-eye"
-          [routerLink]="['/protectoras']"
-          styleClass="p-button-secondary p-button-sm">
-        </p-button>
+          <p-button label="Ver Listado de Protectoras" icon="pi pi-eye" [routerLink]="['/protectoras']"
+            styleClass="p-button-secondary p-button-sm">
+          </p-button>
 
-        <p-button
-          label="Ir al Inicio Público"
-          icon="pi pi-home"
-          [routerLink]="['/inicio']"
-          styleClass="p-button-secondary p-button-sm">
-        </p-button>
+          <p-button label="Ir al Inicio Público" icon="pi pi-home" [routerLink]="['/inicio']"
+            styleClass="p-button-secondary p-button-sm">
+          </p-button>
+        </div>
       </div>
-
       <div>
-        <p-button
-          label="Tickets de Soporte"
-          icon="pi pi-ticket"
-          [routerLink]="['/tickets']"
+        <p-button label="Tickets de Soporte" icon="pi pi-ticket" [routerLink]="['/tickets']"
           styleClass="p-button-secondary p-button-sm">
         </p-button>
       </div>
@@ -46,11 +36,12 @@
           <i class="pi pi-minus"></i>
         </ng-template>
         <p-tab value="0" class="flex items-center !gap-2" (click)="tabAnimals()" *ngIf="canManageAnimals()">
-          <i [ngClass]="{'fa fa-paw': user()?.role === 'ROLE_ADMIN', 'fa fa-clock': user()?.role === 'ROLE_MOD'}"></i> <!-- Mantener string aquí por la clase CSS -->
+          <i [ngClass]="{'fa fa-paw': user()?.role === 'ROLE_ADMIN', 'fa fa-clock': user()?.role === 'ROLE_MOD'}"></i>
+          <!-- Mantener string aquí por la clase CSS -->
           <span class="font-bold whitespace-nowrap">{{user()?.role === 'ROLE_MOD' ? 'Pendientes publicar' :
             'Animales'}}</span>
-          <p-progress-spinner *ngIf="isLoadingAnimalsCount()" strokeWidth="8" fill="transparent"
-            animationDuration=".5s" [style]="{ width: '20px', height: '20px' }" />
+          <p-progress-spinner *ngIf="isLoadingAnimalsCount()" strokeWidth="8" fill="transparent" animationDuration=".5s"
+            [style]="{ width: '20px', height: '20px' }" />
           <p-tag *ngIf="!isLoadingAnimalsCount()" severity="warn" [value]="countTabAnimals" [rounded]="true" />
           <!-- @if (user()?.role === 'ROLE_ADMIN') {
             <p-tag *ngIf="!isLoadingAnimalsCount()" severity="info" [value]="countTabPendingAdmin()" [rounded]="true" pTooltip="Pendientes de publicar" tooltipPosition="top" />
@@ -154,11 +145,14 @@
       dándote una nueva oportunidad.
     </p>
 
-    <div class="bg-gray-50 border-2 border-dashed rounded-lg p-3 text-left space-y-2" *ngIf="reactivationNotificationType === 'reactivation-auto-suspension'">
+    <div class="bg-gray-50 border-2 border-dashed rounded-lg p-3 text-left space-y-2"
+      *ngIf="reactivationNotificationType === 'reactivation-auto-suspension'">
       <p><i class="pi pi-check-circle text-green-500 mr-2"></i>Tu historial de infracciones y tus <strong>strikes han
           sido reseteados</strong>.</p>
-      <p><i class="pi pi-trash text-red-500 mr-2"></i>Las fichas de animales asociadas a infracciones no resueltas han sido <strong>eliminadas permanentemente</strong>.</p>
-      <p><i class="pi pi-exclamation-circle text-orange-500 mr-2"></i>Por favor, revisa nuestras políticas de contenido. Futuras infracciones podrían resultar en una <strong>suspensión definitiva</strong>.</p>
+      <p><i class="pi pi-trash text-red-500 mr-2"></i>Las fichas de animales asociadas a infracciones no resueltas han
+        sido <strong>eliminadas permanentemente</strong>.</p>
+      <p><i class="pi pi-exclamation-circle text-orange-500 mr-2"></i>Por favor, revisa nuestras políticas de contenido.
+        Futuras infracciones podrían resultar en una <strong>suspensión definitiva</strong>.</p>
     </div>
 
   </div>

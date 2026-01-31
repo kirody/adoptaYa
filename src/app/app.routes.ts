@@ -80,7 +80,7 @@ export const routes: Routes = [
     path: 'tickets',
     component: TicketsComponent,
     canActivate: [roleGuard],
-    data: { roles: ['ROLE_ADMIN'] }
+    data: { roles: ['ROLE_ADMIN', 'ROLE_MOD'] }
   },
   {
     path: 'login',

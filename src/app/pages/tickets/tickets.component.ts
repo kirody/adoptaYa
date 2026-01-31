@@ -1,5 +1,7 @@
+import { Auth } from '@angular/fire/auth';
+import { Animal } from './../../models/animal';
 import { SelectModule } from 'primeng/select';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataViewModule } from 'primeng/dataview';
 import { ButtonModule } from 'primeng/button';
@@ -14,15 +16,9 @@ import { MessageService } from 'primeng/api';
 import { HeaderPageComponent } from '../../components/header-page/header-page.component';
 import { TextareaModule } from 'primeng/textarea';
 import { TableModule } from 'primeng/table';
-
-export interface Ticket {
-  id: string;
-  type: 'ANIMAL_SCALING' | 'TECHNICAL_ISSUE' | 'USER_REPORT' | 'OTHER';
-  subject: string;
-  description: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
-  createdAt: Date;
-}
+import { AnimalsService } from '../../services/animals.service';
+import { TicketsService } from './tickets.service';
+import { Ticket } from '../../models/ticket';
 
 @Component({
   selector: 'app-tickets',
@@ -51,6 +47,8 @@ export class TicketsComponent implements OnInit {
   tickets = signal<Ticket[]>([]);
   loading: boolean = false;
   displayDialog: boolean = false;
+  displayViewDialog: boolean = false;
+  selectedTicket: Ticket | null = null;
   ticketForm: FormGroup;
   layout: any = 'grid';
   ticketTypes = [
@@ -59,51 +57,55 @@ export class TicketsComponent implements OnInit {
     { label: 'Reporte de Usuario', value: 'USER_REPORT' },
     { label: 'Otro', value: 'OTHER' }
   ];
+  priorities = [
+    { label: 'Baja', value: 'LOW' },
+    { label: 'Media', value: 'MEDIUM' },
+    { label: 'Alta', value: 'HIGH' }
+  ];
+  animals = signal<{ label: string; value: any }[]>([]);
+  private animalsService = inject(AnimalsService);
+  private ticketsService = inject(TicketsService);
+  private auth = inject(Auth);
 
   constructor(private fb: FormBuilder, private messageService: MessageService) {
     this.ticketForm = this.fb.group({
       subject: ['', Validators.required],
       type: [null, Validators.required],
-      description: ['', Validators.required]
+      priority: ['LOW', Validators.required],
+      description: ['', Validators.required],
+      animalId: ['']
+    });
+
+    this.ticketForm.get('type')?.valueChanges.subscribe(value => {
+      if (value === 'ANIMAL_SCALING') {
+        this.ticketForm.get('animalId')?.setValidators([Validators.required]);
+      } else {
+        this.ticketForm.get('animalId')?.clearValidators();
+      }
+      this.ticketForm.get('animalId')?.updateValueAndValidity();
     });
   }
 
   ngOnInit() {
     this.loadTickets();
+    this.loadAnimals();
   }
 
-  loadTickets() {
+  async loadTickets() {
     this.loading = true;
-    // Simulación de carga de datos
-    setTimeout(() => {
-      this.tickets.set([
-        {
-          id: 'TKT-1001',
-          type: 'ANIMAL_SCALING',
-          subject: 'Solicitud de revisión urgente para "Max"',
-          description: 'El animal necesita revisión veterinaria inmediata por herida.',
-          status: 'OPEN',
-          createdAt: new Date()
-        },
-        {
-          id: 'TKT-1002',
-          type: 'TECHNICAL_ISSUE',
-          subject: 'Error al cargar imágenes en perfil',
-          description: 'No puedo subir fotos a la galería desde el móvil.',
-          status: 'IN_PROGRESS',
-          createdAt: new Date(Date.now() - 86400000)
-        },
-        {
-          id: 'TKT-1003',
-          type: 'USER_REPORT',
-          subject: 'Comportamiento inapropiado en comentarios',
-          description: 'Reporte sobre usuario X en la ficha de "Luna".',
-          status: 'OPEN',
-          createdAt: new Date(Date.now() - 172800000)
-        }
-      ]);
+    try {
+      const tickets = await this.ticketsService.getTickets();
+      this.tickets.set(tickets);
+    } catch (error) {
+      console.error('Error al cargar tickets:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los tickets' });
+    } finally {
       this.loading = false;
-    }, 800);
+    }
+  }
+
+  get isAnimalScaling(): boolean {
+    return this.ticketForm.get('type')?.value === 'ANIMAL_SCALING';
   }
 
   getTypeSeverity(type: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" | undefined {
@@ -116,6 +118,16 @@ export class TicketsComponent implements OnInit {
     return types[type] || 'info';
   }
 
+  getTypeLabel(type: string): string {
+    const types: {[key: string]: string} = {
+      'ANIMAL_SCALING': 'Escalado de Animal',
+      'TECHNICAL_ISSUE': 'Problema Técnico',
+      'USER_REPORT': 'Reporte de Usuario',
+      'OTHER': 'Otro'
+    };
+    return types[type] || type;
+  }
+
   getStatusSeverity(status: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" | undefined {
     switch (status) {
       case 'OPEN': return 'success';
@@ -125,31 +137,107 @@ export class TicketsComponent implements OnInit {
     }
   }
 
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'OPEN': return 'ABIERTO';
+      case 'IN_PROGRESS': return 'EN CURSO';
+      case 'CLOSED': return 'CERRADO';
+      default: return status;
+    }
+  }
+
   openNewTicketDialog() {
-    this.ticketForm.reset();
+    this.ticketForm.reset({
+      status: 'OPEN',
+      createdAt: new Date(),
+      priority: 'LOW'
+    });
     this.displayDialog = true;
   }
 
-  saveTicket() {
+  async saveTicket() {
     if (this.ticketForm.invalid) {
       this.ticketForm.markAllAsTouched();
       return;
     }
 
+    this.loading = true;
     const formValue = this.ticketForm.value;
-    const newTicket: Ticket = {
-      id: 'TKT-' + Math.floor(1000 + Math.random() * 9000),
+
+    const user = this.auth.currentUser;
+    if (!user) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Debes iniciar sesión para crear un ticket' });
+      this.loading = false;
+      return;
+    }
+
+    // Preparamos el objeto sin ID
+    const ticketData: Omit<Ticket, 'id'> = {
       ...formValue,
+      customId: this.generateCustomId(formValue.type),
       status: 'OPEN',
-      createdAt: new Date()
+      createdAt: new Date(),
+      userId: user.uid
     };
 
-    this.tickets.set([newTicket, ...this.tickets()]);
-    this.displayDialog = false;
-    this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'El ticket ha sido creado correctamente' });
+    try {
+      const id = await this.ticketsService.createTicket(ticketData);
+      const newTicket: Ticket = { id, ...ticketData };
+      this.tickets.update(tickets => [newTicket, ...tickets]);
+      this.displayDialog = false;
+      this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'El ticket ha sido creado correctamente' });
+    } catch (error) {
+      console.error('Error al crear ticket:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el ticket' });
+    } finally {
+      this.loading = false;
+    }
   }
 
   viewTicket(ticket: Ticket) {
-    console.log('Ver ticket:', ticket);
+    this.selectedTicket = ticket;
+    this.displayViewDialog = true;
+  }
+
+   loadAnimals() {
+    this.animalsService.getAnimals().then((data: any) => {
+      this.animals.set(data.map((animal: Animal) => ({ label: `${animal.name} (${animal.specie}) | ${animal.protectressName}`, value: animal.id })));
+    });
+  }
+
+  getAnimalLabel(id: string | undefined): string {
+    if (!id) return 'N/A';
+    const animal = this.animals().find(a => a.value === id);
+    return animal ? animal.label : id;
+  }
+
+   getPrioritySeverity(priority: string): 'success' | 'info' | 'warn' | 'danger' | undefined {
+    switch (priority) {
+      case 'LOW': return 'success';
+      case 'MEDIUM': return 'warn';
+      case 'HIGH': return 'danger';
+      default: return 'info';
+    }
+  }
+
+  getPriorityLabel(priority: string): string {
+    switch (priority) {
+      case 'LOW': return 'Baja';
+      case 'MEDIUM': return 'Media';
+      case 'HIGH': return 'Alta';
+      default: return priority;
+    }
+  }
+
+  generateCustomId(type: string): string {
+    let prefix = 'OTH';
+    switch (type) {
+      case 'ANIMAL_SCALING': prefix = 'SCA'; break;
+      case 'TECHNICAL_ISSUE': prefix = 'TEC'; break;
+      case 'USER_REPORT': prefix = 'USE'; break;
+      case 'OTHER': prefix = 'OTH'; break;
+    }
+    const random = Math.floor(10000 + Math.random() * 90000);
+    return `${prefix}-${random}`;
   }
 }

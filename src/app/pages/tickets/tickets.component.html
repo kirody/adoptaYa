@@ -8,19 +8,14 @@
       <p-button label="Crear Ticket" icon="pi pi-plus" (click)="openNewTicketDialog()"></p-button>
     </div>
 
-    <p-table
-      [value]="tickets()"
-      [paginator]="true"
-      [rows]="10"
-      [loading]="loading"
-      [rowHover]="true"
-      responsiveLayout="scroll"
-      styleClass="p-datatable-sm">
+    <p-table [value]="tickets()" [paginator]="true" [rows]="10" [loading]="loading" [rowHover]="true"
+      responsiveLayout="scroll" styleClass="p-datatable-sm">
 
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="id" style="width: 10%">ID <p-sortIcon field="id"></p-sortIcon></th>
           <th pSortableColumn="type" style="width: 20%">Tipo <p-sortIcon field="type"></p-sortIcon></th>
+          <th pSortableColumn="priority" style="width: 15%">Prioridad <p-sortIcon field="priority"></p-sortIcon></th>
           <th pSortableColumn="subject">Asunto <p-sortIcon field="subject"></p-sortIcon></th>
           <th pSortableColumn="status" style="width: 15%">Estado <p-sortIcon field="status"></p-sortIcon></th>
           <th pSortableColumn="createdAt" style="width: 15%">Fecha <p-sortIcon field="createdAt"></p-sortIcon></th>
@@ -30,13 +25,16 @@
 
       <ng-template pTemplate="body" let-ticket>
         <tr>
-          <td><span class="font-bold">{{ ticket.id }}</span></td>
-          <td><p-tag [value]="ticket.type" [severity]="getTypeSeverity(ticket.type)"></p-tag></td>
+          <td><span class="font-bold">{{ ticket.customId || ticket.id }}</span></td>
+          <td><p-tag [value]="getTypeLabel(ticket.type)" [severity]="getTypeSeverity(ticket.type)"></p-tag></td>
+          <td><p-tag [value]="getPriorityLabel(ticket.priority)" [severity]="getPrioritySeverity(ticket.priority)"></p-tag></td>
           <td>{{ ticket.subject }}</td>
-          <td><p-tag [value]="ticket.status" [severity]="getStatusSeverity(ticket.status)" [rounded]="true"></p-tag></td>
+          <td><p-tag [value]="getStatusLabel(ticket.status)" [severity]="getStatusSeverity(ticket.status)" [rounded]="true"></p-tag>
+          </td>
           <td>{{ ticket.createdAt | date:'dd/MM/yyyy' }}</td>
           <td>
-            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" styleClass="p-button-secondary" (click)="viewTicket(ticket)" pTooltip="Ver detalles" tooltipPosition="top"></p-button>
+            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" styleClass="p-button-secondary"
+              (click)="viewTicket(ticket)" pTooltip="Ver detalles" tooltipPosition="top"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -50,39 +48,132 @@
   </div>
 </div>
 
-<p-dialog
-  [(visible)]="displayDialog"
-  [style]="{width: '650px'}"
-  header="Crear Nuevo Ticket"
-  [modal]="true"
-  styleClass="p-fluid"
-  [draggable]="false"
-  [resizable]="false">
-
+<!-- CREAR TICKET -->
+<p-dialog [(visible)]="displayDialog" [style]="{width: '650px'}" header="Crear Nuevo Ticket" [modal]="true"
+  styleClass="p-fluid" [draggable]="false" [resizable]="false">
   <ng-template pTemplate="content">
     <form [formGroup]="ticketForm" class="flex flex-column gap-3 mt-2">
       <div class="field">
         <label for="subject" class="font-bold block mb-2">Asunto</label>
-        <input type="text" pInputText class="w-full" id="subject" formControlName="subject" placeholder="Resumen del problema" />
-        <small class="p-error block mt-1" *ngIf="ticketForm.get('subject')?.invalid && ticketForm.get('subject')?.touched">El asunto es obligatorio.</small>
+        <input type="text" pInputText class="w-full" id="subject" formControlName="subject"
+          placeholder="Resumen del problema" />
+        <small class="p-error block mt-1"
+          *ngIf="ticketForm.get('subject')?.invalid && ticketForm.get('subject')?.touched">El asunto es
+          obligatorio.</small>
       </div>
 
       <div class="field">
         <label for="type" class="font-bold block mb-2">Tipo</label>
-        <p-select id="type" class="w-full" [options]="ticketTypes" formControlName="type" placeholder="Selecciona un tipo" appendTo="body"></p-select>
-        <small class="p-error block mt-1" *ngIf="ticketForm.get('type')?.invalid && ticketForm.get('type')?.touched">El tipo es obligatorio.</small>
+        <p-select id="type" class="w-full" [options]="ticketTypes" formControlName="type"
+          placeholder="Selecciona un tipo" appendTo="body"></p-select>
+        <small class="p-error block mt-1" *ngIf="ticketForm.get('type')?.invalid && ticketForm.get('type')?.touched">El
+          tipo es obligatorio.</small>
       </div>
 
       <div class="field">
-        <label for="description" class="font-bold block mb-2">Descripción</label>
-        <textarea id="description" class="w-full" pInputTextarea formControlName="description" rows="5" placeholder="Detalla el problema..."></textarea>
-        <small class="p-error block mt-1" *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">La descripción es obligatoria.</small>
+        <label for="priority" class="font-bold block mb-2">Prioridad</label>
+        <p-select id="priority" class="w-full" [options]="priorities" formControlName="priority"
+          placeholder="Selecciona una prioridad" appendTo="body"></p-select>
+        <small class="p-error block mt-1" *ngIf="ticketForm.get('priority')?.invalid && ticketForm.get('priority')?.touched">La prioridad es obligatoria.</small>
+      </div>
+
+      <div *ngIf="isAnimalScaling" class="flex flex-column gap-3">
+        <div class="field">
+          <label for="animal" class="font-bold block mb-2">Animal a Escalar</label>
+          <p-select [options]="animals()" formControlName="animalId" placeholder="Selecciona un animal"
+            [style]="{'width':'100%'}" [filter]="true" filterBy="label" filterPlaceholder="Buscar animal..." appendTo="body"></p-select>
+          <small class="p-error block mt-1" *ngIf="ticketForm.get('animalId')?.invalid && ticketForm.get('animalId')?.touched">El animal es obligatorio.</small>
+        </div>
+        <div class="field">
+          <label for="description" class="font-bold block mb-2">Motivo del Escalado</label>
+          <textarea id="description" class="w-full" pInputTextarea formControlName="description" rows="5" placeholder="Detalla el motivo del escalado..."></textarea>
+          <small class="p-error block mt-1" *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">El motivo del escalado es obligatorio.</small>
+        </div>
+      </div>
+
+      <div *ngIf="!isAnimalScaling">
+        <div class="field">
+          <label for="description" class="font-bold block mb-2">Descripción</label>
+          <textarea id="description" class="w-full" pInputTextarea formControlName="description" rows="5" placeholder="Detalla el problema..."></textarea>
+          <small class="p-error block mt-1" *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">La descripción es obligatoria.</small>
+        </div>
       </div>
     </form>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+    <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text"
+      (click)="displayDialog = false"></button>
     <button pButton pRipple label="Guardar" icon="pi pi-check" class="p-button-text" (click)="saveTicket()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- VER DETALLES DEL TICKET -->
+<p-dialog [(visible)]="displayViewDialog" [style]="{width: '650px', maxWidth: '95vw'}" [modal]="true"
+  [draggable]="false" [resizable]="false" [showHeader]="false" styleClass="p-fluid border-round-2xl shadow-none" [dismissableMask]="true">
+  <ng-template pTemplate="content">
+    <div *ngIf="selectedTicket" class="flex flex-column pt-5 px-2 pb-0">
+
+      <!-- Header: Date & Close -->
+      <div class="flex justify-content-between align-items-center mb-2">
+         <span class="text-500 text-sm font-medium bg-surface-100 px-2 py-1 border-round">{{ selectedTicket.createdAt | date:'d MMM yyyy, HH:mm' }}</span>
+         <button pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary w-2rem h-2rem" (click)="displayViewDialog = false"></button>
+      </div>
+
+      <!-- Subject -->
+      <h2 class="text-2xl font-bold text-900 m-0 mb-3 line-height-2">{{ selectedTicket.subject }}</h2>
+
+      <!-- Status & ID Row -->
+      <div class="flex align-items-center gap-3 mb-4">
+         <p-tag [value]="getStatusLabel(selectedTicket.status)" [severity]="getStatusSeverity(selectedTicket.status)" [rounded]="true" styleClass="px-3 font-bold"></p-tag>
+         <span class="text-500 text-sm">ID: <span class="text-700 font-medium">{{ selectedTicket.customId || selectedTicket.id }}</span></span>
+      </div>
+
+      <!-- Info Grid (Type & Priority) -->
+      <div class="grid grid-nogutter surface-50 border-round-xl p-3 mb-4 border-1 surface-border">
+         <div class="col-6 flex flex-column gap-1 border-right-1 surface-border pr-3">
+            <span class="text-xs font-bold text-500 uppercase tracking-wide">Tipo</span>
+            <div class="flex align-items-center gap-2 text-800">
+               <i class="pi pi-tag text-primary-500"></i>
+               <span class="font-medium text-sm">{{ getTypeLabel(selectedTicket.type) }}</span>
+            </div>
+         </div>
+         <div class="col-6 flex flex-column gap-1 mt-3">
+            <span class="text-xs font-bold text-500 uppercase tracking-wide">Prioridad</span>
+            <div class="flex align-items-center gap-2 text-800">
+               <i class="pi pi-flag-fill"
+                  [class.text-green-500]="selectedTicket.priority === 'LOW'"
+                  [class.text-orange-500]="selectedTicket.priority === 'MEDIUM'"
+                  [class.text-red-500]="selectedTicket.priority === 'HIGH'"></i>
+               <span class="font-medium text-sm">{{ getPriorityLabel(selectedTicket.priority) }}</span>
+            </div>
+         </div>
+      </div>
+
+      <!-- Animal Context -->
+      <div *ngIf="selectedTicket.animalId" class="mb-4">
+          <div class="flex align-items-center gap-3 p-3 border-1 surface-border border-round-xl bg-white shadow-sm hover:shadow-2 transition-duration-200 transition-all">
+             <div class="w-2rem h-2rem border-circle bg-pink-50 text-pink-500 flex align-items-center justify-content-center flex-shrink-0">
+                <i class="pi pi-heart-fill text-sm"></i>
+             </div>
+             <div class="flex flex-column overflow-hidden">
+                <span class="text-xs text-500 font-bold uppercase mb-1">Animal Relacionado</span>
+                <span class="text-900 font-medium white-space-nowrap overflow-hidden text-overflow-ellipsis">{{ getAnimalLabel(selectedTicket.animalId) }}</span>
+             </div>
+          </div>
+      </div>
+
+      <!-- Description -->
+      <div class="flex flex-column gap-2 mb-2">
+         <span class="text-xs font-bold text-500 uppercase tracking-wide">Descripción</span>
+         <div class="text-800 line-height-3 text-base" style="white-space: pre-wrap;">{{ selectedTicket.description }}</div>
+      </div>
+
+    </div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end pt-3 border-top-1 surface-border mt-2">
+       <button pButton pRipple label="Cerrar" class="p-button-text p-button-secondary font-bold" (click)="displayViewDialog = false"></button>
+    </div>
   </ng-template>
 </p-dialog>
