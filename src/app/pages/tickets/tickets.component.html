@@ -3,8 +3,7 @@
   <app-header-page [title]="'Gestión de Tickets'" [icon]="'pi pi-ticket'"></app-header-page>
 
   <div class="mt-4">
-    <div class="flex align-items-center justify-content-between mb-4">
-      <h3 class="m-0 text-xl font-bold">Tickets Abiertos</h3>
+    <div class="flex align-items-center justify-content-end mb-4">
       <p-button label="Crear Ticket" icon="pi pi-plus" (click)="openNewTicketDialog()"></p-button>
     </div>
 
@@ -176,12 +175,12 @@
         <span class="text-xs font-bold text-500 uppercase tracking-wide block mb-2">Acciones de Gestión</span>
         <div class="flex gap-2 flex-wrap">
           <button pButton label="Asignar" icon="pi pi-user-plus" class="p-button-sm p-button-outlined" (click)="displayAssignDialog = true"></button>
-          <button pButton label="Responder" icon="pi pi-comment" class="p-button-sm p-button-outlined p-button-secondary" (click)="displayNoteDialog = true"></button>
+          <button pButton label="Responder" icon="pi pi-reply" class="p-button-sm" (click)="displayNoteDialog = true"></button>
         </div>
       </div>
 
       <!-- User Options for On Hold -->
-      <div *ngIf="selectedTicket.status === 'ON_HOLD' && userRole === Roles.MOD" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border">
+      <div *ngIf="selectedTicket.status === 'ON_HOLD' && userRole === Roles.MOD && !selectedTicket.userResponse" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border">
         <span class="text-xs font-bold text-500 uppercase tracking-wide block mb-2">Acciones Requeridas</span>
         <button pButton label="Responder" icon="pi pi-reply" class="p-button-sm" (click)="displayNoteDialog = true; replyMessage = ''"></button>
       </div>
