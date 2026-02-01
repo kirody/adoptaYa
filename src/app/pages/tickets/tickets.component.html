@@ -69,26 +69,24 @@
         <label for="subject" class="font-bold block mb-2">Asunto</label>
         <input type="text" pInputText class="w-full" id="subject" formControlName="subject"
           placeholder="Resumen del problema" />
-        <small class="p-error block mt-1"
-          *ngIf="ticketForm.get('subject')?.invalid && ticketForm.get('subject')?.touched">El asunto es
-          obligatorio.</small>
+        <p-message *ngIf="ticketForm.get('subject')?.invalid && ticketForm.get('subject')?.touched"
+            severity="error" variant="simple" size="small">El asunto es obligatorio</p-message>
       </div>
 
       <div class="field">
         <label for="type" class="font-bold block mb-2">Tipo</label>
         <p-select id="type" class="w-full" [options]="ticketTypes" formControlName="type"
           placeholder="Selecciona un tipo" appendTo="body"></p-select>
-        <small class="p-error block mt-1" *ngIf="ticketForm.get('type')?.invalid && ticketForm.get('type')?.touched">El
-          tipo es obligatorio.</small>
+        <p-message *ngIf="ticketForm.get('type')?.invalid && ticketForm.get('type')?.touched"
+            severity="error" variant="simple" size="small">El tipo es obligatorio</p-message>
       </div>
 
       <div class="field">
         <label for="priority" class="font-bold block mb-2">Prioridad</label>
         <p-select id="priority" class="w-full" [options]="priorities" formControlName="priority"
           placeholder="Selecciona una prioridad" appendTo="body"></p-select>
-        <small class="p-error block mt-1"
-          *ngIf="ticketForm.get('priority')?.invalid && ticketForm.get('priority')?.touched">La prioridad es
-          obligatoria.</small>
+          <p-message *ngIf="ticketForm.get('priority')?.invalid && ticketForm.get('priority')?.touched"
+            severity="error" variant="simple" size="small">La prioridad es obligatoria</p-message>
       </div>
 
       <div *ngIf="isAnimalScaling" class="flex flex-column gap-3">
@@ -97,17 +95,15 @@
           <p-select [options]="animals()" formControlName="animalId" placeholder="Selecciona un animal"
             [style]="{'width':'100%'}" [filter]="true" filterBy="label" filterPlaceholder="Buscar animal..."
             appendTo="body"></p-select>
-          <small class="p-error block mt-1"
-            *ngIf="ticketForm.get('animalId')?.invalid && ticketForm.get('animalId')?.touched">El animal es
-            obligatorio.</small>
+          <p-message *ngIf="ticketForm.get('animalId')?.invalid && ticketForm.get('animalId')?.touched"
+            severity="error" variant="simple" size="small">El animal es obligatorio</p-message>
         </div>
         <div class="field">
           <label for="description" class="font-bold block mb-2">Motivo del Escalado</label>
           <textarea id="description" class="w-full" pInputTextarea formControlName="description" rows="5"
             placeholder="Detalla el motivo del escalado..."></textarea>
-          <small class="p-error block mt-1"
-            *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">El motivo del
-            escalado es obligatorio.</small>
+          <p-message *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched"
+            severity="error" variant="simple" size="small">Este campo es obligatorio</p-message>
         </div>
       </div>
 
@@ -116,9 +112,8 @@
           <label for="description" class="font-bold block mb-2">Descripción</label>
           <textarea id="description" class="w-full" pInputTextarea formControlName="description" rows="5"
             placeholder="Detalla el problema..."></textarea>
-          <small class="p-error block mt-1"
-            *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">La descripción es
-            obligatoria.</small>
+          <p-message *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched"
+            severity="error" variant="simple" size="small">La descripción es obligatoria</p-message>
         </div>
       </div>
     </form>
@@ -127,7 +122,7 @@
   <ng-template pTemplate="footer">
     <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text"
       (click)="displayDialog = false"></button>
-    <button pButton pRipple label="Guardar" icon="pi pi-check" class="p-button-text" (click)="saveTicket()"></button>
+    <button pButton pRipple label="Crear" icon="pi pi-check" class="p-button-text" (click)="saveTicket()"></button>
   </ng-template>
 </p-dialog>
 
@@ -161,6 +156,42 @@
             selectedTicket.id }}</span></span>
       </div>
 
+      <!-- User Info for Open Tickets -->
+      <div *ngIf="selectedTicket.status === 'OPEN' && userRole !== Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border flex align-items-start gap-3">
+        <i class="pi pi-info-circle text-blue-500 text-xl mt-1"></i>
+        <div class="flex flex-column gap-2">
+          <span class="text-900 font-medium">Ticket Recibido</span>
+          <span class="text-700 line-height-3">Tu ticket ha sido recibido correctamente. Un administrador lo revisará pronto.</span>
+        </div>
+      </div>
+
+      <!-- User Info for In Progress Tickets -->
+      <div *ngIf="selectedTicket.status === 'IN_PROGRESS' && userRole !== Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border flex align-items-start gap-3">
+        <i class="pi pi-info-circle text-blue-500 text-xl mt-1"></i>
+        <div class="flex flex-column gap-2">
+          <span class="text-900 font-medium">En Revisión</span>
+          <span class="text-700 line-height-3">Tu ticket está siendo revisado actualmente.</span>
+        </div>
+      </div>
+
+      <div *ngIf="selectedTicket.status === 'ON_HOLD' && userRole !== Roles.ADMIN && !selectedTicket.userResponse"
+        class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border flex align-items-start gap-3">
+        <i class="pi pi-info-circle text-orange-500 text-xl mt-1"></i>
+        <div class="flex flex-column gap-2">
+          <span class="text-900 font-medium">Tu ticket está en espera de información adicional.</span>
+          <span class="text-700 line-height-3">Hemos revisado tu caso, pero necesitamos que respondas al último mensaje del administrador para poder continuar.</span>
+        </div>
+      </div>
+
+      <div *ngIf="selectedTicket.status === 'ON_HOLD' && userRole === Roles.ADMIN && selectedTicket.userResponse"
+        class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border flex align-items-start gap-3">
+        <i class="pi pi-info-circle text-blue-500 text-xl mt-1"></i>
+        <div class="flex flex-column gap-2">
+          <span class="text-900 font-medium">Respuesta del Usuario Recibida</span>
+          <span class="text-700 line-height-3">El usuario ha respondido a la solicitud. Revisa la respuesta y actualiza el estado del ticket.</span>
+        </div>
+      </div>
+
       <!-- Admin Options -->
       <div *ngIf="userRole === Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border">
         <span class="text-xs font-bold text-500 uppercase tracking-wide block mb-2">Acciones de Gestión</span>
@@ -181,14 +212,8 @@
         </div>
       </div>
 
-      <!-- User Info for Open Tickets -->
-      <div *ngIf="selectedTicket.status === 'OPEN' && userRole !== Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border flex align-items-center gap-3">
-        <i class="pi pi-info-circle text-blue-500 text-xl"></i>
-        <span class="text-700 line-height-3">Tu ticket ha sido recibido correctamente. Un administrador lo revisará pronto.</span>
-      </div>
-
       <!-- User Options for On Hold -->
-      <div *ngIf="selectedTicket.status === 'ON_HOLD' && userRole === Roles.MOD && !selectedTicket.userResponse" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border">
+      <div *ngIf="selectedTicket.status === 'ON_HOLD' && userRole === Roles.MOD" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border">
         <span class="text-xs font-bold text-500 uppercase tracking-wide block mb-2">Acciones Requeridas</span>
         <button pButton label="Responder" icon="pi pi-reply" class="p-button-sm" (click)="displayNoteDialog = true; replyMessage = ''"></button>
       </div>
@@ -293,16 +318,20 @@
     </ng-template>
 </p-dialog>
 
-<!-- DIALOGO NOTA INTERNA -->
+<!-- DIALOGO RESPONDER -->
 <p-dialog [(visible)]="displayNoteDialog" header="Responder" [modal]="true" [style]="{width: '500px'}" styleClass="p-fluid">
-    <ng-template pTemplate="content">
-        <div class="field mt-2">
-            <label for="note">Respuesta</label>
-            <textarea pInputTextarea [(ngModel)]="replyMessage" rows="5" class="w-full" placeholder="Escribe una respuesta..."></textarea>
-        </div>
-    </ng-template>
-    <ng-template pTemplate="footer">
-        <button pButton label="Cancelar" class="p-button-text" (click)="displayNoteDialog = false"></button>
-        <button pButton label="Guardar" (click)="sendReply()"></button>
-    </ng-template>
+  <ng-template pTemplate="content">
+    <div *ngIf="pendingStatus === 'ON_HOLD' && userRole === Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border flex align-items-center gap-3">
+        <i class="pi pi-info-circle text-blue-500 text-xl"></i>
+        <span class="text-700 line-height-3">Debe ingresar un mensaje para poner el ticket en espera.</span>
+      </div>
+    <div class="field mt-2">
+        <label for="note">Respuesta</label>
+        <textarea pInputTextarea [(ngModel)]="replyMessage" rows="5" class="w-full" placeholder="Escribe una respuesta..."></textarea>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+      <button pButton label="Cancelar" class="p-button-text" (click)="displayNoteDialog = false"></button>
+      <button pButton label="Enviar" (click)="sendReply()"></button>
+  </ng-template>
 </p-dialog>

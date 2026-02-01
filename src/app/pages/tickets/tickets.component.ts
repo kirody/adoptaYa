@@ -23,6 +23,7 @@ import { AuthService } from '../../services/auth.service';
 import { Roles } from '../../models/roles.enum';
 import { HeaderPageComponent } from '../../components/header-page/header-page.component';
 import { Router } from '@angular/router';
+import { Message } from "primeng/message";
 
 @Component({
   selector: 'app-tickets',
@@ -42,8 +43,9 @@ import { Router } from '@angular/router';
     ToastModule,
     SelectModule,
     TableModule,
-    FormsModule
-  ],
+    FormsModule,
+    Message
+],
   providers: [MessageService],
   templateUrl: './tickets.component.html',
   styleUrls: ['./tickets.component.css']
@@ -96,7 +98,6 @@ export class TicketsComponent implements OnInit {
   ];
   selectedTechnician: any;
   replyMessage: string = '';
-
 
   private animalsService = inject(AnimalsService);
   private ticketsService = inject(TicketsService);
@@ -276,7 +277,6 @@ export class TicketsComponent implements OnInit {
     if (status === 'ON_HOLD') {
       this.pendingStatus = 'ON_HOLD';
       this.displayNoteDialog = true;
-      this.messageService.add({ severity: 'info', summary: 'Requerido', detail: 'Debe ingresar un mensaje para poner el ticket en espera.' });
       return;
     }
 
