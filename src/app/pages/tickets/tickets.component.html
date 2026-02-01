@@ -18,7 +18,7 @@
           <th pSortableColumn="subject">Asunto <p-sortIcon field="subject"></p-sortIcon></th>
           <th pSortableColumn="status" style="width: 15%">Estado <p-sortIcon field="status"></p-sortIcon></th>
           <th pSortableColumn="createdAt" style="width: 15%">Fecha <p-sortIcon field="createdAt"></p-sortIcon></th>
-          <th style="width: 10%">Acciones</th>
+          <th style="width: 10%"></th>
         </tr>
       </ng-template>
 
@@ -34,8 +34,11 @@
           </td>
           <td>{{ ticket.createdAt | date:'dd/MM/yyyy' }}</td>
           <td>
-            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" styleClass="p-button-secondary"
-              (click)="viewTicket(ticket)" pTooltip="Ver detalles" tooltipPosition="top"></p-button>
+            <p-button [label]="(userRole === Roles.ADMIN && ticket.status !== 'CLOSED') ? 'Gestionar' : 'Consultar'"
+              [icon]="(userRole === Roles.ADMIN && ticket.status !== 'CLOSED') ? 'pi pi-cog' : 'pi pi-eye'"
+              [outlined]="!(userRole === Roles.ADMIN && ticket.status !== 'CLOSED')"
+              [severity]="(userRole === Roles.ADMIN && ticket.status !== 'CLOSED') ? 'info' : 'secondary'" styleClass="p-button-sm"
+              (click)="viewTicket(ticket)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -141,7 +144,7 @@
           date:'d MMM yyyy, HH:mm' }}</span>
         <button pButton pRipple icon="pi pi-times"
           class="p-button-rounded p-button-text p-button-secondary w-2rem h-2rem"
-          (click)="displayViewDialog = false; isEditingStatus = false"></button>
+          (click)="displayViewDialog = false"></button>
       </div>
 
       <!-- Subject -->
@@ -149,34 +152,39 @@
 
       <!-- Status & ID Row -->
       <div class="flex align-items-center gap-3 mb-4">
-        <div class="flex align-items-center gap-2" *ngIf="!isEditingStatus">
+        <div class="flex align-items-center gap-2">
           <p-tag [value]="getStatusLabel(selectedTicket.status)" [severity]="getStatusSeverity(selectedTicket.status)"
             [rounded]="true" class="px-3 font-bold"></p-tag>
-          <p-button *ngIf="userRole === Roles.ADMIN" icon="pi pi-pencil" [rounded]="true" [text]="true"
-            styleClass="w-2rem h-2rem" (click)="isEditingStatus = true" pTooltip="Editar estado"
-            tooltipPosition="top"></p-button>
-        </div>
-
-        <div class="flex align-items-center gap-2" *ngIf="isEditingStatus">
-          <p-select [options]="statusOptions" [(ngModel)]="selectedTicket.status"
-            (onChange)="updateTicketStatus($event.value); isEditingStatus = false" optionLabel="label" optionValue="value"
-            placeholder="Seleccionar estado" [style]="{'width':'180px'}">
-          </p-select>
-          <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" styleClass="w-2rem h-2rem"
-            (click)="isEditingStatus = false"></p-button>
         </div>
 
         <span class="text-500 text-sm">ID: <span class="text-700 font-medium">{{ selectedTicket.customId ||
             selectedTicket.id }}</span></span>
       </div>
 
-      <!-- Admin Options for In Progress -->
-      <div *ngIf="(selectedTicket.status === 'IN_PROGRESS' || selectedTicket.status === 'ON_HOLD') && userRole === Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border">
+      <!-- Admin Options -->
+      <div *ngIf="userRole === Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border">
         <span class="text-xs font-bold text-500 uppercase tracking-wide block mb-2">Acciones de Gestión</span>
         <div class="flex gap-2 flex-wrap">
-          <button pButton label="Asignar" icon="pi pi-user-plus" class="p-button-sm p-button-outlined" (click)="displayAssignDialog = true"></button>
-          <button pButton label="Responder" icon="pi pi-reply" class="p-button-sm" (click)="displayNoteDialog = true"></button>
+          <button *ngIf="selectedTicket.status === 'OPEN'" pButton label="Empezar a trabajar" icon="pi pi-play" class="p-button-sm" (click)="updateTicketStatus('IN_PROGRESS')"></button>
+
+          <ng-container *ngIf="selectedTicket.status === 'IN_PROGRESS'">
+            <button pButton label="Poner en espera" icon="pi pi-pause" class="p-button-sm p-button-warning" (click)="updateTicketStatus('ON_HOLD')"></button>
+            <button pButton label="Resolver" icon="pi pi-check" class="p-button-sm p-button-success" (click)="updateTicketStatus('CLOSED')"></button>
+          </ng-container>
+
+          <button *ngIf="selectedTicket.status === 'ON_HOLD'" pButton label="Reanudar trabajo" icon="pi pi-refresh" class="p-button-sm" (click)="updateTicketStatus('IN_PROGRESS')"></button>
+
+          <button *ngIf="selectedTicket.status === 'CLOSED'" pButton label="Reabrir" icon="pi pi-undo" class="p-button-sm p-button-warning" (click)="updateTicketStatus('OPEN')"></button>
+
+          <button *ngIf="selectedTicket.status !== 'CLOSED'" pButton label="Asignar" icon="pi pi-user-plus" class="p-button-sm p-button-outlined" (click)="displayAssignDialog = true"></button>
+          <button *ngIf="selectedTicket.status !== 'OPEN' && selectedTicket.status !== 'CLOSED'" pButton label="Responder" icon="pi pi-reply" class="p-button-sm p-button-outlined" (click)="displayNoteDialog = true; replyMessage = ''"></button>
         </div>
+      </div>
+
+      <!-- User Info for Open Tickets -->
+      <div *ngIf="selectedTicket.status === 'OPEN' && userRole !== Roles.ADMIN" class="surface-50 p-3 border-round-xl mb-4 border-1 surface-border flex align-items-center gap-3">
+        <i class="pi pi-info-circle text-blue-500 text-xl"></i>
+        <span class="text-700 line-height-3">Tu ticket ha sido recibido correctamente. Un administrador lo revisará pronto.</span>
       </div>
 
       <!-- User Options for On Hold -->
@@ -226,9 +234,10 @@
       </div>
 
       <!-- Description -->
-      <div class="flex flex-column gap-2 mb-2">
-        <span class="text-xs font-bold text-500 uppercase tracking-wide">Descripción</span>
-        <div class="text-800 line-height-3 text-base" style="white-space: pre-wrap;">{{ selectedTicket.description }}
+      <div class="flex flex-column gap-2 mb-4">
+        <span class="text-xs font-bold text-500 uppercase tracking-wide">Descripción del Problema</span>
+        <div class="surface-50 p-3 border-round-xl border-1 surface-border shadow-sm">
+          <div class="text-800 line-height-3 text-base" style="white-space: pre-wrap;">{{ selectedTicket.description }}</div>
         </div>
       </div>
 
@@ -265,7 +274,7 @@
   <ng-template pTemplate="footer">
     <div class="flex justify-content-end pt-3 border-top-1 surface-border mt-2">
       <button pButton pRipple label="Cerrar" class="p-button-text p-button-secondary font-bold"
-        (click)="displayViewDialog = false; isEditingStatus = false"></button>
+        (click)="displayViewDialog = false"></button>
     </div>
   </ng-template>
 </p-dialog>

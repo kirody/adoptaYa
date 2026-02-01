@@ -77,7 +77,6 @@ export class TicketsComponent implements OnInit {
   currentUser: any = null;
   protected readonly Roles = Roles;
   animals = signal<{ label: string; value: any }[]>([]);
-  isEditingStatus: boolean = false
   displayAssignDialog: boolean = false;
   private _displayNoteDialog: boolean = false;
   get displayNoteDialog(): boolean {
@@ -148,6 +147,18 @@ export class TicketsComponent implements OnInit {
     this.loading = true;
     try {
       const tickets = await this.ticketsService.getTickets();
+      tickets.sort((a, b) => {
+        const statusOrder: { [key: string]: number } = {
+          'OPEN': 1,
+          'IN_PROGRESS': 2,
+          'ON_HOLD': 3,
+          'CLOSED': 4
+        };
+        const orderA = statusOrder[a.status] || 99;
+        const orderB = statusOrder[b.status] || 99;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       this.tickets.set(tickets);
     } catch (error) {
       console.error('Error al cargar tickets:', error);
@@ -279,6 +290,7 @@ export class TicketsComponent implements OnInit {
       console.error('Error al actualizar estado:', error);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado' });
     } finally {
+      this.loadTickets();
       this.loading = false;
     }
   }
