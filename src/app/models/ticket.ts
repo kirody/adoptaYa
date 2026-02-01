@@ -5,8 +5,18 @@ export interface Ticket {
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   subject: string;
   description: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED' | 'ON_HOLD';
   createdAt: Date;
   animalId?: string;
   userId: string;
+  adminResponse: {
+    adminName: string;
+    message: string;
+    date: Date;
+  };
+  userResponse?: {
+    userName: string;
+    message: string;
+    date: Date;
+  };
 }

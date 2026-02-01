@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, addDoc, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, getDocs, doc, updateDoc } from '@angular/fire/firestore';
 import { Ticket } from '../../models/ticket';
 
 @Injectable({
@@ -21,5 +21,10 @@ export class TicketsService {
       const createdAt = data['createdAt']?.toDate ? data['createdAt'].toDate() : data['createdAt'];
       return { id: doc.id, ...data, createdAt } as Ticket;
     });
+  }
+
+  async updateTicket(id: string, data: any) {
+    const ticketRef = doc(this.firestore, `tickets/${id}`);
+    return updateDoc(ticketRef, data);
   }
 }

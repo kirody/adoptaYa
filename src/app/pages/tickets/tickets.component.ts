@@ -10,15 +10,19 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { HeaderPageComponent } from '../../components/header-page/header-page.component';
 import { TextareaModule } from 'primeng/textarea';
 import { TableModule } from 'primeng/table';
 import { AnimalsService } from '../../services/animals.service';
 import { TicketsService } from './tickets.service';
 import { Ticket } from '../../models/ticket';
+import { NotificationsService } from '../../services/notifications.service';
+import { AuthService } from '../../services/auth.service';
+import { Roles } from '../../models/roles.enum';
+import { HeaderPageComponent } from '../../components/header-page/header-page.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tickets',
@@ -37,7 +41,8 @@ import { Ticket } from '../../models/ticket';
     ReactiveFormsModule,
     ToastModule,
     SelectModule,
-    TableModule
+    TableModule,
+    FormsModule
   ],
   providers: [MessageService],
   templateUrl: './tickets.component.html',
@@ -62,10 +67,44 @@ export class TicketsComponent implements OnInit {
     { label: 'Media', value: 'MEDIUM' },
     { label: 'Alta', value: 'HIGH' }
   ];
+  statusOptions = [
+    { label: 'Abierto', value: 'OPEN' },
+    { label: 'En Progreso', value: 'IN_PROGRESS' },
+    { label: 'En Espera', value: 'ON_HOLD' }, // Nuevo estado
+    { label: 'Cerrado', value: 'CLOSED' }
+  ];
+  userRole: string | null = null;
+  currentUser: any = null;
+  protected readonly Roles = Roles;
   animals = signal<{ label: string; value: any }[]>([]);
+  isEditingStatus: boolean = false
+  displayAssignDialog: boolean = false;
+  private _displayNoteDialog: boolean = false;
+  get displayNoteDialog(): boolean {
+    return this._displayNoteDialog;
+  }
+  set displayNoteDialog(value: boolean) {
+    this._displayNoteDialog = value;
+    if (!value) {
+      this.pendingStatus = null;
+    }
+  }
+  pendingStatus: string | null = null;
+  technicians: any[] = [
+    { name: 'Juan Pérez', id: 1 },
+    { name: 'María Gómez', id: 2 },
+    { name: 'Soporte Técnico', id: 3 }
+  ];
+  selectedTechnician: any;
+  replyMessage: string = '';
+
+
   private animalsService = inject(AnimalsService);
   private ticketsService = inject(TicketsService);
+  private notificationsService = inject(NotificationsService);
   private auth = inject(Auth);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   constructor(private fb: FormBuilder, private messageService: MessageService) {
     this.ticketForm = this.fb.group({
@@ -89,6 +128,20 @@ export class TicketsComponent implements OnInit {
   ngOnInit() {
     this.loadTickets();
     this.loadAnimals();
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      this.userRole = user?.role || null;
+      const allTypes = [
+        { label: 'Escalado de Animal', value: 'ANIMAL_SCALING' },
+        { label: 'Problema Técnico', value: 'TECHNICAL_ISSUE' },
+        { label: 'Reporte de Usuario', value: 'USER_REPORT' },
+        { label: 'Otro', value: 'OTHER' }
+      ];
+
+      this.ticketTypes = user?.role === Roles.MOD
+        ? allTypes
+        : allTypes.filter(t => t.value !== 'ANIMAL_SCALING');
+    });
   }
 
   async loadTickets() {
@@ -109,7 +162,7 @@ export class TicketsComponent implements OnInit {
   }
 
   getTypeSeverity(type: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" | undefined {
-    const types: {[key: string]: "success" | "info" | "warn" | "danger" | "secondary"} = {
+    const types: { [key: string]: "success" | "info" | "warn" | "danger" | "secondary" } = {
       'ANIMAL_SCALING': 'warn',
       'TECHNICAL_ISSUE': 'danger',
       'USER_REPORT': 'info',
@@ -119,7 +172,7 @@ export class TicketsComponent implements OnInit {
   }
 
   getTypeLabel(type: string): string {
-    const types: {[key: string]: string} = {
+    const types: { [key: string]: string } = {
       'ANIMAL_SCALING': 'Escalado de Animal',
       'TECHNICAL_ISSUE': 'Problema Técnico',
       'USER_REPORT': 'Reporte de Usuario',
@@ -132,6 +185,7 @@ export class TicketsComponent implements OnInit {
     switch (status) {
       case 'OPEN': return 'success';
       case 'IN_PROGRESS': return 'warn';
+      case 'ON_HOLD': return 'warn';
       case 'CLOSED': return 'secondary';
       default: return 'info';
     }
@@ -141,6 +195,7 @@ export class TicketsComponent implements OnInit {
     switch (status) {
       case 'OPEN': return 'ABIERTO';
       case 'IN_PROGRESS': return 'EN CURSO';
+      case 'ON_HOLD': return 'EN ESPERA';
       case 'CLOSED': return 'CERRADO';
       default: return status;
     }
@@ -149,7 +204,7 @@ export class TicketsComponent implements OnInit {
   openNewTicketDialog() {
     this.ticketForm.reset({
       status: 'OPEN',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       priority: 'LOW'
     });
     this.displayDialog = true;
@@ -176,7 +231,7 @@ export class TicketsComponent implements OnInit {
       ...formValue,
       customId: this.generateCustomId(formValue.type),
       status: 'OPEN',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString() as any,
       userId: user.uid
     };
 
@@ -195,11 +250,40 @@ export class TicketsComponent implements OnInit {
   }
 
   viewTicket(ticket: Ticket) {
-    this.selectedTicket = ticket;
+    this.selectedTicket = { ...ticket };
     this.displayViewDialog = true;
   }
 
-   loadAnimals() {
+  async updateTicketStatus(status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED' | 'ON_HOLD') {
+    if (!this.selectedTicket) return;
+
+    if (this.userRole !== Roles.ADMIN) {
+      this.messageService.add({ severity: 'error', summary: 'No autorizado', detail: 'Solo los administradores pueden cambiar el estado.' });
+      return;
+    }
+
+    if (status === 'ON_HOLD') {
+      this.pendingStatus = 'ON_HOLD';
+      this.displayNoteDialog = true;
+      this.messageService.add({ severity: 'info', summary: 'Requerido', detail: 'Debe ingresar un mensaje para poner el ticket en espera.' });
+      return;
+    }
+
+    this.loading = true;
+    try {
+      await this.ticketsService.updateTicket(this.selectedTicket.id!, { status });
+      this.selectedTicket = { ...this.selectedTicket, status };
+      this.tickets.update(tickets => tickets.map(t => t.id === this.selectedTicket?.id ? this.selectedTicket! : t));
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Estado actualizado correctamente' });
+    } catch (error) {
+      console.error('Error al actualizar estado:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado' });
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  loadAnimals() {
     this.animalsService.getAnimals().then((data: any) => {
       this.animals.set(data.map((animal: Animal) => ({ label: `${animal.name} (${animal.specie}) | ${animal.protectressName}`, value: animal.id })));
     });
@@ -211,7 +295,7 @@ export class TicketsComponent implements OnInit {
     return animal ? animal.label : id;
   }
 
-   getPrioritySeverity(priority: string): 'success' | 'info' | 'warn' | 'danger' | undefined {
+  getPrioritySeverity(priority: string): 'success' | 'info' | 'warn' | 'danger' | undefined {
     switch (priority) {
       case 'LOW': return 'success';
       case 'MEDIUM': return 'warn';
@@ -239,5 +323,73 @@ export class TicketsComponent implements OnInit {
     }
     const random = Math.floor(10000 + Math.random() * 90000);
     return `${prefix}-${random}`;
+  }
+
+  assignTicket() {
+    if (this.selectedTechnician) {
+      // Aquí llamarías a tu servicio: this.ticketsService.assign(this.selectedTicket.id, this.selectedTechnician.id)
+      this.messageService.add({ severity: 'success', summary: 'Asignado', detail: `Ticket asignado a ${this.selectedTechnician.name}` });
+      this.displayAssignDialog = false;
+      this.selectedTechnician = null;
+    }
+  }
+
+  async sendReply() {
+    if (!this.selectedTicket || !this.replyMessage.trim()) return;
+
+    this.loading = true;
+    try {
+      const updates: any = {};
+
+      if (this.userRole === Roles.MOD) {
+        const response = {
+          userId: this.currentUser?.uid || this.auth.currentUser?.uid,
+          userName: this.currentUser?.name || this.auth.currentUser?.displayName || 'Usuario',
+          message: this.replyMessage,
+          date: new Date().toISOString()
+        };
+        updates.userResponse = response;
+      } else {
+        // 1. Enviar notificación al usuario
+        await this.notificationsService.addNotification(this.selectedTicket.userId, {
+          title: `Respuesta a ticket ${this.selectedTicket.customId}`,
+          message: this.replyMessage,
+          ticketId: this.selectedTicket.id,
+          type: 'TICKET_REPLY'
+        });
+
+        // 2. Preparar datos de la respuesta y actualización
+        const response = {
+          adminId: this.currentUser?.uid || this.auth.currentUser?.uid,
+          adminName: this.currentUser?.name || this.auth.currentUser?.displayName || 'Admin',
+          message: this.replyMessage,
+          date: new Date().toISOString()
+        };
+
+        updates.adminResponse = response;
+      }
+
+      // 3. Aplicar cambio de estado pendiente si existe
+      if (this.pendingStatus) {
+        updates.status = this.pendingStatus;
+      }
+
+      await this.ticketsService.updateTicket(this.selectedTicket.id!, updates);
+      this.selectedTicket = { ...this.selectedTicket, ...updates };
+      this.tickets.update(tickets => tickets.map(t => t.id === this.selectedTicket?.id ? this.selectedTicket! : t));
+
+      this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Respuesta enviada correctamente' });
+      this.displayNoteDialog = false;
+      this.replyMessage = '';
+    } catch (error) {
+      console.error('Error al enviar respuesta:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo enviar la respuesta' });
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  viewAnimal(id: any) {
+    this.router.navigate(['/form-animal', id]);
   }
 }
