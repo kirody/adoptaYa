@@ -1,9 +1,9 @@
-import { Component, computed, EventEmitter, inject, Input, Output, signal, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { TableModule } from "primeng/table";
 import { IconFieldModule, } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { TagModule } from "primeng/tag";
-import { ButtonModule, ButtonSeverity } from "primeng/button";
+import { ButtonModule } from "primeng/button";
 import { CardNodataComponent } from "../card-nodata/card-nodata.component";
 import { CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
@@ -12,11 +12,8 @@ import { Animal, } from '../../models/animal';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AnimalsService } from '../../services/animals.service';
-import { ProtectorsService } from '../../services/protectors.service';
 import { DialogModule } from "primeng/dialog";
 import { FormsModule } from '@angular/forms';
-import { UsersService } from '../../services/users.service';
-import { NotificationsService } from '../../services/notifications.service';
 import { MessageModule } from "primeng/message";
 import { ConfirmDialog } from "primeng/confirmdialog";
 import { ToastModule } from "primeng/toast";
@@ -30,6 +27,7 @@ import { MenuItem } from 'primeng/api';
 import { CommonService } from '../../services/common.service';
 import { ImageModule } from 'primeng/image';
 import { DividerModule } from "primeng/divider";
+import { TicketsService } from '../../services/tickets.service';
 
 @Component({
   selector: 'app-animals-table',
@@ -54,21 +52,18 @@ import { DividerModule } from "primeng/divider";
     MenuModule,
     ImageModule,
     DividerModule
-],
+  ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './animals-table.component.html',
   styleUrl: './animals-table.component.css'
 })
 export class AnimalsTableComponent implements OnChanges {
   private router = inject(Router);
-  private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private animalService = inject(AnimalsService);
-  private protectorService = inject(ProtectorsService);
-  private userService = inject(UsersService);
-  private notificationsService = inject(NotificationsService);
   private logService = inject(LogService);
   public commonService = inject(CommonService);
+  private ticketsService = inject(TicketsService);
 
   @Input() dataTable: any;
   @Input({ required: true }) user!: any;
@@ -120,8 +115,14 @@ export class AnimalsTableComponent implements OnChanges {
 
     // Ordenar los datos para mostrar los destacados primero
     if (changes['dataTable'] && changes['dataTable'].currentValue) {
+      if (this.user?.role === 'ROLE_MOD') {
+        this.dataTable = this.dataTable.filter((animal: Animal) => !animal.assignedToAdmin);
+      }
+
       this.dataTable.sort((a: Animal, b: Animal) =>
         (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      this.checkScalingTickets();
+      console.log(this.dataTable);
     }
   }
 
@@ -148,6 +149,19 @@ export class AnimalsTableComponent implements OnChanges {
     this.dataChanged.emit();
   }
 
+  /**
+   * Busca tickets abiertos de tipo ANIMAL_SCALING y marca los animales correspondientes.
+   */
+  checkScalingTickets() {
+    this.ticketsService.getTickets({ type: 'ANIMAL_SCALING', status: { operator: '!=', value: 'CLOSED' } }).subscribe((tickets: any[]) => {
+      const ticketAnimalIds = new Set(tickets.map(t => t.animalId));
+      if (this.dataTable) {
+        this.dataTable.forEach((animal: any) => {
+          animal.hasScalingTicket = ticketAnimalIds.has(animal.id);
+        });
+      }
+    });
+  }
 
   // Botones y campos de acción
   /* showAdminActionPanel = computed(() => this.user?.role === 'ROLE_ADMIN' && !this.adminData());
@@ -479,9 +493,9 @@ export class AnimalsTableComponent implements OnChanges {
 
   private async assignToMe(animal: Animal) {
     try {
+      await this.animalService.updateAnimal(animal.id ?? '', { assignedToAdmin: true });
       const details = `El administrador '${this.user.username}' se ha asignado la revisión del animal '${animal.name}'.`;
       await this.logService.addLog('Revisión de animal asignada', details, this.user, 'Animales');
-      //await this.animalService.assignAnimalToAdmin(animal, this.user, 'Asignado para revisión directa.');
       this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El caso se te ha asignado correctamente.' });
       this.dataChanged.emit();
     } catch (error) {
@@ -561,6 +575,9 @@ export class AnimalsTableComponent implements OnChanges {
           break;
         case 'delete':
           promises.push(this.animalService.deleteAnimal(animal.id!));
+          break;
+        case 'assign':
+          promises.push(this.animalService.updateAnimal(animal.id!, { assignedToAdmin: true }));
           break;
       }
     }

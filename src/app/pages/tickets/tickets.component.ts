@@ -274,8 +274,8 @@ export class TicketsComponent implements OnInit {
       return;
     }
 
-    if (status === 'ON_HOLD') {
-      this.pendingStatus = 'ON_HOLD';
+    if (status === 'ON_HOLD' || status === 'CLOSED') {
+      this.pendingStatus = status;
       this.displayNoteDialog = true;
       return;
     }
@@ -337,12 +337,41 @@ export class TicketsComponent implements OnInit {
     return `${prefix}-${random}`;
   }
 
-  assignTicket() {
-    if (this.selectedTechnician) {
-      // Aquí llamarías a tu servicio: this.ticketsService.assign(this.selectedTicket.id, this.selectedTechnician.id)
-      this.messageService.add({ severity: 'success', summary: 'Asignado', detail: `Ticket asignado a ${this.selectedTechnician.name}` });
+  async assignToMeAndClose() {
+    if (!this.selectedTicket) return;
+
+    this.loading = true;
+    try {
+      const user = this.auth.currentUser;
+      if (!user) return;
+
+      // 1. Asignar el animal al administrador si existe un animal vinculado
+      if (this.selectedTicket.animalId) {
+        await this.animalsService.updateAnimal(this.selectedTicket.animalId, {
+          assignedToAdmin: true,
+          hasScalingTicket: false
+        });
+      }
+
+      // 2. Cerrar el ticket y añadir respuesta automática
+      const adminResponse = {
+        adminName: user.displayName || 'Administrador',
+        message: 'El animal ha sido asignado al administrador y el ticket ha sido cerrado automáticamente.',
+        date: new Date().toISOString()
+      };
+
+      await this.ticketsService.updateTicket(this.selectedTicket.id!, { status: 'CLOSED', adminResponse });
+
+      this.selectedTicket = { ...this.selectedTicket, status: 'CLOSED', adminResponse };
+      this.tickets.update(tickets => tickets.map(t => t.id === this.selectedTicket?.id ? this.selectedTicket! : t));
+      this.messageService.add({ severity: 'success', summary: 'Asignado', detail: 'Ticket cerrado y animal asignado correctamente' });
       this.displayAssignDialog = false;
-      this.selectedTechnician = null;
+      this.displayViewDialog = false;
+    } catch (error) {
+      console.error('Error al asignar y cerrar:', error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo realizar la operación' });
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -384,6 +413,10 @@ export class TicketsComponent implements OnInit {
       // 3. Aplicar cambio de estado pendiente si existe
       if (this.pendingStatus) {
         updates.status = this.pendingStatus;
+
+        if (this.pendingStatus === 'CLOSED' && this.selectedTicket.animalId) {
+          await this.animalsService.updateAnimal(this.selectedTicket.animalId, { hasScalingTicket: false });
+        }
       }
 
       await this.ticketsService.updateTicket(this.selectedTicket.id!, updates);

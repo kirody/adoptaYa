@@ -71,11 +71,9 @@
     </ng-template>
     <ng-template pTemplate="body" let-animal>
       <tr [ngClass]="{
-            'bg-gray-100 opacity-70': user?.role === 'ROLE_MOD' && animal.assignedToAdmin,
             'bg-blue-50': user?.role === 'ROLE_ADMIN' && animal.assignedToAdmin,
             'needs-review-row': animal.infraction === 'pending_review'
-          }"
-        tooltipPosition="top">
+          }" tooltipPosition="top">
         <td>
           <p-tableCheckbox [value]="animal" />
         </td>
@@ -121,15 +119,16 @@
             [pTooltip]="animal.published ? 'Publicado' : 'Sin publicar'" tooltipPosition="top"></i>
         </td>
         <td>
-          En progreso
+          <i *ngIf="animal.hasScalingTicket" class="fa-solid fa-arrow-up-right-dots text-orange-500"
+            pTooltip="Este animal tiene un ticket de escalado abierto" tooltipPosition="top">
+          </i>
         </td>
         <td>{{ animal.protectressName }}</td>
         <td>
           <div class="flex">
             <!-- Editar -->
             <p-button icon="fa-solid fa-pen-to-square" styleClass="p-button-rounded p-button-warning p-button-text"
-              (click)="editAnimal(animal.id)"
-              [disabled]="animal.published" tooltipPosition="top"></p-button>
+              (click)="editAnimal(animal.id)" [disabled]="animal.published" tooltipPosition="top"></p-button>
             <!-- Publicar/Despublicar -->
             <p-button icon="fa-solid"
               [ngClass]="{'fa-eye-slash': animal.published, 'fa-cloud-arrow-up': !animal.published}"

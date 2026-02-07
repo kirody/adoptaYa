@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
   // ¡ADVERTENCIA! No subas este archivo a un repositorio público con una clave real.
-  geminiApiKey: 'AIzaSyDGBi4VhD2KPHS8tYQpjnXJep4QFL7wruM'
+  geminiApiKey: 'AIzaSyAph5KUimEtdApDhAwjCmkKvIpqokFizlk'
 };
 
 export const firebaseConfig = {

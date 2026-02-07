@@ -12,11 +12,11 @@ export interface Ticket {
   adminResponse: {
     adminName: string;
     message: string;
-    date: Date;
+    date: Date | string;
   };
   userResponse?: {
     userName: string;
     message: string;
-    date: Date;
+    date: Date | string;
   };
 }

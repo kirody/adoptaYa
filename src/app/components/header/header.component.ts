@@ -137,6 +137,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
             icon: 'fas fa-cog',
             routerLink: '/panel-gestion',
           },
+           {
+            label: 'Tickets',
+            icon: 'fas fa-ticket',
+            routerLink: '/tickets',
+          },
         ]
         : []),
       ...(this.user && (this.user.role === Roles.ADMIN || (this.user.role === Roles.MOD && this.user.permissions?.includes(Permissions.ADD_ANIMALS)))

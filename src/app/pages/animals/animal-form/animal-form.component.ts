@@ -498,7 +498,7 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
   async loadInfractionDetails(infractionId: string): Promise<void> {
     try {
       this.infractionDetails = await this.infractionsService.getInfractionByEntityId(infractionId);
-      if (this.infractionDetails.status === 'pending_review') {
+      if (this.infractionDetails && this.infractionDetails.status === 'pending_review') {
         const fieldName = this.infractionDetails.context?.fieldName;
         if (fieldName) {
           // Mapea el nombre del campo de la infracción al nombre del control del formulario.
@@ -509,9 +509,9 @@ export class AnimalFormComponent implements OnInit, OnDestroy {
           const formControlName = fieldMap[fieldName];
           // Marca el campo del formulario con un error para resaltarlo.
           this.animalForm.get(formControlName)?.setErrors({ 'infraction': 'Este campo tiene una infracción.' });
+        } else {
+          console.warn('La infracción no tiene un campo asociado o el campo no es reconocido:', fieldName);
         }
-      } else {
-        console.warn('No se encontró ninguna infracción con el ID:', infractionId);
       }
     } catch (error) {
       console.error('Error al cargar los detalles de la infracción:', error);
